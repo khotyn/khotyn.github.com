@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "使用 POI 解析 Exel 的几个注意点"
+title: "使用 POI 解析 Excel 的几个注意点"
 date: 2013-03-01 22:35
 comments: true
 categories: [Programming, Java]
