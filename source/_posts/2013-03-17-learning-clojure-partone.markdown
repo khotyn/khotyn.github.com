@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Clojure 学习笔记：一"
+title: "Clojure 学习笔记：开始"
 date: 2013-03-17 20:44
 comments: true
 categories: [Notes, Clojure]
