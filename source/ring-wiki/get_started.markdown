@@ -3,7 +3,7 @@ layout: page
 title: "Ring 文档 -- 开始"
 date: 2013-04-25 21:07
 comments: true
-sharing: true
+sharing: false
 footer: true
 ---
 
