@@ -4,7 +4,6 @@ title: "杂事儿"
 date: 2013-03-31 22:31
 comments: true
 categories: [生活]
-published: false
 ---
 
 ### 一、坚持
