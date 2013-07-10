@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Java并发编程J.U.C之锁的获取与释放"
+title: "Java 并发编程 J.U.C 之锁的获取与释放"
 date: 2013-07-10 20:14
 comments: true
 categories: [Programming, JUC, Java]
