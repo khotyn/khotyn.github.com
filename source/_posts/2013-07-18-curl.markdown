@@ -1,0 +1,31 @@
+---
+layout: post
+title: "cURL 使用简介"
+date: 2013-07-18 22:05
+comments: true
+categories: [Tools, Shell, Unix]
+--- 
+
+[cURL](http://curl.haxx.se/) 这个神器相信很多人都已经用过，简单地说，cURL 就是一个和服务器端通信的工具，至于用什么协议，cURL 支持各种各样的协议，包括 HTTP，FTP，SMTP 等等协议，可以说是应有尽有。
+
+cURL 的可用的参数非常非常多，你能想到的基本上都有，不过一般使用的就那么几个参数吧，这里就介绍下我常常用到的两个：
+
+### 使用 Post 提交数据
+
+有些服务器端限制了你只能用 POST 的方式提交数据，这个时候如果你就不能通过在 URL 上加上参数的方式来提交数据了，cURL 提供了一个 `-d` 参数来让你可以用 POST 的方式把数据提交上去，例如：
+
+```
+curl http://ka.178.com/receive/index -d "activity_id=3403"
+```
+
+这个请求只用了一个参数，多个参数可以 `&` 符号作链接。
+
+### 附带 Cookie 到请求上
+
+使用 cURL 的另一个经常需要做的事情就是需要拿到用户的登录信息，这些登录信息往往放在 cookie 里面，这样你就需要把 cookie 信息附加在请求上提交到服务器，让服务器认为你是处于登录的状态，cURL 提供了一个 `--cookie` 的参数让你可以附上 cookie：
+
+```
+curl http://ka.178.com/receive/index -cookie "__utma=2582276614.13325.133516.3;"
+```
+
+如果嫌 `--cookie` 太长，可以用 `-b`，`-b` 是 `--cookie` 的简写。
