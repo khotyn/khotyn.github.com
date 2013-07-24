@@ -1,0 +1,31 @@
+---
+layout: post
+title: "再论如何匹配不包含连续字符串的行"
+date: 2013-07-24 22:35
+comments: true
+categories: [Shell, Programming, Regex]
+---
+
+在前一篇文章中，我讨论过如何使用[使用零宽断言来匹配不包含连续字符串的行](http://blog.khotyn.com/blog/2013/07/24/zero-width-assert/)，这个方法采用了零宽断言这种不怎么常见的正则表达式用法，虽然行之有效，但是总归是个麻烦的方法，而且，零宽断言很多的正则表达式解释器都不支持，用 grep 的话，得加上 -P 参数，让 grep 采用 Perl 的方式解释正则表达式，更加遗憾的一点是 -P 参数似乎只有在 GNU 的版本中才有，在我的 Mac 上的 BSD 版本的 grep 中，并没有这个参数。
+
+所幸的是今天无聊翻了翻 grep 的 man page，发现了几个更加方便的方法也更加通用的办法，在这里和大家分享一下：
+
+### grep 的 invert match
+
+今天翻 grep 的 man page，发现了一个 `-v` 参数，它的说明是这样的：
+
+> Selected lines are those not matching any of the specified patterns.
+
+正是我们想要，可以传入一个正则表达式，它帮你匹配不符合这个正则表达式的行，而且 `-v` 参数各个 grep 的版本都支持，无需担心换个系统就不能用的情况。
+
+### 采用 sed 来删除符合某个 pattern 的行
+
+其实不用 grep，用 sed 也可以做到这个需求，sed 本身就是一个强大的行处理工具，sed 可以用如下的方式把符合某个 pattern 的行给删除掉：
+
+```
+sed '/pattern/D'
+```
+
+怎么样？也是非常方便的吧，它可以做到和 grep 一样的功能，非常有效。
+
+总结一下，推荐大家还是用 grep 的 invert match 或者 sed 来完成这个功能，零宽断言在解决这个问题上感觉有点杀鸡焉用牛刀（**零宽断言还有很多适用的场景，不仅仅可以用来解决这个问题**）。
