@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Movies | 码工作坊]]></title>
+  <link href="http://khotyn.github.com/blog/categories/movies/atom.xml" rel="self"/>
+  <link href="http://khotyn.github.com/"/>
+  <updated>2013-08-31T08:23:05+08:00</updated>
+  <id>http://khotyn.github.com/</id>
+  <author>
+    <name><![CDATA[khotyn]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[北壁]]></title>
+    <link href="http://khotyn.github.com/blog/2013/03/10/northwand/"/>
+    <updated>2013-03-10T11:20:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/03/10/northwand</id>
+    <content type="html"><![CDATA[<p>这是一部登山者必看的电影，根据真实故事改编，讲述了几个登山者挑战艾格峰北壁的故事，历史上曾有多人试图从北坡爬上艾格峰，但是在 1938 年之前都失败了，这部电影讲述的就是其中最著名的一个悲剧。</p>
+
+<p>电影的精彩之处在于基本还原了故事的事实，特别是最后只有 Toni 一个人幸存下来，悬在峭壁上一夜，等待援救，最后因为绳结无法通过下降器而没法下降到救援队的地方，悬挂在半空中最后冻死的场景，只是事实比电影还要残酷。</p>
+
+<p>刚好我也找到了当年 Toni 挂在半空中死去的照片：</p>
+
+<p><img src="http://www.wspinanie.pl/serwis/200806/12eiger_historia4.jpg" alt="image" /></p>
+
+<p>对比电影海报中照片：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CHrkhZ6L/vUPFo.jpg" alt="image" /></p>
+
+<p>相比于喜剧，悲剧总是更能够对后人起到惊醒的作用，如果 Andy 在上山完成 Hinterstoisser Traverse 后把绳子留在那里，或许最后几个人都能够活下来，当然，这只是事后的假设。无论是马拉松还是登山，在挑战自我的之前做好充分地准备，迎难而上的同时需要懂得知难而退，给自己留一条后路，毕竟，活着回来比什么都重要。但是，说永远比做要容易，迎难而上，知难而退，本身就是矛盾的一对词，我想我们能做的保持地理智，期望在那一刻来临的时候做出正确地选择。</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: JUC | 码工作坊]]></title>
+  <link href="http://khotyn.github.com/blog/categories/juc/atom.xml" rel="self"/>
+  <link href="http://khotyn.github.com/"/>
+  <updated>2013-08-31T08:23:05+08:00</updated>
+  <id>http://khotyn.github.com/</id>
+  <author>
+    <name><![CDATA[khotyn]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Java 并发编程之 ConcurrentHashMap]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/12/juc-concurrenthashmap/"/>
+    <updated>2013-07-12T23:02:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/12/juc-concurrenthashmap</id>
+    <content type="html"><![CDATA[<p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_concurrenthashmap/">黄金档</a>的文章。</strong></p>
+
+<p>ConcurrentHashMap 是一个线程安全的 Hash Table，它的主要功能是提供了一组和 HashTable 功能相同但是线程安全的方法。ConcurrentHashMap 可以做到读取数据不加锁，并且其内部的结构可以让其在进行写操作的时候能够将锁的粒度保持地尽量地小，不用对整个 ConcurrentHashMap 加锁。</p>
+
+<h3>ConcurrentHashMap 的内部结构</h3>
+
+<p>ConcurrentHashMap 为了提高本身的并发能力，在内部采用了一个叫做 Segment 的结构，一个 Segment 其实就是一个类 Hash Table 的结构，Segment 内部维护了一个链表数组，我们用下面这一幅图来看下 ConcurrentHashMap 的内部结构：</p>
+
+<p><img src="http://pic.yupoo.com/goldendoc/Ba4GCFe1/nuEZ0.png" alt="image" /></p>
+
+<p>从上面的结构我们可以了解到，ConcurrentHashMap 定位一个元素的过程需要进行两次 Hash 操作，第一次 Hash 定位到 Segment，第二次 Hash 定位到元素所在的链表的头部，因此，这一种结构的带来的副作用是 Hash 的过程要比普通的 HashMap 要长，但是带来的好处是写操作的时候可以只对元素所在的 Segment 进行加锁即可，不会影响到其他的 Segment，这样，在最理想的情况下，ConcurrentHashMap 可以最高同时支持 Segment 数量大小的写操作（刚好这些写操作都非常平均地分布在所有的 Segment 上），所以，通过这一种结构，ConcurrentHashMap 的并发能力可以大大的提高。</p>
+
+<h3>Segment</h3>
+
+<p>我们再来具体了解一下Segment的数据结构：</p>
+
+<p>```java
+static final class Segment&lt;K,V> extends ReentrantLock implements Serializable {</p>
+
+<pre><code>transient volatile int count;
+transient int modCount;
+transient int threshold;
+transient volatile HashEntry&lt;K,V&gt;[] table;
+final float loadFactor;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>详细解释一下 Segment 里面的成员变量的意义：</p>
+
+<ul>
+<li>count：Segment 中元素的数量</li>
+<li>modCount：对 table 的大小造成影响的操作的数量（比如 put 或者 remove 操作）</li>
+<li>threshold：阈值，Segment 里面元素的数量超过这个值依旧就会对 Segment 进行扩容</li>
+<li>table：链表数组，数组中的每一个元素代表了一个链表的头部</li>
+<li>loadFactor：负载因子，用于确定 threshold</li>
+</ul>
+
+
+<h3>ConcurrentHashMap 的初始化</h3>
+
+<p>下面我们来结合源代码来具体分析一下 ConcurrentHashMap 的实现，先看下初始化方法：</p>
+
+<p>```java
+public ConcurrentHashMap(int initialCapacity,</p>
+
+<pre><code>                     float loadFactor, int concurrencyLevel) {
+if (!(loadFactor &gt; 0) || initialCapacity &lt; 0 || concurrencyLevel &lt;= 0)
+    throw new IllegalArgumentException();
+
+if (concurrencyLevel &gt; MAX_SEGMENTS)
+    concurrencyLevel = MAX_SEGMENTS;
+
+// Find power-of-two sizes best matching arguments
+int sshift = 0;
+int ssize = 1;
+while (ssize &lt; concurrencyLevel) {
+    ++sshift;
+    ssize &lt;&lt;= 1;
+}
+segmentShift = 32 - sshift;
+segmentMask = ssize - 1;
+this.segments = Segment.newArray(ssize);
+
+if (initialCapacity &gt; MAXIMUM_CAPACITY)
+    initialCapacity = MAXIMUM_CAPACITY;
+int c = initialCapacity / ssize;
+if (c * ssize &lt; initialCapacity)
+    ++c;
+int cap = 1;
+while (cap &lt; c)
+    cap &lt;&lt;= 1;
+
+for (int i = 0; i &lt; this.segments.length; ++i)
+    this.segments[i] = new Segment&lt;K,V&gt;(cap, loadFactor);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>CurrentHashMap 的初始化一共有三个参数，一个 initialCapacity，表示初始的容量，一个 loadFactor，表示负载参数，最后一个是 concurrentLevel，代表 ConcurrentHashMap 内部的 Segment 的数量，ConcurrentLevel 一经指定，不可改变，后续如果 ConcurrentHashMap 的元素数量增加导致 ConrruentHashMap 需要扩容，ConcurrentHashMap 不会增加 Segment 的数量，而只会增加 Segment 中链表数组的容量大小，这样的好处是扩容过程不需要对整个 ConcurrentHashMap 做 rehash，而只需要对 Segment 里面的元素做一次 rehash 就可以了。</p>
+
+<p>整个 ConcurrentHashMap 的初始化方法还是非常简单的，先是根据 concurrentLevel 来 new 出 Segment，这里 Segment 的数量是不小于 concurrentLevel 的最大的 2 的指数，就是说 Segment 的数量永远是 2 的指数个，这样的好处是方便采用移位操作来进行 hash，加快 hash 的过程。接下来就是根据 intialCapacity 确定 Segment 的容量的大小，每一个 Segment 的容量大小也是 2 的指数，同样是为了加快 hash 的过程。</p>
+
+<p>这边需要特别注意一下两个变量，分别是 segmentShift 和 segmentMask，这两个变量在后面将会起到很大的作用，假设构造函数确定了 Segment 的数量是 2 的 n 次方，那么 segmentShift 就等于 32 减去 n，而 segmentMask 就等于 2 的 n 次方减一。</p>
+
+<h3>ConcurrentHashMap 的 get 操作</h3>
+
+<p>前面提到过 ConcurrentHashMap 的 get 操作是不用加锁的，我们这里看一下其实现：</p>
+
+<p>```java
+public V get(Object key) {</p>
+
+<pre><code>int hash = hash(key.hashCode());
+return segmentFor(hash).get(key, hash);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>看第三行，segmentFor 这个函数用于确定操作应该在哪一个 segment 中进行，几乎对 ConcurrentHashMap 的所有操作都需要用到这个函数，我们看下这个函数的实现：</p>
+
+<p>```java
+final Segment&lt;K,V> segmentFor(int hash) {</p>
+
+<pre><code>return segments[(hash &gt;&gt;&gt; segmentShift) &amp; segmentMask];
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这个函数用了位操作来确定 Segment，根据传入的 hash 值向右无符号右移 segmentShift 位，然后和 segmentMask 进行与操作，结合我们之前说的 segmentShift 和 segmentMask 的值，就可以得出以下结论：假设 Segment 的数量是 2 的n次方，根据元素的 hash 值的高 n 位就可以确定元素到底在哪一个 Segment 中。</p>
+
+<p>在确定了需要在哪一个 segment 中进行操作以后，接下来的事情就是调用对应的 Segment 的 get 方法：</p>
+
+<p>```java
+V get(Object key, int hash) {</p>
+
+<pre><code>if (count != 0) { // read-volatile
+    HashEntry&lt;K,V&gt; e = getFirst(hash);
+    while (e != null) {
+        if (e.hash == hash &amp;&amp; key.equals(e.key)) {
+            V v = e.value;
+            if (v != null)
+                return v;
+            return readValueUnderLock(e); // recheck
+        }
+        e = e.next;
+    }
+}
+return null;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>先看第二行代码，这里对 count 进行了一次判断，其中 count 表示 Segment 中元素的数量，我们可以来看一下 count 的定义：</p>
+
+<p><code>java
+transient volatile int count;
+</code></p>
+
+<p>可以看到 count 是 volatile 的，实际上这里里面利用了 volatile 的语义：</p>
+
+<blockquote><p>对volatile字段的写入操作happens-before于每一个后续的同一个字段的读操作。</p></blockquote>
+
+<p>因为实际上 put、remove 等操作也会更新 count 的值，所以当竞争发生的时候， volatile 的语义可以保证写操作在读操作之前，也就保证了写操作对后续的读操作都是可见的，这样后面 get 的后续操作就可以拿到完整的元素内容。</p>
+
+<p>然后，在第三行，调用了 getFirst() 来取得链表的头部：</p>
+
+<p>```java
+HashEntry&lt;K,V> getFirst(int hash) {</p>
+
+<pre><code>HashEntry&lt;K,V&gt;[] tab = table;
+return tab[hash &amp; (tab.length - 1)];
+</code></pre>
+
+<p>}
+```</p>
+
+<p>同样，这里也是用位操作来确定链表的头部，hash 值和 HashTable 的长度减一做与操作，最后的结果就是 hash 值的低 n 位，其中 n 是 HashTable 的长度以 2 为底的结果。</p>
+
+<p>在确定了链表的头部以后，就可以对整个链表进行遍历，看第 4 行，取出 key 对应的 value 的值，如果拿出的 value 的值是 null，则可能这个 key，value 对正在 put 的过程中，如果出现这种情况，那么就加锁来保证取出的 value 是完整的，如果不是 null，则直接返回 value。</p>
+
+<h3>ConcurrentHashMap 的 put 操作</h3>
+
+<p>看完了 get 操作，再看下 put 操作，put 操作的前面也是确定 Segment 的过程，这里不再赘述，直接看关键的 segment 的 put 方法：</p>
+
+<p>```java
+V put(K key, int hash, V value, boolean onlyIfAbsent) {</p>
+
+<pre><code>lock();
+try {
+    int c = count;
+    if (c++ &gt; threshold) // ensure capacity
+        rehash();
+    HashEntry&lt;K,V&gt;[] tab = table;
+    int index = hash &amp; (tab.length - 1);
+    HashEntry&lt;K,V&gt; first = tab[index];
+    HashEntry&lt;K,V&gt; e = first;
+    while (e != null &amp;&amp; (e.hash != hash || !key.equals(e.key)))
+        e = e.next;
+
+    V oldValue;
+    if (e != null) {
+        oldValue = e.value;
+        if (!onlyIfAbsent)
+            e.value = value;
+    }
+    else {
+        oldValue = null;
+        ++modCount;
+        tab[index] = new HashEntry&lt;K,V&gt;(key, hash, first, value);
+        count = c; // write-volatile
+    }
+    return oldValue;
+} finally {
+    unlock();
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>首先对 Segment 的 put 操作是加锁完成的，然后在第五行，如果 Segment 中元素的数量超过了阈值（由构造函数中的 loadFactor 算出）这需要进行对 Segment 扩容，并且要进行 rehash，关于 rehash 的过程大家可以自己去了解，这里不详细讲了。</p>
+
+<p>第 8 和第 9 行的操作就是 getFirst 的过程，确定链表头部的位置。</p>
+
+<p>第 11 行这里的这个 while 循环是在链表中寻找和要 put 的元素相同 key 的元素，如果找到，就直接更新更新 key 的 value，如果没有找到，则进入 21 行这里，生成一个新的 HashEntry 并且把它加到整个 Segment 的头部，然后再更新 count 的值。</p>
+
+<h3>ConcurrentHashMap 的 remove 操作</h3>
+
+<p>Remove 操作的前面一部分和前面的 get 和 put 操作一样，都是定位 Segment 的过程，然后再调用 Segment 的 remove 方法：</p>
+
+<p>```java
+V remove(Object key, int hash, Object value) {</p>
+
+<pre><code>lock();
+try {
+    int c = count - 1;
+    HashEntry&lt;K,V&gt;[] tab = table;
+    int index = hash &amp; (tab.length - 1);
+    HashEntry&lt;K,V&gt; first = tab[index];
+    HashEntry&lt;K,V&gt; e = first;
+    while (e != null &amp;&amp; (e.hash != hash || !key.equals(e.key)))
+        e = e.next;
+
+    V oldValue = null;
+    if (e != null) {
+        V v = e.value;
+        if (value == null || value.equals(v)) {
+            oldValue = v;
+            // All entries following removed node can stay
+            // in list, but all preceding ones need to be
+            // cloned.
+            ++modCount;
+            HashEntry&lt;K,V&gt; newFirst = e.next;
+            for (HashEntry&lt;K,V&gt; p = first; p != e; p = p.next)
+                newFirst = new HashEntry&lt;K,V&gt;(p.key, p.hash,
+                                              newFirst, p.value);
+            tab[index] = newFirst;
+            count = c; // write-volatile
+        }
+    }
+    return oldValue;
+} finally {
+    unlock();
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>首先 remove 操作也是确定需要删除的元素的位置，不过这里删除元素的方法不是简单地把待删除元素的前面的一个元素的 next 指向后面一个就完事了，我们之前已经说过 HashEntry 中的 next 是 final 的，一经赋值以后就不可修改，在定位到待删除元素的位置以后，程序就将待删除元素前面的那一些元素全部复制一遍，然后再一个一个重新接到链表上去，看一下下面这一幅图来了解这个过程：</p>
+
+<p><img src="http://pic.yupoo.com/goldendoc/Ba3OfBv8/medish.jpg" alt="image" /></p>
+
+<p>假设链表中原来的元素如上图所示，现在要删除元素 3，那么删除元素 3 以后的链表就如下图所示：</p>
+
+<p><img src="http://pic.yupoo.com/goldendoc/Ba3OfPQE/medish.jpg" alt="image" /></p>
+
+<h3>ConcurrentHashMap 的 size 操作</h3>
+
+<p>在前面的章节中，我们涉及到的操作都是在单个 Segment 中进行的，但是 ConcurrentHashMap 有一些操作是在多个 Segment 中进行，比如 size 操作，ConcurrentHashMap 的 size 操作也采用了一种比较巧的方式，来尽量避免对所有的 Segment 都加锁。</p>
+
+<p>前面我们提到了一个 Segment 中的有一个 modCount 变量，代表的是对 Segment 中元素的数量造成影响的操作的次数，这个值只增不减，size 操作就是遍历了两次 Segment，每次记录 Segment 的 modCount 值，然后将两次的 modCount 进行比较，如果相同，则表示期间没有发生过写入操作，就将原先遍历的结果返回，如果不相同，则把这个过程再重复做一次，如果再不相同，则就需要将所有的 Segment 都锁住，然后一个一个遍历了，具体的实现大家可以看 ConcurrentHashMap 的源码，这里就不贴了。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Java 并发编程 J.U.C 之 Condition]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/12/juc-condition/"/>
+    <updated>2013-07-12T07:36:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/12/juc-condition</id>
+    <content type="html"><![CDATA[<p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_condition/">黄金档</a>的文章。</strong></p>
+
+<p>在上一篇中，我们了解了下 <a href="http://blog.khotyn.com/blog/2013/07/10/juc-lock-acquire-release/">J.U.C 的锁的获取与释放的过程</a>，这个过程主要通过在 A.Q.S 中维持一个等待队列来实现，其中我们也提到了，在 A.Q.S 中除了一个等待队列之外，还有一个 Condition 队列，在了解 Condition 队列之前，先来看一下 Condition 是怎么回事：</p>
+
+<blockquote><p>The synchronizer framework provides a ConditionObject class for use by synchronizers that maintain exclusive synchronization and conform to the Lock interface. Any number of condition objects may be attached to a lock object, providing classic monitor-style await, signal, and signalAll operations, including those with timeouts, along with some inspection and monitoring methods.</p></blockquote>
+
+<p>上面的这一段内容摘自 Doug Lea 的 <a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf">AQS 论文</a>，从上面这一段话可以看出，Condition 主要是为了在 J.U.C 框架中提供和 Java 传统的监视器风格的 wait，notify 和 notifyAll 方法类似的功能，那么先来解释一下这三个方法的作用：</p>
+
+<ul>
+<li>Object.wait() 方法：使当前线程释放 Object 上的监视器并且挂起，直到有另外的线程调用 Object.notify() 方法或者 Object.notifyAll() 方法唤醒当前线程，当被唤醒后，Object.wait() 方法会尝试重新获取监视器，成功获取后继续往下执行。注意 Object.wait() 方法只有在当前线程持有 Object 的监视器的时候才能够调用，不然会抛出异常。</li>
+<li>Object.notify() 方法：用于唤醒另外一个调用了 Object.wait() 方法的线程，如果有多个都调用了 Object.wait() 方法，那么就会选择一个线程去 notify()，具体选择哪一个和具体的实现有关，当前线程在调用 Object.notify() 方法以后会就释放Object的监视器，和 wait() 方法一样，Object.notify() 方法只有在当前线程持有 Object 的监视器的时候才能够调用，不然就会抛出异常。</li>
+<li>Object.notifyAll() 方法：唤醒所有调用了 Object.wait() 方法的线程，如果有多个线程调用了 Object.wait() 方法，那么就会引发这些线程之间的竞争，最后谁成功获取到 Object 的监视器和具体的实现有关，当前线程在调用 Object.notifyAll() 方法以后会就释放 Object 的监视器，和 wait() 方法一样，Object.notifyAll() 方法只有在当前线程只有 Object 的监视器的时候才能够调用，不然就会抛出异常。</li>
+</ul>
+
+
+<p>那么 Condition 是如何实现 wait，notify 和 notifyAll 方法的功能呢？我们接下来看：</p>
+
+<p>在 Condition 中，wait，notify 和 notifyAll 方法分别对应了 await，signal 和 signalAll 方法，当然 Condition 也提供了超时的、不可被中断的 await() 方法，不过我们主要还是看一看 await，notify 和 notifyAll 的实现，先看 await：</p>
+
+<h3>await 方法</h3>
+
+<p>```java
+public final void await() throws InterruptedException {</p>
+
+<pre><code>if (Thread.interrupted())
+    throw new InterruptedException();
+Node node = addConditionWaiter();
+int savedState = fullyRelease(node);
+int interruptMode = 0;
+while (!isOnSyncQueue(node)) {
+    LockSupport.park(this);
+    if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
+        break;
+}
+if (acquireQueued(node, savedState) &amp;&amp; interruptMode != THROW_IE)
+    interruptMode = REINTERRUPT;
+if (node.nextWaiter != null)
+    unlinkCancelledWaiters();
+if (interruptMode != 0)
+    reportInterruptAfterWait(interruptMode);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>整个 await 的过程如下：</p>
+
+<ul>
+<li>在第 2 行处，如果当前线程被中断，则抛出中断异常。</li>
+<li>在第 4 行处，将节点加入到 Condition 队列中去，这里如果 lastWaiter 是 cancel 状态，那么会把它踢出 Condition 队列。</li>
+<li>在第 5 行处，调用 tryRelease，释放当前线程的锁</li>
+<li>在第 7 行处，判断节点是否在等待队列中（signal 操作会将 Node 从 Condition 队列中拿出并且放入到等待队列中去），如果不在等待队列中了，就 park 当前线程，如果在，就退出循环，这个时候如果被中断，那么就退出循环</li>
+<li>在第 12 行处，这个时候线程已经被 signal() 或者 signalAll() 操作给唤醒了，退出了 4 中的 while 循环，尝试再次获取锁，调用 acquireQueued 方法。</li>
+</ul>
+
+
+<p>可以看到，这个 await 的操作过程和 Object.wait() 方法是一样，只不过 await() 采用了 Condition 队列的方式实现了 Object.wait() 的功能。</p>
+
+<h3>signal 和 signalAll 方法</h3>
+
+<p>在了解了 await 方法的实现以后，signal 和 signalAll 方法的实现就相对简单了，先看看 signal 方法：</p>
+
+<p>```java
+public final void signal() {</p>
+
+<pre><code>if (!isHeldExclusively())
+    throw new IllegalMonitorStateException();
+Node first = firstWaiter;
+if (first != null)
+    doSignal(first);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这里先判断当前线程是否持有锁，如果没有持有，则抛出异常，然后判断整个 condition 队列是否为空，不为空则调用 doSignal 方法来唤醒线程，看看 doSignal 方法都干了一些什么：</p>
+
+<p>```java
+private void doSignal(Node first) {</p>
+
+<pre><code>do {
+    if ( (firstWaiter = first.nextWaiter) == null)
+        lastWaiter = null;
+    first.nextWaiter = null;
+} while (!transferForSignal(first) &amp;&amp;
+         (first = firstWaiter) != null);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这个 while 循环的作用就是将 firstWaiter 往 Condition 队列的后面移一位，并且唤醒 first，看看 while 循环中 tranferForSignal：</p>
+
+<p>```java
+final boolean transferForSignal(Node node) {</p>
+
+<pre><code>/*
+ * If cannot change waitStatus, the node has been cancelled.
+ */
+if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))
+    return false;
+
+/*
+ * Splice onto queue and try to set waitStatus of predecessor to
+ * indicate that thread is (probably) waiting. If cancelled or
+ * attempt to set waitStatus fails, wake up to resync (in which
+ * case the waitStatus can be transiently and harmlessly wrong).
+ */
+Node p = enq(node);
+int c = p.waitStatus;
+if (c &gt; 0 || !compareAndSetWaitStatus(p, c, Node.SIGNAL))
+    LockSupport.unpark(node.thread);
+return true;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这段代码的作用就是修改 Node 的 waitStatus 为 0，然后将 Node 插入到等待队列中，并且唤醒 Node。</p>
+
+<p>signalAll 和 signal 方法类似，主要的不同在于它不是调用 doSignal 方法，而是调用 doSignalAll 方法：</p>
+
+<p>```java
+private void doSignalAll(Node first) {</p>
+
+<pre><code>lastWaiter = firstWaiter  = null;
+do {
+    Node next = first.nextWaiter;
+    first.nextWaiter = null;
+    transferForSignal(first);
+    first = next;
+} while (first != null);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这个方法就相当于把 Condition 队列中的所有 Node 全部取出插入到等待队列中去。</p>
+
+<h3>总结</h3>
+
+<p>在了解了 await，signal 和 signalAll 方法的实现以后，我们再来通过一副 gif 动画来看一看这一个整体的过程：</p>
+
+<p><img src="http://farm3.staticflickr.com/2888/9263654699_6b959eecb2_o.gif" alt="image" /></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Java 并发编程 J.U.C 之锁的获取与释放]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/10/juc-lock-acquire-release/"/>
+    <updated>2013-07-10T20:14:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/10/juc-lock-acquire-release</id>
+    <content type="html"><![CDATA[<p><strong>此篇文章是作者两年前发表在<a href="http://www.goldendoc.org/2011/06/lock_acquire_release/">黄金档</a>的文章。</strong></p>
+
+<p>上一篇文章中，我们对 <a href="http://www.goldendoc.org/2011/05/juc/">J.U.C 的一些大概的情况</a>做了了解，在这一篇文章我们将来以 ReentrantLock 为例，来分析一下锁的获取和释放的过程，让大家能够对锁的获取和释放的整体过程有一个了解。</p>
+
+<h3>一、锁的获取</h3>
+
+<p>先看下 ReentrantLock 的 lock() 方法，整个方法只有一行，调用 acquire 方法，看看 acquire 方法的实现：</p>
+
+<p>```java
+public final void acquire(int arg) {</p>
+
+<pre><code>if (!tryAcquire(arg) &amp;&amp;
+    acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+    selfInterrupt();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这段代码的实现也是比较简洁，先尝试一次 tryAcquire 操作，如果失败，则把当前线程加入到同步队列中去，这个时候可能会反复的阻塞与唤醒这个线程，直到后续的 tryAcquire（看 acquireQueued 的实现）操作成功。</p>
+
+<p>再看看 tryAcquire 的实现：</p>
+
+<p>```java
+protected final boolean tryAcquire(int acquires) {</p>
+
+<pre><code>final Thread current = Thread.currentThread();
+int c = getState();
+if (c == 0) {
+    if (isFirst(current) &amp;&amp;
+        compareAndSetState(0, acquires)) {
+        setExclusiveOwnerThread(current);
+        return true;
+    }
+}
+else if (current == getExclusiveOwnerThread()) {
+    int nextc = c + acquires;
+    if (nextc &lt; 0)
+        throw new Error("Maximum lock count exceeded");
+    setState(nextc);
+    return true;
+}
+return false;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这段代码是尝试获取锁的过程，它先判断当前的 AQS 的 state 值，如果为 0，则表示该锁没有被持有过，如果这个时候同步队列是空的或者当前线程就是在同步队列的头部，那么修改 state 的值，并且设置排他锁的持有线程为当前线程</p>
+
+<p>如果大于 0，则判断当前线程是否是排他锁的持有线程，如果是，那么把 state 值加 1（注意 state 是 int 类型的，所以 state 的最大值是就是 int 的最大值）</p>
+
+<p>如果第一次 tryAcquire() 操作失败，那么就把当前线程加入到等待队列中去，看 addWaiter() 方法：</p>
+
+<p>```java
+private Node addWaiter(Node mode) {</p>
+
+<pre><code>Node node = new Node(Thread.currentThread(), mode);
+// Try the fast path of enq; backup to full enq on failure
+Node pred = tail;
+if (pred != null) {
+    node.prev = pred;
+    if (compareAndSetTail(pred, node)) {
+        pred.next = node;
+        return node;
+    }
+}
+enq(node);
+return node;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这段代码中先尝试了一下了下 enq() 方法中等待队列不为空的情况，如果失败，再调用 enq() 方法将当前线程加入等待队列，enq() 的过程我们已经在上一篇文章中讲过了，不再赘述。</p>
+
+<p>最后在当前线程被加入到等待队列中去以后，再调用 acquireQueued 去获取锁，看看 acquireQueued 的代码：</p>
+
+<p>```java
+final boolean acquireQueued(final Node node, int arg) {</p>
+
+<pre><code>try {
+    boolean interrupted = false;
+    for (;;) {
+        final Node p = node.predecessor();
+        if (p == head &amp;&amp; tryAcquire(arg)) {
+            setHead(node);
+            p.next = null; // help GC
+            return interrupted;
+        }
+        if (shouldParkAfterFailedAcquire(p, node) &amp;&amp;
+            parkAndCheckInterrupt())
+            interrupted = true;
+    }
+} catch (RuntimeException ex) {
+    cancelAcquire(node);
+    throw ex;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这段代码中拿到当前线程在同步队列中的前面一个节点，如果这个节点是是头部，那么马上进行一次 tryAcquire 操作，如果操作成功，那么把当前线程弹出队列，整个操作就此结束。如果这个节点不是头部或者说 tryAcquire 操作失败的话，那么就判断是不是要将当前线程给阻塞掉（shouldParkAfterFailedAcquire）方法：判断当前线程是否应该被阻塞掉，实际上判断的是当前线程的前一个节点的状态，如果前一个节点的状态小于 0（condition 或者 signal），那么返回 true，阻塞当前线程；如果前一个节点的状态大于 0（cancelled），则向前遍历，直到找到一个节点状态不大于 0 的节点，并且将中间的 cancelled 状态的节点全部踢出队列；如果前一个节点的状态等于 0，那么将其状态置为 -1（signal），并且返回 false，等待下一次循环的时候再阻塞。</p>
+
+<p><strong>整个锁的获取过程就是这样，我们再来总结一下整个过程</strong>：acquire() 方法会先调用一次 tryAcquire 方法获取一次锁，如果失败，则把当前线程加入到等待队列中去，然后再调用 acquireQueued 获取锁，acquireQueued 在当前节点不在头部的时候会把当前线程的前一个结点的状态置为 SIGNAL，然后阻塞当前线程。当当前线程到了队列的头部的时候，那么获取锁的操作就会成功返回。</p>
+
+<h3>二、锁的释放</h3>
+
+<p>首先，我们知道在 acquireQueued 方法中，如果一个线程成功获取到了锁，那么它就应该是整个等待队列的 head 节点，然后，我们再来看一看 unlock() 方法，和 lock() 方法一样，unlock() 方法也是只有一行代码，直接调用 release() 方法，我们看看 release() 方法的实现：</p>
+
+<p>```java
+public final boolean release(int arg) {</p>
+
+<pre><code>if (tryRelease(arg)) {
+    Node h = head;
+    if (h != null &amp;&amp; h.waitStatus != 0)
+        unparkSuccessor(h);
+    return true;
+}
+return false;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这个过程首先调用 tryRelease 方法，如果锁已经完全释放，那么就唤醒下一个节点，先来看看 tryRelease 方法：</p>
+
+<p>```java
+protected final boolean tryRelease(int releases) {</p>
+
+<pre><code>int c = getState() - releases;
+if (Thread.currentThread() != getExclusiveOwnerThread())
+    throw new IllegalMonitorStateException();
+boolean free = false;
+if (c == 0) {
+    free = true;
+    setExclusiveOwnerThread(null);
+}
+setState(c);
+return free;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这段代码首先获取当前 AQS 的 state 状态并且将其值减一，如果结果等于 0（锁已经被完全释放），那么将排他锁的持有线程置为 null。将 AQS 的 state 状态置为减一后的结果。</p>
+
+<p>然后再看看唤醒继任节点的代码：</p>
+
+<p>```
+private void unparkSuccessor(Node node) {</p>
+
+<pre><code>compareAndSetWaitStatus(node, Node.SIGNAL, 0);
+Node s = node.next;
+if (s == null || s.waitStatus &gt; 0) {
+    s = null;
+    for (Node t = tail; t != null &amp;&amp; t != node; t = t.prev)
+        if (t.waitStatus &lt;= 0)
+            s = t;
+}
+if (s != null)
+    LockSupport.unpark(s.thread);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>这段代码先清除当前节点的 waitStatus 为 0，然后判断下一个节点是不是 null 或者 cancelled 的状态，如果是，则从队列的尾部往前开始找，找到一个非 cancelled 状态的节点，最后唤醒这个节点。</p>
+
+<p><strong>最后，总结一下释放操作的整个过程</strong>：其实整个释放过程就做了两件事情，一个是将state值减1，然后就是判断锁是否被完全释放，如果被完全释放，则唤醒继任节点。</p>
+
+<h3>三、整体过程描述</h3>
+
+<p>看了上面的锁的获取与释放操作以后，整体过程还是比较清晰的，在文章的最后，我们把获取与释放操作串在一起在简单看一下：</p>
+
+<ul>
+<li>获取锁的时候将当前线程放入同步队列，并且将前一个节点的状态置为 signal 状态，然后阻塞</li>
+<li>当这个节点的前一个节点成功获取到锁，前一个节点就成了整个同步队列的 head。</li>
+<li>当前一个节点释放锁的时候，它就唤醒当前线程的这个节点，然后当前线程的节点就可以成功获取到锁了</li>
+<li>这个时候它就到整个队列的头部了，然后 release 操作的时候又可以唤醒下一个。</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 生活 | 码工作坊]]></title>
+  <link href="http://khotyn.github.com/blog/categories/生活/atom.xml" rel="self"/>
+  <link href="http://khotyn.github.com/"/>
+  <updated>2013-08-31T08:23:05+08:00</updated>
+  <id>http://khotyn.github.com/</id>
+  <author>
+    <name><![CDATA[khotyn]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[杂事儿]]></title>
+    <link href="http://khotyn.github.com/blog/2013/03/31/mass/"/>
+    <updated>2013-03-31T22:31:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/03/31/mass</id>
+    <content type="html"><![CDATA[<h3>一、坚持</h3>
+
+<p>最近颇为得意的几件事儿，便是年后坚持做了几件事儿，每天背一点英语单词，每天写日记。</p>
+
+<p>背单词我是通过「拓词」这个应用来背的，但是这段时间坚持下来，没有特别好的效果，这个背单词的方法不是正确的方法，背了以后你只能照着「拓词」给出的答案来选，而很难直接给出单词的意思，更不用说对单词的用法进行应用了。另外，「拓词」本身的服务质量也不稳定，计时不准确，App 闪退等问题也比较严重，准备找一种更好的方式来拓展我的词汇量。</p>
+
+<p>写日记我是通过「Day One」这款 App 来记的，我买了 Mac 版和 iOS 版，三个多月使用下来非常棒，「Day One」支持 Markdown，整个应用做的也十分精美，让人看了就有写日记的冲动，特别有意思的时候它有时候会弹出一些话来让你写日记，比如，下面这句：</p>
+
+<blockquote><p>Keep a diary, and someday it'll keep you.</p></blockquote>
+
+<p>其实日记是你最私密的东西，在里面，你可以写任何的在其他社交网络上不敢写的东西，可以把你最真实的感情写在里面，让你直面最真实的自己，而当你失落的时候，这些日记就是过去的你，会在背后支持着你。</p>
+
+<p>一直以来，无论是上学的时候，还是工作的时候，总会有不断的计划冒出来，无论当时下多么大的决心，总是到一定阶段的时候放弃了。但是，最近发现，有些决心确实比另外一些更加坚定，持续地更久。其实，我一直以来内心都藏有一种恐惧，害怕自己会变成一个平庸的人，每天上班下班，完成着交给的工作，无所作为，而正是这种恐惧，成为的内心最强大的东西。</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,99 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
 
-<!DOCTYPE html>
-<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
-<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
-<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  <title>码工作坊</title>
-  <meta name="author" content="khotyn">
-
-  
-  <meta name="description" content="前几天在 HotCode 的用户群里面，有同学问起“如何将 JVM 中的 class dump 出来”，当时我下意识的回答就是“可以在 JVM 启动的时候挂一个 agent 上去，然后通过 Instrumentation API 在 class 加载的时候做拦截，把类 dump 出来。”， &hellip;">
-  
-
-  <!-- http://t.co/dKP3o1e -->
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  
-  <link rel="canonical" href="http://khotyn.github.com/">
-  <link href="/favicon.png" rel="icon">
-  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <script src="/javascripts/modernizr-2.0.js"></script>
-  <script src="/javascripts/ender.js"></script>
-  <script src="/javascripts/octopress.js" type="text/javascript"></script>
-  <link href="/atom.xml" rel="alternate" title="码工作坊" type="application/atom+xml">
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-
-  
-
-</head>
-
-<body    class="collapse-sidebar sidebar-footer" >
-  <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
-  
-</ul>
-  
-<form action="http://google.com/search" method="get">
-  <fieldset role="search">
-    <input type="hidden" name="q" value="site:khotyn.github.com" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
-  </fieldset>
-</form>
-  
-<ul class="main-navigation">
-    <li><a href="/">
-        <span class="blue_light">
-            码工作坊
-        </span>
-       
-    </a></li>
-  <li><a href="/">Blog</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/about">About me</a></li>
-</ul>
-</nav>
-  <div id="main">
-    <div id="content">
-      <div class="blog-index">
-  
-  
-  
-    <article>
-      
-  <header>
+  <title><![CDATA[码工作坊]]></title>
+  <link href="http://khotyn.github.com/atom.xml" rel="self"/>
+  <link href="http://khotyn.github.com/"/>
+  <updated>2013-08-31T08:23:05+08:00</updated>
+  <id>http://khotyn.github.com/</id>
+  <author>
+    <name><![CDATA[khotyn]]></name>
     
-      <h1 class="entry-title"><a href="/blog/2013/08/03/dumping-class-from-jvm/">从 JVM 中 Dump Class 的几种方法</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
 
   
-
-
-<time datetime="2013-08-03T14:04:00+08:00" pubdate data-updated="true">Aug 3<span>rd</span>, 2013</time>
-        
-         | <a href="/blog/2013/08/03/dumping-class-from-jvm/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>前几天在 HotCode 的用户群里面，有同学问起“如何将 JVM 中的 class dump 出来”，当时我下意识的回答就是“可以在 JVM 启动的时候挂一个 agent 上去，然后通过 Instrumentation API 在 class 加载的时候做拦截，把类 dump 出来。”，今天无聊在翻 <a href="http://weibo.com/rednaxelafx">R 大</a>的<a href="http://rednaxelafx.iteye.com/blog/727938">博客</a>的时候，发现还可以通过 sa-jdi.jar 里面的一个类做 dump，这里就集中介绍一下这几个方法，然后介绍我在 sa-jdi.jar 基础上改的一个小工具。</p>
+  <entry>
+    <title type="html"><![CDATA[从 JVM 中 dump class 的几种方法]]></title>
+    <link href="http://khotyn.github.com/blog/2013/08/03/dumping-class-from-jvm/"/>
+    <updated>2013-08-03T14:04:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/08/03/dumping-class-from-jvm</id>
+    <content type="html"><![CDATA[<p>前几天在 HotCode 的用户群里面，有同学问起“如何将 JVM 中的 class dump 出来”，当时我下意识的回答就是“可以在 JVM 启动的时候挂一个 agent 上去，然后通过 Instrumentation API 在 class 加载的时候做拦截，把类 dump 出来。”，今天无聊在翻 <a href="http://weibo.com/rednaxelafx">R 大</a>的<a href="http://rednaxelafx.iteye.com/blog/727938">博客</a>的时候，发现还可以通过 sa-jdi.jar 里面的一个类做 dump，这里就集中介绍一下这几个方法，然后介绍我在 sa-jdi.jar 基础上改的一个小工具。</p>
 
 <h3>采用 classLoader.getResourceAsStream()</h3>
 
@@ -253,44 +178,15 @@
 <li>然后配合仓库中的 classDump 脚本就可以用了。</li>
 </ul>
 
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/30/sed-part-two/">「Sed & Awk」阅读笔记之 Sed 高级命令</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-30T21:41:00+08:00" pubdate data-updated="true">Jul 30<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/30/sed-part-two/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>上一篇文章中，我介绍了一下 <a href="../../../../2013/07/28/sed-and-awk-part-one/">sed 的基础</a>，包括执行方式、地址选择器以及基本命令，在这一篇文章中，我们继续来了解一下 sed 的高级命令，之所以称它们为高级命令，是因为这些命令会改变 sed 的执行流，废话不说，我们来看看这些命令吧：</p>
+  <entry>
+    <title type="html"><![CDATA[「Sed & Awk」阅读笔记之 Sed 高级命令]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/30/sed-part-two/"/>
+    <updated>2013-07-30T21:41:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/30/sed-part-two</id>
+    <content type="html"><![CDATA[<p>上一篇文章中，我介绍了一下 <a href="../../../../2013/07/28/sed-and-awk-part-one/">sed 的基础</a>，包括执行方式、地址选择器以及基本命令，在这一篇文章中，我们继续来了解一下 sed 的高级命令，之所以称它们为高级命令，是因为这些命令会改变 sed 的执行流，废话不说，我们来看看这些命令吧：</p>
 
 <h3>高级命令</h3>
 
@@ -507,44 +403,15 @@
 <h3>总结</h3>
 
 <p>sed 的高级命令相对于基本命令来说不怎么常用，但是在处理特定的问题的时候，这些命令还是很有用的。不过，不管怎么说，sed 都不是一门完备的语言，所以其适用的问题域也是比较有限的，sed 最大的优势在于逐行处理文本上，用适当的工具处理适当的问题，才能发挥出工具最大的威力。</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/28/sed-and-awk-part-one/">「Sed & Awk」阅读笔记之 Sed 基础</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-28T16:39:00+08:00" pubdate data-updated="true">Jul 28<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/28/sed-and-awk-part-one/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>之前写的一篇文章有提到采用 sed 来<a href="../../../../blog/2013/07/24/match-line-not-contain-a-string/">匹配不包含连续字符串的行</a>，平时在做日志分析的时候也经常要用到 sed，但是仅仅用了 sed 的字符串替换的功能，没有系统地去学习过 sed 用法，这次找到一本叫<a href="http://book.douban.com/subject/1741933/">「sed &amp; awk」</a>的书，便花时间对 sed 做了系统的学习。</p>
+  <entry>
+    <title type="html"><![CDATA[「Sed & awk」阅读笔记之 sed 基础]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/28/sed-and-awk-part-one/"/>
+    <updated>2013-07-28T16:39:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/28/sed-and-awk-part-one</id>
+    <content type="html"><![CDATA[<p>之前写的一篇文章有提到采用 sed 来<a href="../../../../blog/2013/07/24/match-line-not-contain-a-string/">匹配不包含连续字符串的行</a>，平时在做日志分析的时候也经常要用到 sed，但是仅仅用了 sed 的字符串替换的功能，没有系统地去学习过 sed 用法，这次找到一本叫<a href="http://book.douban.com/subject/1741933/">「sed &amp; awk」</a>的书，便花时间对 sed 做了系统的学习。</p>
 
 <h3>sed 的执行方式</h3>
 
@@ -849,44 +716,15 @@ text
 <h3>总结</h3>
 
 <p>sed 的基本命令相对来说还是比较简单的，最主要的还是要用好地址选择器，在下一篇中，我会介绍一些 sed 的高级命令。</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/24/match-line-not-contain-a-string/">再论如何匹配不包含连续字符串的行</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-24T22:35:00+08:00" pubdate data-updated="true">Jul 24<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/24/match-line-not-contain-a-string/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>在前一篇文章中，我讨论过如何使用<a href="http://blog.khotyn.com/blog/2013/07/24/zero-width-assert/">使用零宽断言来匹配不包含连续字符串的行</a>，这个方法采用了零宽断言这种不怎么常见的正则表达式用法，虽然行之有效，但是总归是个麻烦的方法，而且，零宽断言很多的正则表达式解释器都不支持，用 grep 的话，得加上 -P 参数，让 grep 采用 Perl 的方式解释正则表达式，更加遗憾的一点是 -P 参数似乎只有在 GNU 的版本中才有，在我的 Mac 上的 BSD 版本的 grep 中，并没有这个参数。</p>
+  <entry>
+    <title type="html"><![CDATA[再论如何匹配不包含连续字符串的行]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/24/match-line-not-contain-a-string/"/>
+    <updated>2013-07-24T22:35:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/24/match-line-not-contain-a-string</id>
+    <content type="html"><![CDATA[<p>在前一篇文章中，我讨论过如何使用<a href="http://blog.khotyn.com/blog/2013/07/24/zero-width-assert/">使用零宽断言来匹配不包含连续字符串的行</a>，这个方法采用了零宽断言这种不怎么常见的正则表达式用法，虽然行之有效，但是总归是个麻烦的方法，而且，零宽断言很多的正则表达式解释器都不支持，用 grep 的话，得加上 -P 参数，让 grep 采用 Perl 的方式解释正则表达式，更加遗憾的一点是 -P 参数似乎只有在 GNU 的版本中才有，在我的 Mac 上的 BSD 版本的 grep 中，并没有这个参数。</p>
 
 <p>所幸的是今天无聊翻了翻 grep 的 man page，发现了几个更加方便的方法也更加通用的办法，在这里和大家分享一下：</p>
 
@@ -919,44 +757,15 @@ text
 <p>解释一下这段 sed 脚本的作用，首先是 <code>-n</code> 参数，大家知道 sed 的默认将处理和没有处理过的行都定向到输出流上，而 <code>-n</code> 参数是用来关闭这个功能，我们当然不希望 sed 将所有的行都打印出来。然后脚本的开始是一个行的选择器，前面是一个正则表达式（sed 的正则表达式都是放在两个斜杠之间的），后面的是一个<code>!</code>号，这样就表示选择反向选择，即选择不符合 pattern 的行，然后最后是一个 <code>p</code> 命令，把这样的行打印出来，这里的 pattern 当然可以是需求中的那个连续的字符串，这样，我们就达到了需求的目的了。</p>
 
 <p>总结一下，推荐大家还是用 grep 的 invert match 或者 sed 来完成这个功能，零宽断言在解决这个问题上感觉有点杀鸡焉用牛刀（<strong>零宽断言还有很多适用的场景，不仅仅可以用来解决这个问题</strong>）。</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/24/zero-width-assert/">使用零宽断言来匹配不包含连续字符串的行</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-24T16:34:00+08:00" pubdate data-updated="true">Jul 24<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/24/zero-width-assert/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近在工作中遇到一个问题，有 N 个字符串，需要用正则表达式去过滤掉不包含某一个特定连续字符串(比如abc)的字符串。</p>
+  <entry>
+    <title type="html"><![CDATA[使用零宽断言来匹配不包含连续字符串的行]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/24/zero-width-assert/"/>
+    <updated>2013-07-24T16:34:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/24/zero-width-assert</id>
+    <content type="html"><![CDATA[<p>最近在工作中遇到一个问题，有 N 个字符串，需要用正则表达式去过滤掉不包含某一个特定连续字符串(比如abc)的字符串。</p>
 
 <p>在网上搜罗了一大把，找到了在 Perl 5 的正则表达式中有零宽断言这个东西，非常强大，先来了解下零宽断言倒是是什么？</p>
 
@@ -1011,44 +820,15 @@ text
 <p>最后加上 + 号的原因是因为能够做到完全匹配，因为任何一个字符只要其本身不是 ‘a’，并且后面不是 ‘bc’，那么就是能够匹配 &#8220;(?!abc).&#8221; 的，因此，只要一个字符串里面不包含 abc，那么它就能够完全匹配 ((?abc).)+</p>
 
 <p><strong>PS：这片文章其实是前几年写的，之前的博客被关闭了，数据丢了，幸好当时在 Iteye 上还有一份，于是就迁移过来。这几年我经常用这个方式来分析线上服务器的日志，可以说，有了零宽断言，省去了非常多的麻烦~，定位问题的速度也快了不少，零宽断言的确是一个非常犀利的东西。</strong></p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/18/curl/">cURL 使用简介</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-18T22:05:00+08:00" pubdate data-updated="true">Jul 18<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/18/curl/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><a href="http://curl.haxx.se/">cURL</a> 这个神器相信很多人都已经用过，简单地说，cURL 就是一个和服务器端通信的工具，至于用什么协议，cURL 支持各种各样的协议，包括 HTTP，FTP，SMTP 等等协议，可以说是应有尽有。</p>
+  <entry>
+    <title type="html"><![CDATA[cURL 使用简介]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/18/curl/"/>
+    <updated>2013-07-18T22:05:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/18/curl</id>
+    <content type="html"><![CDATA[<p><a href="http://curl.haxx.se/">cURL</a> 这个神器相信很多人都已经用过，简单地说，cURL 就是一个和服务器端通信的工具，至于用什么协议，cURL 支持各种各样的协议，包括 HTTP，FTP，SMTP 等等协议，可以说是应有尽有。</p>
 
 <p>cURL 的可用的参数非常非常多，你能想到的基本上都有，不过一般使用的就那么几个参数吧，这里就介绍下我常常用到的两个：</p>
 
@@ -1081,44 +861,15 @@ text
 
 
 <p>直接将内容输出到设备 stdout 下就可以（感谢 Unix，一切皆文件！）。</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/12/juc-concurrenthashmap/">Java 并发编程之 ConcurrentHashMap</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-12T23:02:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/12/juc-concurrenthashmap/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_concurrenthashmap/">黄金档</a>的文章。</strong></p>
+  <entry>
+    <title type="html"><![CDATA[Java 并发编程之 ConcurrentHashMap]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/12/juc-concurrenthashmap/"/>
+    <updated>2013-07-12T23:02:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/12/juc-concurrenthashmap</id>
+    <content type="html"><![CDATA[<p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_concurrenthashmap/">黄金档</a>的文章。</strong></p>
 
 <p>ConcurrentHashMap 是一个线程安全的 Hash Table，它的主要功能是提供了一组和 HashTable 功能相同但是线程安全的方法。ConcurrentHashMap 可以做到读取数据不加锁，并且其内部的结构可以让其在进行写操作的时候能够将锁的粒度保持地尽量地小，不用对整个 ConcurrentHashMap 加锁。</p>
 
@@ -1489,44 +1240,15 @@ text
 <p>在前面的章节中，我们涉及到的操作都是在单个 Segment 中进行的，但是 ConcurrentHashMap 有一些操作是在多个 Segment 中进行，比如 size 操作，ConcurrentHashMap 的 size 操作也采用了一种比较巧的方式，来尽量避免对所有的 Segment 都加锁。</p>
 
 <p>前面我们提到了一个 Segment 中的有一个 modCount 变量，代表的是对 Segment 中元素的数量造成影响的操作的次数，这个值只增不减，size 操作就是遍历了两次 Segment，每次记录 Segment 的 modCount 值，然后将两次的 modCount 进行比较，如果相同，则表示期间没有发生过写入操作，就将原先遍历的结果返回，如果不相同，则把这个过程再重复做一次，如果再不相同，则就需要将所有的 Segment 都锁住，然后一个一个遍历了，具体的实现大家可以看 ConcurrentHashMap 的源码，这里就不贴了。</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/12/juc-condition/">Java 并发编程 J.U.C 之 Condition</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-12T07:36:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/12/juc-condition/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_condition/">黄金档</a>的文章。</strong></p>
+  <entry>
+    <title type="html"><![CDATA[Java 并发编程 J.U.C 之 Condition]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/12/juc-condition/"/>
+    <updated>2013-07-12T07:36:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/12/juc-condition</id>
+    <content type="html"><![CDATA[<p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_condition/">黄金档</a>的文章。</strong></p>
 
 <p>在上一篇中，我们了解了下 <a href="http://blog.khotyn.com/blog/2013/07/10/juc-lock-acquire-release/">J.U.C 的锁的获取与释放的过程</a>，这个过程主要通过在 A.Q.S 中维持一个等待队列来实现，其中我们也提到了，在 A.Q.S 中除了一个等待队列之外，还有一个 Condition 队列，在了解 Condition 队列之前，先来看一下 Condition 是怎么回事：</p>
 
@@ -1716,44 +1438,15 @@ text
 <p>在了解了 await，signal 和 signalAll 方法的实现以后，我们再来通过一副 gif 动画来看一看这一个整体的过程：</p>
 
 <p><img src="http://farm3.staticflickr.com/2888/9263654699_6b959eecb2_o.gif" alt="image" /></p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/10/commands-in-jdk-bin-directory/">JDK Bin 目录下的常见命令</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-10T21:05:00+08:00" pubdate data-updated="true">Jul 10<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/10/commands-in-jdk-bin-directory/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>作为一个 Java 开发，每天都需要和 JDK 打交道，而每一个 Java 开发都应该熟悉 JDK bin 目录下提供的一些命令。</p>
+  <entry>
+    <title type="html"><![CDATA[JDK bin 目录下的常见命令]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/10/commands-in-jdk-bin-directory/"/>
+    <updated>2013-07-10T21:05:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/10/commands-in-jdk-bin-directory</id>
+    <content type="html"><![CDATA[<p>作为一个 Java 开发，每天都需要和 JDK 打交道，而每一个 Java 开发都应该熟悉 JDK bin 目录下提供的一些命令。</p>
 
 <h3>java 和 javac</h3>
 
@@ -1787,44 +1480,15 @@ text
 
 
 <p>我平时使用 jps 都会加上 -l 和 -v（<code>jps -lv</code>），这样输出的信息基本上就能满足日常的需求了，知道了虚拟机的入口类是什么，也知道启动虚拟机的参数，够了。</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/10/juc-lock-acquire-release/">Java 并发编程 J.U.C 之锁的获取与释放</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-10T20:14:00+08:00" pubdate data-updated="true">Jul 10<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/10/juc-lock-acquire-release/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>此篇文章是作者两年前发表在<a href="http://www.goldendoc.org/2011/06/lock_acquire_release/">黄金档</a>的文章。</strong></p>
+  <entry>
+    <title type="html"><![CDATA[Java 并发编程 J.U.C 之锁的获取与释放]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/10/juc-lock-acquire-release/"/>
+    <updated>2013-07-10T20:14:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/10/juc-lock-acquire-release</id>
+    <content type="html"><![CDATA[<p><strong>此篇文章是作者两年前发表在<a href="http://www.goldendoc.org/2011/06/lock_acquire_release/">黄金档</a>的文章。</strong></p>
 
 <p>上一篇文章中，我们对 <a href="http://www.goldendoc.org/2011/05/juc/">J.U.C 的一些大概的情况</a>做了了解，在这一篇文章我们将来以 ReentrantLock 为例，来分析一下锁的获取和释放的过程，让大家能够对锁的获取和释放的整体过程有一个了解。</p>
 
@@ -2076,90 +1740,478 @@ text
 <li>这个时候它就到整个队列的头部了，然后 release 操作的时候又可以唤醒下一个。</li>
 </ul>
 
-</div>
+]]></content>
+  </entry>
   
+  <entry>
+    <title type="html"><![CDATA[Bash Job Control]]></title>
+    <link href="http://khotyn.github.com/blog/2013/07/10/bash-job-control/"/>
+    <updated>2013-07-10T19:43:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/07/10/bash-job-control</id>
+    <content type="html"><![CDATA[<p>这两天在给 <a href="https://github.com/khotyn/hotcode">HotCode</a> 写<a href="https://github.com/khotyn/hotcode/blob/master/test.sh">测试脚本</a>，其中用到了 Bash 的任务控制功能，说白了就是把一个任务放到后台，拉到前台之类的操作，这里做一下总结。</p>
+
+<h3>开启任务控制</h3>
+
+<p>首先，如果要在 Bash 脚本中使用 Bash 的任务控制功能，必须先执行下面这个命令：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">set</span> -m
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这个命令的意思其实就是开启 Bash 的任务控制功能，见 Bash Manual 的 <a href="https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html">The Set Buildin</a>。</p>
+
+<h3>把任务放到后台执行</h3>
+
+<p>要把任务放到后台非常容易，只要在命令后面加入一个 <code>&amp;</code> 即可，像这样：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash test.sh &amp;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>命令的输出类似于这样：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>1<span class="o">]</span> 51668
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>其中前面的 <code>[1]</code> 代表的是这个任务的任务编号，而 <code>51668</code> 则是这个任务的进程 ID。</p>
+
+<h3>查看在后台执行的任务的执行情况</h3>
+
+<p><code>jobs</code> 命令可以查看在后台执行的任务的情况</p>
+
+<p>它的输出类似于下面这样：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>1<span class="o">]</span>  + running    bash test.sh
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>前面的 <code>[1]</code> 就是任务编号，后面的 <code>running</code> 表示任务当前运行的状态。</p>
+
+<p><code>jobs</code> 命令后面可以加一些参数，比如下面这些：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">jobs</span> -r <span class="c">###只输出正在运行的任务</span>
+</span><span class='line'><span class="nb">jobs</span> -s <span class="c">###只输出已经执行完的任务</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>具体看 <a href="https://www.gnu.org/software/bash/manual/html_node/Job-Control-Builtins.html#Job-Control-Builtins">Job Control Buildins</a>。</p>
+
+<h3>把任务调度到前台</h3>
+
+<p>要把任务调度到前台只要用 <code>fg</code> 命令就可以，后面加上一个任务编号表示要把哪个后台任务调度到前台：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">fg</span> %1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上面这个命令就是把任务编号为 1 的任务调度到前台。</p>
+
+<p>Bash 的任务调度还是比较简单的，不过的确是非常地有用。</p>
+]]></content>
+  </entry>
   
+  <entry>
+    <title type="html"><![CDATA[成就达成：4clojure 题目全破！]]></title>
+    <link href="http://khotyn.github.com/blog/2013/06/21/4clojure/"/>
+    <updated>2013-06-21T22:09:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/06/21/4clojure</id>
+    <content type="html"><![CDATA[<p>经过了一个多月的努力，终于将 <a href="http://www.4clojure.com/">4clojure.com</a> 上面的的题目全部解出了，经过这段时间不断地用 clojure，对 Clojure 也有了一些基本的认识，目前让我觉得 clojure 强大的地方在于：</p>
+
+<ul>
+<li>和命令式语言完全不同的编程方式，编程过程就像是不断地数据转换的过程，它给你的感觉就像是进入了一个完全不同的世界一样。</li>
+<li>“惰性求值 + 无限序列”很好很强大~，比如在产生斐波那契数列或者是素数序列的时候都非常有用。</li>
+</ul>
 
 
-    </article>
+<p>也说说几点不满意的地方：</p>
+
+<ul>
+<li>括号比较多，不过这个也是没有办法，有良好的编译器的话这个问题也不算是问题啦。</li>
+<li>异常比较难看懂，不知道是不是我是新手的原因，觉得 clojure 的异常不容易懂，clojure 的代码里面常常一行包括非常多的代码，做了很多的事情，单单看异常还看不错出错的地方在哪里。</li>
+</ul>
+
+
+<p>总之，经过这段时间在 <a href="http://www.4clojure.com/">4clojure.com</a> 上的学习，算是对 clojure 的基本语法，核心函数等东西有了一个基本的掌握，后面会尝试用 clojure 做一些实际的东西，至于做什么，还没有想好。</p>
+
+<p>另外，我已经将我的 4clojure 题目的答案都放到了 github 上，地址是：<a href="https://github.com/khotyn/4clojure-answer">https://github.com/khotyn/4clojure-answer</a>， 如果大家在解题的过程中遇到了什么困难，可以看看我的答案，当然，我的很多答案都是有臭又长，大家有更精简的答案欢迎一起交流。</p>
+]]></content>
+  </entry>
   
-  <div class="pagination">
-    
-      <a class="prev" href="/blog/page/2/">&larr; Older</a>
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
-<aside class="sidebar">
+  <entry>
+    <title type="html"><![CDATA[贡嘎全线徒步穿越 -- Part Two]]></title>
+    <link href="http://khotyn.github.com/blog/2013/05/12/gongga-hiking-part-two/"/>
+    <updated>2013-05-12T21:24:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/05/12/gongga-hiking-part-two</id>
+    <content type="html"><![CDATA[<p>贡嘎全线穿越第一篇见：<a href="http://blog.khotyn.com/blog/2013/05/07/gongga-hiking-part-one/">http://blog.khotyn.com/blog/2013/05/07/gongga-hiking-part-one/</a></p>
+
+<h3>Day Four</h3>
+
+<p>昨晚睡得非常舒服，一扫了昨日的疲惫，可是天公不作美，山上的云看起来很厚，有点担心今天能否看到贡嘎主峰。一行人吃过了早餐（那个饼子在烤过以后非常好吃，不过忘记了叫什么名字）便搭车前往子梅垭口了，车子到了海拔 4400 米的地方便上不去了，上面全是雪，今天我和其他的几个打算在子梅垭口露营的人背的都是重装，到子梅垭口 200 米的海拔走起来还是有点累的，到达子梅垭口的时候能见度已经非常地差了，人稍微站远一点就看不到了，在子梅垭口待了一会儿，我们又遇到了昨天的那两个重装的哥们了，那两个哥们昨天就已经上来了，没有看到贡嘎主峰，然后下山了，今天又上来了，还是没有看到，只能说运气真不好。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5hnMdS/medish.jpg" alt="image" /></p>
+
+<p>因为今天的风比较大，所以我们只能选择了在老子梅垭口扎营，老子梅垭口离子梅垭口大概有几百米的路程，那个有一个小木屋，挡风很好，我们把帐篷搭载了小木屋的里面，木屋里面还有一些木头，领队小胖把木头砸碎，准备生个火出来给大家暖和暖和，这时候，来了一个藏族人，看到我们整准备取火，便说那些木头是他的，不能烧，我们很无奈，只能表示不烧了，接着他又表示：“这些木头不是我的，也不是书记的，这些木头是贡嘎寺的，任何人向你们要钱，你们千万都不能给。我理解你们现在挺冷的，烧一点也是可以的，大家要相互理解嘛，但是不能烧太多。”，我们听了以后很无奈，只能连声称是。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5jdI0N/medish.jpg" alt="image" /></p>
+
+<p>火烧起来以后驱走了不少的寒气，手脚都暖和了许多，外面已经开始下雪，能见度还是很低，老驴米兰给我们讲了他去过的一些地方：格列，木里，七藏沟，年保玉则，稻城，亚丁，雨崩等地方，还给我们看了很多照片，真美，不过四川这边的山水大多数秋天的时候最美，要全部都走一边得花好几年呢。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5n04ZN/medish.jpg" alt="image" /></p>
+
+<h3>Day Five</h3>
+
+<p>昨晚睡得非常难受，头都快爆炸了，在海拔 4600 的地方露营果然是自找麻烦。早上起来，外面的天气没有丝毫地好转，昨晚下了一晚上的雪，路上的脚印已经消失地无影无踪了，不知道下山的路还能不能找到了。简单地吃过早餐，领队小胖开始出去找路，其实只要找到公路就好，顺着公路下山就可以，过了大约 20 分钟，小胖成功找到了公路的位置，我们顺着他的脚印走下去，每走一步雪都没到了膝盖。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5pRNsJ/medish.jpg" alt="image" /></p>
+
+<p>到了公路后几个人发疯似地往下狂走，深怕这么大的雪下不去到底该怎么办，到了海拔 4100 米左右的地方，视野还是开阔起来，另我们惊奇的是，虽然没有看到贡嘎主峰，但是这雪后的雪山景色也是非常美丽的，让人感觉到真是不虚此行。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5rkaaF/medish.jpg" alt="image" /></p>
+
+<p>再往下走就到了上子梅村，这个村子比我想象中地要小很多，只有三户人家，不过坐落在世外桃源里面，也算是不错了。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5sy9rW/medish.jpg" alt="image" /></p>
+
+<p>可能是早上下山的路走地太急，费了不少地体力，下午从上子梅村走到下子梅村的时候有点累，快到下子梅的时候路过一个小学：“驴爱次梅小学”，我们的前面说到的陈老师就在这里面教书。见到陈老师比我想象中的要年轻，聊过以后知道他是 90 年的，今年只有 23 岁，去年刚刚大学毕业，本想只是跑到这边来看一看的，没想到竟然走不成了。这边官方没有小学，想要上小学就只能走很多的路到镇里面去，这个时候住宿是最好的选择，但是很多藏民一年的收入并不能负担起孩子的住宿费用，所以就只能让孩子辍学了。问起他在这里工作生活地一些困难，他说一个是冬天食物不足，这个小山村走出去得一天的时间，小孩子们的课又不能不少，他冬天食物最匮乏的时候曾经抓老鼠吃；另一个就是书记和村长对他的工作不支持，刚开始书记和村长还以为他是来搞投资的，因为在他们的观念里面，一个人不可能无缘无故地就跑到这么个偏僻的地方教书。书记和村长的孩子们都在外面读书，他们不怎么关心其他本村的孩子的教育情况。其实也有很多人对这里的教育进行资助，但是很多善款都被书记和村长贪掉了。这么偏僻的地方其实最缺的就是老师，一个老师一走，学校也就关了。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5xGkrX/medish.jpg" alt="image" /></p>
+
+<p>晚上，我们邀请了陈老师来和我们一起吃饭，看他吃饭的样子应该是经常受饥饿的，有那种对食物的渴望在。因为第二天就要出去了，所以我们给自己剩了一天的路粮，其他的食物就给陈老师了，希望尽一点自己的绵薄之力。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5yLZi4/medish.jpg" alt="image" /></p>
+
+<h3>Day Six</h3>
+
+<p>昨晚也睡得很好，不用露营真是太好了，今天早上天气很不错，可是我只能在心里暗骂好天气为什么不早一天到来呢，为了看到贡嘎主峰，我一定要再来一次贡嘎全线穿越。</p>
+
+<p>今天已经是徒步的最后一天了，行程相对比较轻松，我们乘拖拉机到了巴望海（这边的人叫湖为海子，做拖拉机屁股快被颠成两半儿了），本来巴望海也是一个拥有很美景色的地方，但是那些美景只会在秋天才能出现。走过了巴望海，我们徒步走到了界碑石，然后坐车到了草科镇。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5Ddhlj/medish.jpg" alt="image" /></p>
+
+<p>到草科以后总算是有信号了，赶紧给家里打了电话，住的地方有温泉，吃过晚饭以后泡了一个温泉非常舒服，之后，作为徒步的最后一天，大家一起吃了夜宵，聊得很 High。</p>
+
+<h3>Day Seven</h3>
+
+<p>今天一大早起来，从草科坐车到成都，路途比想象中要顺利，只花了三个小时。中午去九眼桥吃了滋味烤鱼，很不一样的滋味，很好吃，这半的烤鱼烤地很嫩，不像杭州的烤鱼，皮都是焦的。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CR5F31iM/medish.jpg" alt="image" /></p>
+
+<p>下午到四川大学逛了一下，里面有一些学生正准备搭车去四川，很有想法。</p>
+
+<p>晚上坐飞机飞回了杭州，飞机晚点，到达杭州已是半夜两点钟。</p>
+]]></content>
+  </entry>
   
-    <section>
-  <h1>Recent Posts</h1>
-  <ul id="recent_posts">
-    
-      <li class="post">
-        <a href="/blog/2013/08/03/dumping-class-from-jvm/">从 JVM 中 dump class 的几种方法</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/30/sed-part-two/">「Sed & Awk」阅读笔记之 Sed 高级命令</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/28/sed-and-awk-part-one/">「Sed & awk」阅读笔记之 sed 基础</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/24/match-line-not-contain-a-string/">再论如何匹配不包含连续字符串的行</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/24/zero-width-assert/">使用零宽断言来匹配不包含连续字符串的行</a>
-      </li>
-    
-  </ul>
-</section>
+  <entry>
+    <title type="html"><![CDATA[Clojure 如何判断一个序列中是否存在某个元素]]></title>
+    <link href="http://khotyn.github.com/blog/2013/05/09/clojure-element-in-seq/"/>
+    <updated>2013-05-09T21:17:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/05/09/clojure-element-in-seq</id>
+    <content type="html"><![CDATA[<p>最近一直在看 Clojure，经常碰到的一个问题是怎么判断一个序列中是否存在某个元素。对于这个问题的第一反应就是用<code>contains?</code>来判断，但是<code>contains?</code>的第二个参数是<code>key</code>而不是元素的值，对于 vector 或者 array 这样的数据结构不能做判断：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">user</span><span class="o">=</span>&gt; <span class="o">(</span>contains? <span class="err">&#39;</span><span class="o">(</span>101 102 103 104<span class="o">)</span> 101<span class="o">)</span>
+</span><span class='line'><span class="nb">false</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
+<p>另一个方法就是采用 set 配合 some 来做判断：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">user</span><span class="o">=</span>&gt; <span class="o">(</span>some <span class="c">#{101} &#39;(101 102 103 104))</span>
+</span><span class='line'>101
+</span></code></pre></td></tr></table></div></figure>
 
 
+<p><code>some</code> 的函数原型是 <code>(some prev coll)</code>，它会对 coll 中的元素依次应用 prev 进行测试，返回第一个为真的元素，而用一个 set 进行测试，返回就是第一个包含在这个 set 中的元素，因此上面的那段表达式就返回了 101。</p>
 
-
+<p>这样，只要上面这个表达式返回的不是<code>nil</code>，就表示元素在序列中了。</p>
+]]></content>
+  </entry>
   
-</aside>
+  <entry>
+    <title type="html"><![CDATA[贡嘎全线徒步穿越 -- Part One]]></title>
+    <link href="http://khotyn.github.com/blog/2013/05/07/gongga-hiking-part-one/"/>
+    <updated>2013-05-07T22:13:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/05/07/gongga-hiking-part-one</id>
+    <content type="html"><![CDATA[<p>清明节在家宅了三天，非常地不舒服，某日在内网看到了贡嘎徒步的召集贴，脑袋一热就报名了，前期买了很多的装备，做了一些准备，期间还四川还发生了地震，差点退缩了，不过最后还是出发了。</p>
 
-    </div>
-  </div>
-  <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - khotyn -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
+<h3>Day One</h3>
 
-</footer>
+<p>前一天从杭州飞到成都，一大早从成都出发，海拔一路上升，到康定进行了一些补给，到了一个叫老榆林的村庄，海拔 3200 米，住在藏人扎西的家里，这边的房子充满了藏族风情，刚进村子就看到了雪山，真的是非常地壮观。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CQjRiogI/medish.jpg" alt="image" /></p>
+
+<p>扎西的家的下面就有一条小河穿过，河旁边有几个天然的温泉，其中一个温泉里面，一个女人裸露着上半身带着儿子在洗澡，我们也下到旁边的温泉里面泡脚，温泉充满了硫磺的味道，不过泡地非常地舒服。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CQjKjley/medish.jpg" alt="image" /></p>
+
+<p>为了防止高反，领队小胖让我们喝了很多的水，半夜上了好几趟厕所，据说他们爬山的时候有时候就直接拿着喝水的瓶子解决，第二天再用雪水洗洗继续用，非常时刻，非常措施。</p>
+
+<h3>Day Two</h3>
+
+<p>今天正式开始徒步，车子将我们送到了电站，在电站碰到了好多藏人正准备进山挖虫草，现在正是藏人挖虫草的季节，虫草是很多家庭一年唯一的收入。从电站出发到格西草原，一路上很有指环王、魔兽世界的感觉，在森林、灌木中行走，让我怀疑自己是不是身在希尔斯布莱德丘陵，路旁还不时有一些旄牛在吃草，有几只旄牛仔很可爱。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CQjVaIYI/medish.jpg" alt="image" /></p>
+
+<p>中午的时候队伍到达了盘盘山垭口的下方，海拔大概在 3800 米，下面是一个非常陡的坡，我们的目的地是 4200 米的露营地，爬坡比想象中的累很多，用了领队的方法，调正呼吸，尽量用深呼吸，放慢自己所有的动作，跟随自己的节奏，不要跟随别人的脚步，才轻松了不少，上了 4000 米以后就完全是另外的一番景象了，没有了森林，也没有了灌木，只有高山草甸。因为是个纯爷们儿的队伍，队伍的行进速度比想象中的要快，在下午三点左右，我们就到达了预计的露营地，看大家体力还不错，就继续开始攀爬，大概下午四点左右的时候到达了 4300 米出的营地，然后开始扎营，后面看来这可能是个错误的决定，最后的这一百米的海拔消耗了大家很多的体力，到达营地搭完帐篷后，每个人都累得不行了，有几个队友还出现了比较严重的高反，头痛地厉害，特别是影风，喊着第二天要回去，实在受不了，我也稍微有点头痛，不过还是可以忍受。</p>
+
+<p>在我们扎营的时候，后面来了两个重装的哥们，没有向导，背后的登山包叠地高高的，好生佩服，他们选择了在我们旁边扎营，大家在一起好照顾嘛。</p>
+
+<p>傍晚的时候天气开始剧变，下方山谷里面的雾气扑面而来，不一会儿，就开始下雪了，帐篷上开始积雪，领队阿甘还在给我们做饭。吃完饭已经是天黑，雪还在继续地下，庆幸的是下的不是雨，要不然还得在帐篷旁边挖倒水沟什么的，麻烦地很。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CQjZrq7a/medish.jpg" alt="image" /></p>
+
+<p>吸取了昨天喝了太多的水，半夜得起来好几趟的教训，今天晚上没有喝水，毕竟睡在帐篷里面解决起来可不是很方便啊。</p>
+
+<h3>Day Three</h3>
+
+<p>昨晚一夜没有睡好，不知道到底睡了几个小时，头胀的厉害，口也很喝，真是难受，这一夜特别漫长。</p>
+
+<p>等了很久的样子，感觉天亮啊，打开帐篷一看，啊，满眼是雪，抬头一看，天气好极了，周围雪山的轮廓也清晰极了。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CQjYdYbh/medish.jpg" alt="image" /></p>
+
+<p>天空还挂了半轮月亮，太阳，月亮，蓝天，雪山，都一起出现了，看到这美景，身上的疲惫都感觉少了一大半了。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CQk0Ulwk/medish.jpg" alt="image" /></p>
+
+<p>早餐大家都没有胃口，喝了一点粥，领队切了很多饼子，大部分都没有吃完。昨天两个重装的哥们已经开始向盘盘山垭口进发，我们收拾好东西随后也进发了。</p>
+
+<p>到盘盘山垭口的路不是很艰难，照样是昨天的方法，在中午左右我们就达到盘盘山垭口了，天气目前也还可以，可惜小贡嘎被云挡住了，希望后面爬子梅垭口的时候可以看到贡嘎主峰。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CQk41ndU/medish.jpg" alt="image" /></p>
+
+<p>到达盘盘山垭口，拍了几个照片，发现前面重装的哥们走错路了，领队告诉了他们正确的路，估计他们得多花几个小时走路了，从盘盘山垭口下去一路是下坡，走起来也轻松了很多，不过下山达到山谷后就要开始走土路，下午走了好几个小时，脚就开始痛了，毕竟，登山鞋不适合走这种路，今天本想走到差不多了就在路边扎营的，领队小胖看我们已经非常疲惫，于是骑马到有手机信号的地方叫来了车子，帮我们直接送到了玉龙西村。</p>
+
+<p>达到了玉龙西村的客栈，客栈的主人叫泽西，一坐下他就给我们端上了酥油茶，第一次喝酥油茶，感觉怪怪地，油油地。客栈的女主人也非常热情，帮忙打洗脚水，倒洗澡水，感觉是个非常不错的人。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CQkjwr2I/medish.jpg" alt="image" /></p>
+
+<p>这个客栈有电，有热水，中国移动在这儿还偶尔有点信号，感觉又回到了人间。</p>
+
+<p>客栈里面除了我们和泽西的家人，还有三个年轻人，两个男生，一个女生，从和他们交谈的过程中了解到，其中一个男生是清华毕业的学生，在这片区域组织志愿者来教书，这个女生就是他找来的。在这边做教育工作非常不容易，得不到政府、国家的承认，村支书、村长也不支持他们的工作，经常阻扰。从他们口中我们知道了还有一个姓陈的志愿者，瞒着父母跑到这边来，目前在下子梅村，前几天父母已经跑到玉龙西村来打听，刚好我们后面几天就要经过下子梅村，于是他托我们给陈老师带个话，确认陈老师没事儿，然后可以告诉他父母他的近况。</p>
+
+<p>晚上的时候大家商量了明天的行程，照领队的意思我们应该明天上子梅垭口（海拔 4600 米）后就下撤到上子梅村的，但是贡嘎穿越，说白了主要还是希望可以看到贡嘎主峰，如果能够看到日照金山就更好了，最后决定队伍分成两部分，一部分高反不严重的跟着领队小胖在子梅垭口扎营，看日落日出；另一部分跟随领队阿甘下撤到上子梅村。</p>
+]]></content>
+  </entry>
   
+  <entry>
+    <title type="html"><![CDATA[杂事儿]]></title>
+    <link href="http://khotyn.github.com/blog/2013/03/31/mass/"/>
+    <updated>2013-03-31T22:31:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/03/31/mass</id>
+    <content type="html"><![CDATA[<h3>一、坚持</h3>
 
-<script type="text/javascript">
-      var disqus_shortname = 'khotynblog';
-      
-        
-        var disqus_script = 'count.js';
-      
-    (function () {
-      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
-      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    }());
-</script>
+<p>最近颇为得意的几件事儿，便是年后坚持做了几件事儿，每天背一点英语单词，每天写日记。</p>
+
+<p>背单词我是通过「拓词」这个应用来背的，但是这段时间坚持下来，没有特别好的效果，这个背单词的方法不是正确的方法，背了以后你只能照着「拓词」给出的答案来选，而很难直接给出单词的意思，更不用说对单词的用法进行应用了。另外，「拓词」本身的服务质量也不稳定，计时不准确，App 闪退等问题也比较严重，准备找一种更好的方式来拓展我的词汇量。</p>
+
+<p>写日记我是通过「Day One」这款 App 来记的，我买了 Mac 版和 iOS 版，三个多月使用下来非常棒，「Day One」支持 Markdown，整个应用做的也十分精美，让人看了就有写日记的冲动，特别有意思的时候它有时候会弹出一些话来让你写日记，比如，下面这句：</p>
+
+<blockquote><p>Keep a diary, and someday it&#8217;ll keep you.</p></blockquote>
+
+<p>其实日记是你最私密的东西，在里面，你可以写任何的在其他社交网络上不敢写的东西，可以把你最真实的感情写在里面，让你直面最真实的自己，而当你失落的时候，这些日记就是过去的你，会在背后支持着你。</p>
+
+<p>一直以来，无论是上学的时候，还是工作的时候，总会有不断的计划冒出来，无论当时下多么大的决心，总是到一定阶段的时候放弃了。但是，最近发现，有些决心确实比另外一些更加坚定，持续地更久。其实，我一直以来内心都藏有一种恐惧，害怕自己会变成一个平庸的人，每天上班下班，完成着交给的工作，无所作为，而正是这种恐惧，成为的内心最强大的东西。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Clojure 学习笔记：生命游戏]]></title>
+    <link href="http://khotyn.github.com/blog/2013/03/23/clojure-game-of-life/"/>
+    <updated>2013-03-23T16:49:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/03/23/clojure-game-of-life</id>
+    <content type="html"><![CDATA[<p>本周继续在看「Clojure Programming」这本书，这本书的第三章讲的是 Clojure 的集合和数据结构，作为这章的结束，作者举了一个「生命游戏」的例子来讲解 Clojure 数据结构的使用，作者一共提供了三种方式来解这个生命游戏，其中前两种方式比较好理解，最后一种方式对我来说理解起来比较困难，不过经过几个小时的推敲，总算是基本搞明白了，这里就将我理解的过程记录一下。</p>
+
+<p>关于什么是「生命游戏」，大家可以直接看维基百科：<a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Game of Life</a>。简单地来说，生命游戏的规则就是在一个二维数组里面，有一些元素是“活着的”，有一些元素是“死亡的”，这个二维数组随着每一代的进化，有些元素会死去，有些元素会活过来，具体变化的规则如下：</p>
+
+<ul>
+<li>如果一个元素现在是“活着”的，并且它的邻居里面（周围的 8 个元素）活着的元素的数量少于 2 个，那么这个元素在下一代就会死去。</li>
+<li>如果一个元素现在是“活着”的，并且它的邻居里面活着的元素的数量等于 2 个或者 3 个，那么这个元素在下一代会依旧活着。</li>
+<li>如果一个元素现在是“活着”的，并且它的邻居里面活着的元素大于 3 个，那么这个元素在下一代周就会死去。</li>
+<li>如果一个元素是“死”的，并且它的邻居里面有三个元素是活着的，那么下一代这个元素就会复活。</li>
+</ul>
 
 
+<p>如果我们对这些规则进行简化，就可以得出以下的结论：</p>
+
+<ul>
+<li>如果一个元素的邻居有 3 个是活着的，那么无论如何，它在下一代中肯定是活着的。</li>
+<li>如果一个元素的邻居有 2 个是活着的，那么下一代中的死活状态和本代是一样的。</li>
+<li>如果是其他的情况，那么这个元素在下一代肯定会死去。</li>
+</ul>
 
 
+<p>根据这些规则，「Clojure Programming」这本书给出的代码如下（是的，一共才 11 行代码，不得不感慨 Clojure 真是精简，用 Java 写起来这得多少啊）：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="c1">;; 生命游戏</span>
+</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">neighbours</span>
+</span><span class='line'>  <span class="p">[[</span><span class="nv">x</span> <span class="nv">y</span><span class="p">]]</span>
+</span><span class='line'>  <span class="p">(</span><span class="nb">for </span><span class="p">[</span><span class="nv">dx</span> <span class="p">[</span><span class="mi">-1</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]</span> <span class="nv">dy</span> <span class="p">[</span><span class="mi">-1</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]</span> <span class="ss">:when</span> <span class="p">(</span><span class="nb">not= </span><span class="mi">0</span> <span class="nv">dx</span> <span class="nv">dy</span><span class="p">)]</span>
+</span><span class='line'>    <span class="p">[(</span><span class="nb">+ </span><span class="nv">dx</span> <span class="nv">x</span><span class="p">)</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">dy</span> <span class="nv">y</span><span class="p">)]))</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">step</span>
+</span><span class='line'>  <span class="s">&quot;Yields the next state of the world&quot;</span>
+</span><span class='line'>  <span class="p">[</span><span class="nv">cells</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="nb">set </span><span class="p">(</span><span class="nb">for </span><span class="p">[[</span><span class="nv">loc</span> <span class="nv">n</span><span class="p">]</span> <span class="p">(</span><span class="nf">frequencies</span> <span class="p">(</span><span class="nb">mapcat </span><span class="nv">neighbours</span> <span class="nv">cells</span><span class="p">))</span>
+</span><span class='line'>             <span class="ss">:when</span> <span class="p">(</span><span class="nb">or </span><span class="p">(</span><span class="nb">= </span><span class="nv">n</span> <span class="mi">3</span><span class="p">)</span> <span class="p">(</span><span class="nb">and </span><span class="p">(</span><span class="nb">= </span><span class="nv">n</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nf">cells</span> <span class="nv">loc</span><span class="p">)))]</span>
+</span><span class='line'>         <span class="nv">loc</span><span class="p">)))</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
+<p>这个源代码的前面一个方法比较简单，就是给定一个元素的座标，计算其邻居的各个元素的座标，主要的代码在第二个方法 step 上。</p>
+
+<p>第二个函数接受的参数是一个当前活着的元素座标的列表，结果是下一代存活的元素的集合。先看第二个函数的 for 循环，这个 for 里面有一个</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="nb">mapcat </span><span class="nv">neighbours</span> <span class="nv">cells</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
+<p>这个 <code>mapcat</code> 方法其实是 map 和 concat 两个函数结合，其定义如下：</p>
+
+<blockquote><p>Returns the result of applying concat to the result of applying map
+to f and colls.  Thus function f should return a collection.</p></blockquote>
+
+<p>相当于</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="nb">concat </span><span class="p">(</span><span class="nb">map </span><span class="nv">neighbours</span> <span class="nv">cells</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
+<p>在这段代码里面这段函数起到的作用就是将当前所有活着的元素的邻居收到一个集合里面。</p>
 
-</body>
-</html>
+<p>收集完成以后，函数对这个集合进行了 frequencies 操作，这个 <code>frequencies</code> 就是统计集合内每一个不同的元素出现的数量。最后对 <code>frequencies</code> 的结果进行解构，就得到 for 循环里面的 loc 和 n 的值，其中：loc 就是当前活着的元素的某个邻居的座标，n 就是这个邻居作为邻居出现次数。</p>
+
+<p>但是，这里有一个点需要注意的，如果一个元素 A 是另一个元素 B 的邻居，那么这个元素 A 的邻居也就包含了 B。换句话说，两个元素总是互为邻居的，也就是，n 是这个元素作为邻居出现的次数，<strong>同时也是这个元素周围活着的邻居数量</strong>。</p>
+
+<p>这样，for 循环的后面还有的 <code>:when</code> 就可以根据规则对 n 的值进行判断了：</p>
+
+<ul>
+<li>如果 n 为 3，无论如何这个元素在下一代都会活着，所以这个元素的座标就作为结果返回了（就是最后的 <code>loc</code> 那段代码）。</li>
+<li>如果 n 为 2，那么需要进行进一步的判断，如果当前元素在 <code>cells</code> 中，也就是说当前元素原来是活着的，根据规则，它下一代依旧会活着，它的座标也会被返回。</li>
+</ul>
+
+
+<p>最后，所有符合上面的条件的元素都会被返回，这个函数最后就返回了下一代中所有的存活的元素的座标了。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Clojure 学习笔记：开始]]></title>
+    <link href="http://khotyn.github.com/blog/2013/03/17/learning-clojure-partone/"/>
+    <updated>2013-03-17T20:44:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/03/17/learning-clojure-partone</id>
+    <content type="html"><![CDATA[<h3>一、 为什么学 Clojure</h3>
+
+<p>Clojure 一直是我想去学习的一门语言，从去年开始就想学，但是我一直忍着没学，没学的原因一方面是想看一看自己是不是三分钟热度，过了一段时间就不再对它感兴趣了。另一方面，我更想去多学一些计算机底层的技术，因为我自认为基础并不太好，未来会成为个人发展的一个障碍。</p>
+
+<p>但是，从现在看来，我似乎对 Clojure 并不是脑子一热就想去学，而有一些更深层的原因。我想学 Clojure 一个主要的原因是因为最近一段时间一直在思考语言的抽象维度，表达能力的问题，对这个问题我虽然有一些感觉，但是因为了解的语言非常有限，所以一直都没有抓到问题的本质，找不到问题的答案是什么，而多了解一门不同类型的语言或许可以在一定程度上帮助我思考这个问题，如果这门语言和 Java 越不同，能给我带来的思维的转换就越大，显然 Lisp 会是很好的选择。而 Clojure 正是基于 JVM 的一种 Lisp 方言，对做 Java 开发的我来说再好不过。</p>
+
+<h3>二、Clojure 是一门什么样的语言</h3>
+
+<p>面对这个问题，我的脑子中一下子塞入了各种名词：</p>
+
+<ul>
+<li>不变量</li>
+<li>函数式编程</li>
+<li>S 表达式</li>
+<li>一堆括号</li>
+<li>宏</li>
+</ul>
+
+
+<p>现在对 Clojure 的认识还很模糊，这个问题我希望能够一直带在整个学习过程中，希望在经过一段时间的学习以后可以回答这个问题。</p>
+
+<h3>三、环境安装</h3>
+
+<p>在 Mac 下可以直接通过 brew 来安装：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>brew install clojure</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Clojure 官网也提供了其他的安装方式：<a href="http://clojure.org/getting_started">http://clojure.org/getting_started</a></p>
+
+<p>编辑器我选择是 Intellij IDEA，安装上一个 La Clojure 的插件即可，这个插件提供了代码高亮、格式化等功能，并且针对 Clojure 括号略多的情况，给括号提供了彩虹色的高亮，非常贴心。另外 La Clojure 内置的 REPL 在语法高亮、光标的移动方面都比 Clojure 自带的要好。</p>
+
+<h3>四、学习资料</h3>
+
+<p>关于 Clojure 的书比较著名的有三本：</p>
+
+<ul>
+<li><a href="http://book.douban.com/subject/4743790/">The Joy of Clojure</a></li>
+<li><a href="http://book.douban.com/subject/7915128/">Programming Clojure</a></li>
+<li><a href="http://book.douban.com/subject/6715378/">Clojure Programming</a></li>
+</ul>
+
+
+<p>目前这三本书中 The Joy of Clojure 正在翻译中，Programming Clojure 和 Clojure Programming 已经翻译好，可以在各大网站上预订了，想看中文版的朋友可以考虑去买纸质书。</p>
+
+<p>我选择了 Clojure Programming 这本书，没什么原因，刚好之前下载了这本书的英文版，看着看着就一直再看了。</p>
+
+<h3>五、下一篇</h3>
+
+<p>这第一篇笔记没有什么关于 Clojure 的具体内容，主要作用在于提醒自己学习要不忘初衷，下一篇中我会开始整理出一些具体内容出来，敬请期待。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[面向接口编程]]></title>
+    <link href="http://khotyn.github.com/blog/2013/03/13/interface-oriented-programming/"/>
+    <updated>2013-03-13T12:14:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/03/13/interface-oriented-programming</id>
+    <content type="html"><![CDATA[<p>最近在和同事在讨论一个问题，在接口存在的必要性双方存在不一样的看法，当然最后的结果无所谓对错，我觉得这样的讨论的过程，思考的过程都是挺好的。</p>
+
+<p>在讨论“面向接口编程”之前，我想先谈一谈抽象，这是我认为计算机最重要的概念之一。面对如此复杂的世界，我们不可能世界的所有细节都了如指掌，所以，一直以来，人类面对这个复杂的世界的认识方法之一就是抽象，比如“鸟”是对在天上会飞的所有动物的一个抽象，“家具”是对椅子，桌子等物品的一个抽象，甚至椅子本身也是一个抽象的概念，因为椅子可能是三条腿的，也可能是两条腿的。“抽象”在计算机里面更加明显，比如在 Unix 的世界里面，把一切东西都抽象成文件。</p>
+
+<p>抽象能够很好地帮助我们认识这个世界，但是抽象也会带来的一些问题，一个重要的问题就是细节的丢失，现有的抽象不一定可以涵盖未来的细节。因此，我们在开发的过程中时常要会存在这种情况，你抽象的业务模型是能够涵盖目前或者未来的一个阶段的业务的，但是当新的业务来临的时候，可能会出现目前的模型无法描述新的业务的情况，你无法考虑到所有的细节，当你的模型无法描述新的细节的时候，就必须调整原来的模型以应对新的情况。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[北壁]]></title>
+    <link href="http://khotyn.github.com/blog/2013/03/10/northwand/"/>
+    <updated>2013-03-10T11:20:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/03/10/northwand</id>
+    <content type="html"><![CDATA[<p>这是一部登山者必看的电影，根据真实故事改编，讲述了几个登山者挑战艾格峰北壁的故事，历史上曾有多人试图从北坡爬上艾格峰，但是在 1938 年之前都失败了，这部电影讲述的就是其中最著名的一个悲剧。</p>
+
+<p>电影的精彩之处在于基本还原了故事的事实，特别是最后只有 Toni 一个人幸存下来，悬在峭壁上一夜，等待援救，最后因为绳结无法通过下降器而没法下降到救援队的地方，悬挂在半空中最后冻死的场景，只是事实比电影还要残酷。</p>
+
+<p>刚好我也找到了当年 Toni 挂在半空中死去的照片：</p>
+
+<p><img src="http://www.wspinanie.pl/serwis/200806/12eiger_historia4.jpg" alt="image" /></p>
+
+<p>对比电影海报中照片：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/CHrkhZ6L/vUPFo.jpg" alt="image" /></p>
+
+<p>相比于喜剧，悲剧总是更能够对后人起到惊醒的作用，如果 Andy 在上山完成 Hinterstoisser Traverse 后把绳子留在那里，或许最后几个人都能够活下来，当然，这只是事后的假设。无论是马拉松还是登山，在挑战自我的之前做好充分地准备，迎难而上的同时需要懂得知难而退，给自己留一条后路，毕竟，活着回来比什么都重要。但是，说永远比做要容易，迎难而上，知难而退，本身就是矛盾的一对词，我想我们能做的保持地理智，期望在那一刻来临的时候做出正确地选择。</p>
+]]></content>
+  </entry>
+  
+</feed>

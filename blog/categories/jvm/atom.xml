@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: JVM | 码工作坊]]></title>
+  <link href="http://khotyn.github.com/blog/categories/jvm/atom.xml" rel="self"/>
+  <link href="http://khotyn.github.com/"/>
+  <updated>2013-08-31T08:23:05+08:00</updated>
+  <id>http://khotyn.github.com/</id>
+  <author>
+    <name><![CDATA[khotyn]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[从 JVM 中 dump class 的几种方法]]></title>
+    <link href="http://khotyn.github.com/blog/2013/08/03/dumping-class-from-jvm/"/>
+    <updated>2013-08-03T14:04:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/08/03/dumping-class-from-jvm</id>
+    <content type="html"><![CDATA[<p>前几天在 HotCode 的用户群里面，有同学问起“如何将 JVM 中的 class dump 出来”，当时我下意识的回答就是“可以在 JVM 启动的时候挂一个 agent 上去，然后通过 Instrumentation API 在 class 加载的时候做拦截，把类 dump 出来。”，今天无聊在翻 <a href="http://weibo.com/rednaxelafx">R 大</a>的<a href="http://rednaxelafx.iteye.com/blog/727938">博客</a>的时候，发现还可以通过 sa-jdi.jar 里面的一个类做 dump，这里就集中介绍一下这几个方法，然后介绍我在 sa-jdi.jar 基础上改的一个小工具。</p>
+
+<h3>采用 classLoader.getResourceAsStream()</h3>
+
+<p>将一个类从 JVM 中 dump 出来，最简单的方法当然就是直接从 jar 包中把对应的 class 文件找到，然后 dump 出来了，我们可以用 <code>classLoader</code> 的 <code>getResourceAsStream</code> 来做：</p>
+
+<p><code>java
+ClassLoader loader = Thread.currentThread().getContextClassLoader();
+InputStream in = loader.getResourceAsStream("com/khotyn/Test.class");
+</code></p>
+
+<p>拿到 InputStream 后，你就可以随便玩了。</p>
+
+<p>这个方法简单是简单，但是缺点也很明显，在有些 Java 程序中，类不一定是从 Class 文件中过来，有些是在运行时生成的，有些则在载入到 JVM 之前被增强过，所以这个方法有些类是 dump 不出来的，有些类则 dump 出来不是你想要的。</p>
+
+<h3>采用 javaagent</h3>
+
+<p>另外一个方法是通过在 JVM 启动的时候挂在一个 javaagent，然后用 Instrucmentation API 在类被加载到虚拟机之前做拦截，参考代码如下：</p>
+
+<p>```java
+package com.khotyn.test;</p>
+
+<p>import java.io.File;
+import java.io.IOException;
+import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.IllegalClassFormatException;
+import java.lang.instrument.Instrumentation;
+import java.security.ProtectionDomain;</p>
+
+<p>import org.apache.commons.io.FileUtils;</p>
+
+<p>/<em>*
+ * A demo to demonstrate how to use JVM ti to dump class file from JVM.
+ *
+ * @author khotyn.huangt 13-8-3 PM2:21
+ </em>/
+public class AgentMain {</p>
+
+<pre><code>public static void premain(String agentArgs, Instrumentation inst) {
+    inst.addTransformer(new ClassFileTransformer() {
+
+        @Override
+        public byte[] transform(ClassLoader loader, String className, Class&lt;?&gt; classBeingRedefined,
+                                ProtectionDomain protectionDomain, byte[] classfileBuffer)
+                                                                                          throws IllegalClassFormatException {
+            try {
+                FileUtils.writeByteArrayToFile(new File("/tmp/" + className.replace('.', '/') + ".class"),
+                                               classfileBuffer);
+            } catch (IOException e) {
+                // Quite
+            }
+            return null;
+        }
+    });
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>将上面的代码打成一个 jar 包（<em>注意把依赖的 apache commons.io 也打入，也可以直接下载我的 demo 工程：<a href="http://pan.baidu.com/share/link?shareid=778648109&amp;uk=607430891">agentDumpClass.zip</a></em>），然后在 jar 包的 <code>META-INF/MANIFEST.MF</code> 中填上如下的内容：</p>
+
+<p><code>
+Manifest-Version: 1.0
+Boot-Class-Path: agentDump.jar
+Built-By: apple
+Build-Jdk: 1.7.0_17
+Class-Path: lib/commons-io-2.4.jar
+Premain-Class: com.khotyn.test.AgentMain
+Created-By: Apache Maven
+Can-Redefine-Classes: true
+Archiver-Version: Plexus Archiver
+</code></p>
+
+<p>然后你就可以执行类似于下面的命令来进行 dump 了：</p>
+
+<p><code>
+java -javaagent:/Users/apple/workspace/agentDumpClass/target/agentDump.jar Test
+</code></p>
+
+<p>由于 premain 方法是在 java 程序的 main 方法执行之前执行的，所以这个方法几乎可以拦截到所有的类，另外，由于注册的 ClassFileTransformer 是 ClassLoader 加载 class 之后，JVM 定义 class 之前被执行的，所以无论是在运行时生成的类，还是经过增强后的类，这个方法都能够 dump 出来，比第一种方法要强很多。然而这个方法还是有一些缺点：</p>
+
+<ul>
+<li>需要在 JVM 启动时增加特别的参数。</li>
+<li>只能随 class 被加载进行 dump，不能随时进行 dump</li>
+</ul>
+
+
+<h3>采用 sa-jdi.jar 的 ClassDump 工具</h3>
+
+<p>这个方式是 R 大在博客中介绍的方法，可以说是最强大的方法，不像前面的两个方法，这个方法可以在 JVM 进程外执行，且像 javaagent 的那个方法一样，都可以将运行时和被增强过的类 dump 出来，非常方便，至于具体的用法大家就直接看 <a href="http://rednaxelafx.iteye.com/blog/727938">R 大的文章</a>吧。</p>
+
+<h3>改进 ClassDump</h3>
+
+<p>ClassDump 工具虽然强大，但是命令略显繁琐，特别是当你只需要 dump 特定的类的时候，还需要专门写一个 ClassFilter 的实现类，这么好的工具，应该直接做成命令行工具才好，于是我修改了 ClassDump 的代码，让它可以支持正则表达式的方式来对需要 dump 的类进行过滤，改进后的 ClassDump 放在了我的 github 仓库上：<a href="https://github.com/khotyn/tools">https://github.com/khotyn/tools</a></p>
+
+<p>大家可以直接用下面的方式来使用这个改进版：</p>
+
+<p><code>
+sudo classDump 17118 'com.khotyn.*' dump
+</code></p>
+
+<p>classDump 这个命令的第一个参数是目标 JVM 的 PID，第二个参数是一个正则表达式，表示你所要 Dump 出来的类，第三个参数可选，是 dump 的目录。</p>
+
+<p>但是这个工具有一个缺点，就是目前只能在 Mac 下用（因为我用 Mac，呵呵，我把修改后的类直接打入到了 Mac 的 jdk 的 sa-jdi.jar 下面），不过要做其他的平台的也很简单啦，只要按照以下步骤来打包出自己的 sa-jdi.jar 就可以：</p>
+
+<ul>
+<li>下载我修改过的两个类：<a href="http://pan.baidu.com/share/link?shareid=780474506&amp;uk=607430891">ClassDump.class</a>，<a href="http://pan.baidu.com/share/link?shareid=782905423&amp;uk=607430891">RegexClassFilter.class</a></li>
+<li>从 jdk 目录下拷贝一份 sa-jdi.jar 出来</li>
+<li>用下面的命令将修改过的两个类打到 sa-jdi.jar 中去：<code>jar uf sa-jdi.jar sun/jvm/hotspot/tools/jcore/ClassDump.class sun/jvm/hotspot/tools/jcore/RegexClassFilter.class</code></li>
+<li>然后配合仓库中的 classDump 脚本就可以用了。</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>
