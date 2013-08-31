@@ -9,8 +9,7 @@
   <meta name="author" content="khotyn">
 
   
-  <meta name="description" content="这两天在给 HotCode 写测试脚本，其中用到了 Bash 的任务控制功能，说白了就是把一个任务放到后台，拉到前台之类的操作，这里做一下总结。 开启任务控制 首先，如果要在 Bash 脚本中使用 Bash 的任务控制功能，必须先执行下面这个命令： 1
-set -m 这个命令的意思其实就是开启 &hellip;">
+  <meta name="description" content="经过了一个多月的努力，终于将 4clojure.com 上面的的题目全部解出了，经过这段时间不断地用 clojure，对 Clojure 也有了一些基本的认识，目前让我觉得 clojure 强大的地方在于： 和命令式语言完全不同的编程方式，编程过程就像是不断地数据转换的过程， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -63,110 +62,6 @@ set -m 这个命令的意思其实就是开启 &hellip;">
     <div id="content">
       <div class="blog-index">
   
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/10/bash-job-control/">Bash Job Control</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-10T19:43:00+08:00" pubdate data-updated="true">Jul 10<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/10/bash-job-control/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>这两天在给 <a href="https://github.com/khotyn/hotcode">HotCode</a> 写<a href="https://github.com/khotyn/hotcode/blob/master/test.sh">测试脚本</a>，其中用到了 Bash 的任务控制功能，说白了就是把一个任务放到后台，拉到前台之类的操作，这里做一下总结。</p>
-
-<h3>开启任务控制</h3>
-
-<p>首先，如果要在 Bash 脚本中使用 Bash 的任务控制功能，必须先执行下面这个命令：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">set</span> -m
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>这个命令的意思其实就是开启 Bash 的任务控制功能，见 Bash Manual 的 <a href="https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html">The Set Buildin</a>。</p>
-
-<h3>把任务放到后台执行</h3>
-
-<p>要把任务放到后台非常容易，只要在命令后面加入一个 <code>&amp;</code> 即可，像这样：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>bash test.sh &amp;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>命令的输出类似于这样：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>1<span class="o">]</span> 51668
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>其中前面的 <code>[1]</code> 代表的是这个任务的任务编号，而 <code>51668</code> 则是这个任务的进程 ID。</p>
-
-<h3>查看在后台执行的任务的执行情况</h3>
-
-<p><code>jobs</code> 命令可以查看在后台执行的任务的情况</p>
-
-<p>它的输出类似于下面这样：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>1<span class="o">]</span>  + running    bash test.sh
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>前面的 <code>[1]</code> 就是任务编号，后面的 <code>running</code> 表示任务当前运行的状态。</p>
-
-<p><code>jobs</code> 命令后面可以加一些参数，比如下面这些：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">jobs</span> -r <span class="c">###只输出正在运行的任务</span>
-</span><span class='line'><span class="nb">jobs</span> -s <span class="c">###只输出已经执行完的任务</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>具体看 <a href="https://www.gnu.org/software/bash/manual/html_node/Job-Control-Builtins.html#Job-Control-Builtins">Job Control Buildins</a>。</p>
-
-<h3>把任务调度到前台</h3>
-
-<p>要把任务调度到前台只要用 <code>fg</code> 命令就可以，后面加上一个任务编号表示要把哪个后台任务调度到前台：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">fg</span> %1
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>上面这个命令就是把任务编号为 1 的任务调度到前台。</p>
-
-<p>Bash 的任务调度还是比较简单的，不过的确是非常地有用。</p>
-</div>
-  
-  
-
-
-    </article>
   
   
     <article>
@@ -738,48 +633,6 @@ to f and colls.  Thus function f should return a collection.</p></blockquote>
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2013/03/13/interface-oriented-programming/">面向接口编程</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-03-13T12:14:00+08:00" pubdate data-updated="true">Mar 13<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/03/13/interface-oriented-programming/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近在和同事在讨论一个问题，在接口存在的必要性双方存在不一样的看法，当然最后的结果无所谓对错，我觉得这样的讨论的过程，思考的过程都是挺好的。</p>
-
-<p>在讨论“面向接口编程”之前，我想先谈一谈抽象，这是我认为计算机最重要的概念之一。面对如此复杂的世界，我们不可能世界的所有细节都了如指掌，所以，一直以来，人类面对这个复杂的世界的认识方法之一就是抽象，比如“鸟”是对在天上会飞的所有动物的一个抽象，“家具”是对椅子，桌子等物品的一个抽象，甚至椅子本身也是一个抽象的概念，因为椅子可能是三条腿的，也可能是两条腿的。“抽象”在计算机里面更加明显，比如在 Unix 的世界里面，把一切东西都抽象成文件。</p>
-
-<p>抽象能够很好地帮助我们认识这个世界，但是抽象也会带来的一些问题，一个重要的问题就是细节的丢失，现有的抽象不一定可以涵盖未来的细节。因此，我们在开发的过程中时常要会存在这种情况，你抽象的业务模型是能够涵盖目前或者未来的一个阶段的业务的，但是当新的业务来临的时候，可能会出现目前的模型无法描述新的业务的情况，你无法考虑到所有的细节，当你的模型无法描述新的细节的时候，就必须调整原来的模型以应对新的情况。</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
       <h1 class="entry-title"><a href="/blog/2013/03/10/northwand/">北壁</a></h1>
     
     
@@ -825,9 +678,89 @@ to f and colls.  Thus function f should return a collection.</p></blockquote>
 
     </article>
   
-  <div class="pagination">
+  
+    <article>
+      
+  <header>
     
-      <a class="prev" href="/blog/page/3/">&larr; Older</a>
+      <h1 class="entry-title"><a href="/blog/2013/03/01/apache-poi-notes/">使用 POI 解析 Excel 的几个注意点</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-01T22:35:00+08:00" pubdate data-updated="true">Mar 1<span>st</span>, 2013</time>
+        
+         | <a href="/blog/2013/03/01/apache-poi-notes/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近在写一个解析 Excel 的程序，需要把从前端上传上来的 Excel 程序解析成 JSON 格式返回给前端，期间也试过 <a href="http://jexcelapi.sourceforge.net/">jxl</a> ，不过它只支持到 Excel 2003。后来转而使用 apache 的 <a href="http://POI.apache.org/">POI</a>，作为初次使用者，使用过程中遇到了不少的问题，在这篇博客中记录一下：</p>
+
+<h3>如何引入 XSSF</h3>
+
+<p>刚下手写的时候，直接使用了 HSSFWorkbook 处理 Excel，后来发现它只能处理 2003 的 Excel，而不能处理 2007 版本的 Excel，翻了一下 POI 的文档，发现处理 2007 的 Excel 需要使用 XSSFWorkbook，但是引入的 POI 包中却找不到 XSSF 相关的类，原猜想是因为引入了版本较新的 POI，而官方的文档还是比较老的，因而被误导。结果发现使用 XSSF 需要额外引入 <strong>poi-ooxml</strong> 这个 jar 包， XSSF 相关的类都在这个 jar 包中，mvn 依赖如下：</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;dependency&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;groupId&gt;</span>org.apache.poi<span class="nt">&lt;/groupId&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;artifactId&gt;</span>poi-ooxml<span class="nt">&lt;/artifactId&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;version&gt;</span>3.9<span class="nt">&lt;/version&gt;</span>
+</span><span class='line'><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>兼容处理 Excel 2003 和 2007</h3>
+
+<p>引入了 <strong>poi-ooxml</strong> 以后就使用 XSSF 来处理，本以为 XSSF 既然能够处理 Excel 2007，那么 2003 也该能处理吧？得向下兼容不是？没想到不行！总不能用扩展名来区别是 2003 还是 2007 吧，后来发现了 <strong>WorkbookFactory</strong> 这个类，它的 <code>create(InputStream inp)</code> 方法可以根据版本来选择创建 <code>HSSFWorkbook</code> 还是 <code>XSSFWorkbook</code>，使用者无需关心版本的问题，非常方便！</p>
+
+<h3>以 String 的形式读取单元格的数据</h3>
+
+<p>要读取的 Excel 中有一些数据是数字的，单元格的类型是 Numberic 的，而我希望将单元格中的数据都以 String 的形式拿出来。于是当我看到 <code>Cell.getStringCellValue()</code> 这个方法的时候满心欢喜，但是当用了之后，这货居然直接给我一个异常，定眼一样，这方式是 get<strong>StringCell</strong>Value，而不是 get<strong>CellString</strong>Value，真是瞎了眼了。事实上，Cell 也根本没有 <code>getCellStringValue</code> 这样的方法，后来借助了 <a href="http://stackoverflow.com/questions/1072561/how-can-i-read-numeric-strings-in-excel-cells-as-string-not-numbers-with-apach">SOF</a>，查到了一个方法：</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">setCellType</span><span class="o">(</span><span class="n">Cell</span><span class="o">.</span><span class="na">CELL_TYPE_STRING</span><span class="o">);</span>
+</span><span class='line'><span class="n">cellValue</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">getStringCellValue</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>是的，就是先把单元格变成 String 类型的，然后再调用 <code>getStringCellValue()</code> 来获取数据，虽然这方法可行，但是总感觉有点猥琐，不知大家有没有更好的方法？</p>
+
+<h3>错误地使用 <code>getPhysicalNumberOfCells()</code></h3>
+
+<p>遇到的最后一个坑就是使用了 <code>getPhysicalNumberOfCells()</code> 这个方法来获取一行中单元格的数量以对行的中单元格进行遍历，依靠这个方法来遍历会出现的情况就是如果行中间的某些单元格是空的，那么你就解析不到这一行最后的几个单元格，原因是因为按照文档的说明</p>
+
+<blockquote><p>Gets the number of defined cells (NOT number of cells in the actual row!). That is to say if only columns 0,4,5 have values then there would be 3.</p></blockquote>
+
+<p>这个方法只对有值的单元格进行计数，正确的遍历方法应该用 <code>getFirstCellNum()</code> 和 <code>getLastCellNum()</code> 来确定第一个单元格和最后一个单元格的位置，然后进行遍历，当然，要注意中间可能会出现空单元的情况，小心 NPE 异常。</p>
+
+<p>另外，我发现很多 POI 的中文介绍资料上遍历 Excel 的样例代码都是采用了 <code>getPhysicalNumberOfCells()</code>，估计作者也没有经过彻底的测试，或者仔细阅读官方的文档和例子，平时大家做开发的时候，还是尽量找官方的介绍资料为好，看二手资料，一不小心就踩坑了。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
     
     <a href="/blog/archives">Blog Archives</a>
     
