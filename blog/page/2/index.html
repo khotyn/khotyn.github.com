@@ -9,8 +9,7 @@
   <meta name="author" content="khotyn">
 
   
-  <meta name="description" content="这两天在给 HotCode 写测试脚本，其中用到了 Bash 的任务控制功能，说白了就是把一个任务放到后台，拉到前台之类的操作，这里做一下总结。 开启任务控制 首先，如果要在 Bash 脚本中使用 Bash 的任务控制功能，必须先执行下面这个命令： 1
-set -m 这个命令的意思其实就是开启 &hellip;">
+  <meta name="description" content="此篇文章是作者两年前发表在黄金档的文章。 上一篇文章中，我们对 J.U.C 的一些大概的情况做了了解，在这一篇文章我们将来以 ReentrantLock 为例，来分析一下锁的获取和释放的过程，让大家能够对锁的获取和释放的整体过程有一个了解。 一、锁的获取 先看下 ReentrantLock 的 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -63,6 +62,295 @@ set -m 这个命令的意思其实就是开启 &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/07/10/juc-lock-acquire-release/">Java 并发编程 J.U.C 之锁的获取与释放</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-10T20:14:00+08:00" pubdate data-updated="true">Jul 10<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/07/10/juc-lock-acquire-release/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>此篇文章是作者两年前发表在<a href="http://www.goldendoc.org/2011/06/lock_acquire_release/">黄金档</a>的文章。</strong></p>
+
+<p>上一篇文章中，我们对 <a href="http://www.goldendoc.org/2011/05/juc/">J.U.C 的一些大概的情况</a>做了了解，在这一篇文章我们将来以 ReentrantLock 为例，来分析一下锁的获取和释放的过程，让大家能够对锁的获取和释放的整体过程有一个了解。</p>
+
+<h3>一、锁的获取</h3>
+
+<p>先看下 ReentrantLock 的 lock() 方法，整个方法只有一行，调用 acquire 方法，看看 acquire 方法的实现：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">acquire</span><span class="o">(</span><span class="kt">int</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(!</span><span class="n">tryAcquire</span><span class="o">(</span><span class="n">arg</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>        <span class="n">acquireQueued</span><span class="o">(</span><span class="n">addWaiter</span><span class="o">(</span><span class="n">Node</span><span class="o">.</span><span class="na">EXCLUSIVE</span><span class="o">),</span> <span class="n">arg</span><span class="o">))</span>
+</span><span class='line'>        <span class="n">selfInterrupt</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这段代码的实现也是比较简洁，先尝试一次 tryAcquire 操作，如果失败，则把当前线程加入到同步队列中去，这个时候可能会反复的阻塞与唤醒这个线程，直到后续的 tryAcquire（看 acquireQueued 的实现）操作成功。</p>
+
+<p>再看看 tryAcquire 的实现：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">protected</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">tryAcquire</span><span class="o">(</span><span class="kt">int</span> <span class="n">acquires</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">final</span> <span class="n">Thread</span> <span class="n">current</span> <span class="o">=</span> <span class="n">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">();</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">getState</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">c</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">isFirst</span><span class="o">(</span><span class="n">current</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>            <span class="n">compareAndSetState</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">acquires</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">setExclusiveOwnerThread</span><span class="o">(</span><span class="n">current</span><span class="o">);</span>
+</span><span class='line'>            <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">current</span> <span class="o">==</span> <span class="n">getExclusiveOwnerThread</span><span class="o">())</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">nextc</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="n">acquires</span><span class="o">;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">nextc</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class='line'>            <span class="k">throw</span> <span class="k">new</span> <span class="nf">Error</span><span class="o">(</span><span class="s">&quot;Maximum lock count exceeded&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">setState</span><span class="o">(</span><span class="n">nextc</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这段代码是尝试获取锁的过程，它先判断当前的 AQS 的 state 值，如果为 0，则表示该锁没有被持有过，如果这个时候同步队列是空的或者当前线程就是在同步队列的头部，那么修改 state 的值，并且设置排他锁的持有线程为当前线程</p>
+
+<p>如果大于 0，则判断当前线程是否是排他锁的持有线程，如果是，那么把 state 值加 1（注意 state 是 int 类型的，所以 state 的最大值是就是 int 的最大值）</p>
+
+<p>如果第一次 tryAcquire() 操作失败，那么就把当前线程加入到等待队列中去，看 addWaiter() 方法：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">private</span> <span class="n">Node</span> <span class="nf">addWaiter</span><span class="o">(</span><span class="n">Node</span> <span class="n">mode</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">Node</span> <span class="n">node</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Node</span><span class="o">(</span><span class="n">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">(),</span> <span class="n">mode</span><span class="o">);</span>
+</span><span class='line'>    <span class="c1">// Try the fast path of enq; backup to full enq on failure</span>
+</span><span class='line'>    <span class="n">Node</span> <span class="n">pred</span> <span class="o">=</span> <span class="n">tail</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">pred</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">node</span><span class="o">.</span><span class="na">prev</span> <span class="o">=</span> <span class="n">pred</span><span class="o">;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">compareAndSetTail</span><span class="o">(</span><span class="n">pred</span><span class="o">,</span> <span class="n">node</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">pred</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">node</span><span class="o">;</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">node</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="n">enq</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">node</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这段代码中先尝试了一下了下 enq() 方法中等待队列不为空的情况，如果失败，再调用 enq() 方法将当前线程加入等待队列，enq() 的过程我们已经在上一篇文章中讲过了，不再赘述。</p>
+
+<p>最后在当前线程被加入到等待队列中去以后，再调用 acquireQueued 去获取锁，看看 acquireQueued 的代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">acquireQueued</span><span class="o">(</span><span class="kd">final</span> <span class="n">Node</span> <span class="n">node</span><span class="o">,</span> <span class="kt">int</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kt">boolean</span> <span class="n">interrupted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="o">(;;)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="kd">final</span> <span class="n">Node</span> <span class="n">p</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="na">predecessor</span><span class="o">();</span>
+</span><span class='line'>            <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">==</span> <span class="n">head</span> <span class="o">&amp;&amp;</span> <span class="n">tryAcquire</span><span class="o">(</span><span class="n">arg</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">setHead</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">p</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span> <span class="c1">// help GC</span>
+</span><span class='line'>                <span class="k">return</span> <span class="n">interrupted</span><span class="o">;</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>            <span class="k">if</span> <span class="o">(</span><span class="n">shouldParkAfterFailedAcquire</span><span class="o">(</span><span class="n">p</span><span class="o">,</span> <span class="n">node</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>                <span class="n">parkAndCheckInterrupt</span><span class="o">())</span>
+</span><span class='line'>                <span class="n">interrupted</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">RuntimeException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">cancelAcquire</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">throw</span> <span class="n">ex</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这段代码中拿到当前线程在同步队列中的前面一个节点，如果这个节点是是头部，那么马上进行一次 tryAcquire 操作，如果操作成功，那么把当前线程弹出队列，整个操作就此结束。如果这个节点不是头部或者说 tryAcquire 操作失败的话，那么就判断是不是要将当前线程给阻塞掉（shouldParkAfterFailedAcquire）方法：判断当前线程是否应该被阻塞掉，实际上判断的是当前线程的前一个节点的状态，如果前一个节点的状态小于 0（condition 或者 signal），那么返回 true，阻塞当前线程；如果前一个节点的状态大于 0（cancelled），则向前遍历，直到找到一个节点状态不大于 0 的节点，并且将中间的 cancelled 状态的节点全部踢出队列；如果前一个节点的状态等于 0，那么将其状态置为 -1（signal），并且返回 false，等待下一次循环的时候再阻塞。</p>
+
+<p><strong>整个锁的获取过程就是这样，我们再来总结一下整个过程</strong>：acquire() 方法会先调用一次 tryAcquire 方法获取一次锁，如果失败，则把当前线程加入到等待队列中去，然后再调用 acquireQueued 获取锁，acquireQueued 在当前节点不在头部的时候会把当前线程的前一个结点的状态置为 SIGNAL，然后阻塞当前线程。当当前线程到了队列的头部的时候，那么获取锁的操作就会成功返回。</p>
+
+<h3>二、锁的释放</h3>
+
+<p>首先，我们知道在 acquireQueued 方法中，如果一个线程成功获取到了锁，那么它就应该是整个等待队列的 head 节点，然后，我们再来看一看 unlock() 方法，和 lock() 方法一样，unlock() 方法也是只有一行代码，直接调用 release() 方法，我们看看 release() 方法的实现：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">release</span><span class="o">(</span><span class="kt">int</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">tryRelease</span><span class="o">(</span><span class="n">arg</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Node</span> <span class="n">h</span> <span class="o">=</span> <span class="n">head</span><span class="o">;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">h</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">h</span><span class="o">.</span><span class="na">waitStatus</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class='line'>            <span class="n">unparkSuccessor</span><span class="o">(</span><span class="n">h</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这个过程首先调用 tryRelease 方法，如果锁已经完全释放，那么就唤醒下一个节点，先来看看 tryRelease 方法：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">protected</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">tryRelease</span><span class="o">(</span><span class="kt">int</span> <span class="n">releases</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">getState</span><span class="o">()</span> <span class="o">-</span> <span class="n">releases</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">()</span> <span class="o">!=</span> <span class="n">getExclusiveOwnerThread</span><span class="o">())</span>
+</span><span class='line'>        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalMonitorStateException</span><span class="o">();</span>
+</span><span class='line'>    <span class="kt">boolean</span> <span class="n">free</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">c</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">free</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">setExclusiveOwnerThread</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="n">setState</span><span class="o">(</span><span class="n">c</span><span class="o">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">free</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这段代码首先获取当前 AQS 的 state 状态并且将其值减一，如果结果等于 0（锁已经被完全释放），那么将排他锁的持有线程置为 null。将 AQS 的 state 状态置为减一后的结果。</p>
+
+<p>然后再看看唤醒继任节点的代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">private</span> <span class="kt">void</span> <span class="nf">unparkSuccessor</span><span class="o">(</span><span class="n">Node</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">compareAndSetWaitStatus</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="n">Node</span><span class="o">.</span><span class="na">SIGNAL</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">Node</span> <span class="n">s</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">s</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">s</span><span class="o">.</span><span class="na">waitStatus</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">s</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="o">(</span><span class="n">Node</span> <span class="n">t</span> <span class="o">=</span> <span class="n">tail</span><span class="o">;</span> <span class="n">t</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">t</span> <span class="o">!=</span> <span class="n">node</span><span class="o">;</span> <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="na">prev</span><span class="o">)</span>
+</span><span class='line'>            <span class="k">if</span> <span class="o">(</span><span class="n">t</span><span class="o">.</span><span class="na">waitStatus</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class='line'>                <span class="n">s</span> <span class="o">=</span> <span class="n">t</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">s</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+</span><span class='line'>        <span class="n">LockSupport</span><span class="o">.</span><span class="na">unpark</span><span class="o">(</span><span class="n">s</span><span class="o">.</span><span class="na">thread</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这段代码先清除当前节点的 waitStatus 为 0，然后判断下一个节点是不是 null 或者 cancelled 的状态，如果是，则从队列的尾部往前开始找，找到一个非 cancelled 状态的节点，最后唤醒这个节点。</p>
+
+<p><strong>最后，总结一下释放操作的整个过程</strong>：其实整个释放过程就做了两件事情，一个是将state值减1，然后就是判断锁是否被完全释放，如果被完全释放，则唤醒继任节点。</p>
+
+<h3>三、整体过程描述</h3>
+
+<p>看了上面的锁的获取与释放操作以后，整体过程还是比较清晰的，在文章的最后，我们把获取与释放操作串在一起在简单看一下：</p>
+
+<ul>
+<li>获取锁的时候将当前线程放入同步队列，并且将前一个节点的状态置为 signal 状态，然后阻塞</li>
+<li>当这个节点的前一个节点成功获取到锁，前一个节点就成了整个同步队列的 head。</li>
+<li>当前一个节点释放锁的时候，它就唤醒当前线程的这个节点，然后当前线程的节点就可以成功获取到锁了</li>
+<li>这个时候它就到整个队列的头部了，然后 release 操作的时候又可以唤醒下一个。</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -783,89 +1071,9 @@ to f and colls.  Thus function f should return a collection.</p></blockquote>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/03/01/apache-poi-notes/">使用 POI 解析 Excel 的几个注意点</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-03-01T22:35:00+08:00" pubdate data-updated="true">Mar 1<span>st</span>, 2013</time>
-        
-         | <a href="/blog/2013/03/01/apache-poi-notes/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近在写一个解析 Excel 的程序，需要把从前端上传上来的 Excel 程序解析成 JSON 格式返回给前端，期间也试过 <a href="http://jexcelapi.sourceforge.net/">jxl</a> ，不过它只支持到 Excel 2003。后来转而使用 apache 的 <a href="http://POI.apache.org/">POI</a>，作为初次使用者，使用过程中遇到了不少的问题，在这篇博客中记录一下：</p>
-
-<h3>如何引入 XSSF</h3>
-
-<p>刚下手写的时候，直接使用了 HSSFWorkbook 处理 Excel，后来发现它只能处理 2003 的 Excel，而不能处理 2007 版本的 Excel，翻了一下 POI 的文档，发现处理 2007 的 Excel 需要使用 XSSFWorkbook，但是引入的 POI 包中却找不到 XSSF 相关的类，原猜想是因为引入了版本较新的 POI，而官方的文档还是比较老的，因而被误导。结果发现使用 XSSF 需要额外引入 <strong>poi-ooxml</strong> 这个 jar 包， XSSF 相关的类都在这个 jar 包中，mvn 依赖如下：</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;dependency&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;groupId&gt;</span>org.apache.poi<span class="nt">&lt;/groupId&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;artifactId&gt;</span>poi-ooxml<span class="nt">&lt;/artifactId&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;version&gt;</span>3.9<span class="nt">&lt;/version&gt;</span>
-</span><span class='line'><span class="nt">&lt;/dependency&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>兼容处理 Excel 2003 和 2007</h3>
-
-<p>引入了 <strong>poi-ooxml</strong> 以后就使用 XSSF 来处理，本以为 XSSF 既然能够处理 Excel 2007，那么 2003 也该能处理吧？得向下兼容不是？没想到不行！总不能用扩展名来区别是 2003 还是 2007 吧，后来发现了 <strong>WorkbookFactory</strong> 这个类，它的 <code>create(InputStream inp)</code> 方法可以根据版本来选择创建 <code>HSSFWorkbook</code> 还是 <code>XSSFWorkbook</code>，使用者无需关心版本的问题，非常方便！</p>
-
-<h3>以 String 的形式读取单元格的数据</h3>
-
-<p>要读取的 Excel 中有一些数据是数字的，单元格的类型是 Numberic 的，而我希望将单元格中的数据都以 String 的形式拿出来。于是当我看到 <code>Cell.getStringCellValue()</code> 这个方法的时候满心欢喜，但是当用了之后，这货居然直接给我一个异常，定眼一样，这方式是 get<strong>StringCell</strong>Value，而不是 get<strong>CellString</strong>Value，真是瞎了眼了。事实上，Cell 也根本没有 <code>getCellStringValue</code> 这样的方法，后来借助了 <a href="http://stackoverflow.com/questions/1072561/how-can-i-read-numeric-strings-in-excel-cells-as-string-not-numbers-with-apach">SOF</a>，查到了一个方法：</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">setCellType</span><span class="o">(</span><span class="n">Cell</span><span class="o">.</span><span class="na">CELL_TYPE_STRING</span><span class="o">);</span>
-</span><span class='line'><span class="n">cellValue</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">getStringCellValue</span><span class="o">();</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>是的，就是先把单元格变成 String 类型的，然后再调用 <code>getStringCellValue()</code> 来获取数据，虽然这方法可行，但是总感觉有点猥琐，不知大家有没有更好的方法？</p>
-
-<h3>错误地使用 <code>getPhysicalNumberOfCells()</code></h3>
-
-<p>遇到的最后一个坑就是使用了 <code>getPhysicalNumberOfCells()</code> 这个方法来获取一行中单元格的数量以对行的中单元格进行遍历，依靠这个方法来遍历会出现的情况就是如果行中间的某些单元格是空的，那么你就解析不到这一行最后的几个单元格，原因是因为按照文档的说明</p>
-
-<blockquote><p>Gets the number of defined cells (NOT number of cells in the actual row!). That is to say if only columns 0,4,5 have values then there would be 3.</p></blockquote>
-
-<p>这个方法只对有值的单元格进行计数，正确的遍历方法应该用 <code>getFirstCellNum()</code> 和 <code>getLastCellNum()</code> 来确定第一个单元格和最后一个单元格的位置，然后进行遍历，当然，要注意中间可能会出现空单元的情况，小心 NPE 异常。</p>
-
-<p>另外，我发现很多 POI 的中文介绍资料上遍历 Excel 的样例代码都是采用了 <code>getPhysicalNumberOfCells()</code>，估计作者也没有经过彻底的测试，或者仔细阅读官方的文档和例子，平时大家做开发的时候，还是尽量找官方的介绍资料为好，看二手资料，一不小心就踩坑了。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
+    
+      <a class="prev" href="/blog/page/3/">&larr; Older</a>
     
     <a href="/blog/archives">Blog Archives</a>
     
@@ -878,6 +1086,10 @@ to f and colls.  Thus function f should return a collection.</p></blockquote>
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/09/05/thanks-my-friend/">谢谢我的小伙伴们</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/09/03/crush/">Crush</a>
@@ -893,10 +1105,6 @@ to f and colls.  Thus function f should return a collection.</p></blockquote>
     
       <li class="post">
         <a href="/blog/2013/07/28/sed-and-awk-part-one/">「Sed & awk」阅读笔记之 sed 基础</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/24/match-line-not-contain-a-string/">再论如何匹配不包含连续字符串的行</a>
       </li>
     
   </ul>

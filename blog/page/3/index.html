@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>使用 POI 解析 Excel 的几个注意点 - 码工作坊</title>
+  <title>码工作坊</title>
   <meta name="author" content="khotyn">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://khotyn.github.com/blog/2013/03/01/apache-poi-notes/">
+  <link rel="canonical" href="http://khotyn.github.com/blog/page/3/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -60,12 +60,15 @@
 </nav>
   <div id="main">
     <div id="content">
-      <div>
-<article class="hentry" role="article">
+      <div class="blog-index">
   
+  
+  
+    <article>
+      
   <header>
     
-      <h1 class="entry-title">使用 POI 解析 Excel 的几个注意点</h1>
+      <h1 class="entry-title"><a href="/blog/2013/03/01/apache-poi-notes/">使用 POI 解析 Excel 的几个注意点</a></h1>
     
     
       <p class="meta">
@@ -83,14 +86,14 @@
 
 <time datetime="2013-03-01T22:35:00+08:00" pubdate data-updated="true">Mar 1<span>st</span>, 2013</time>
         
-         | <a href="#disqus_thread">Comments</a>
+         | <a href="/blog/2013/03/01/apache-poi-notes/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>最近在写一个解析 Excel 的程序，需要把从前端上传上来的 Excel 程序解析成 JSON 格式返回给前端，期间也试过 <a href="http://jexcelapi.sourceforge.net/">jxl</a> ，不过它只支持到 Excel 2003。后来转而使用 apache 的 <a href="http://POI.apache.org/">POI</a>，作为初次使用者，使用过程中遇到了不少的问题，在这篇博客中记录一下：</p>
+  <div class="entry-content"><p>最近在写一个解析 Excel 的程序，需要把从前端上传上来的 Excel 程序解析成 JSON 格式返回给前端，期间也试过 <a href="http://jexcelapi.sourceforge.net/">jxl</a> ，不过它只支持到 Excel 2003。后来转而使用 apache 的 <a href="http://POI.apache.org/">POI</a>，作为初次使用者，使用过程中遇到了不少的问题，在这篇博客中记录一下：</p>
 
 <h3>如何引入 XSSF</h3>
 
@@ -136,63 +139,20 @@
 
 <p>另外，我发现很多 POI 的中文介绍资料上遍历 Excel 的样例代码都是采用了 <code>getPhysicalNumberOfCells()</code>，估计作者也没有经过彻底的测试，或者仔细阅读官方的文档和例子，平时大家做开发的时候，还是尽量找官方的介绍资料为好，看二手资料，一不小心就踩坑了。</p>
 </div>
-
-
-  <footer>
-    <p class="meta">
-      
   
-
-<span class="byline author vcard">Posted by <span class="fn">khotyn</span></span>
-
-      
-
-
-
-
-
-
-
-
   
 
 
-<time datetime="2013-03-01T22:35:00+08:00" pubdate data-updated="true">Mar 1<span>st</span>, 2013</time>
-      
-
-<span class="categories">
+    </article>
   
-    <a class='category' href='/blog/categories/java/'>Java</a>, <a class='category' href='/blog/categories/programming/'>Programming</a>
-  
-</span>
-
-
-    </p>
+  <div class="pagination">
     
-      <div class="sharing">
-  
-  
-  
-</div>
-
+    <a href="/blog/archives">Blog Archives</a>
     
-    <p class="meta">
-      
-      
-        <a class="basic-alignment right" href="/blog/2013/03/10/northwand/" title="Next Post: 北壁">北壁 &raquo;</a>
-      
-    </p>
-  </footer>
-</article>
-
-  <section>
-    <h1>Comments</h1>
-    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a class="next" href="/blog/page/2/">Newer &rarr;</a>
+    
+  </div>
 </div>
-  </section>
-
-</div>
-
 <aside class="sidebar">
   
     <section>
@@ -230,7 +190,6 @@
   
 </aside>
 
-
     </div>
   </div>
   <footer role="contentinfo"><p>
@@ -245,10 +204,7 @@
       var disqus_shortname = 'khotynblog';
       
         
-        // var disqus_developer = 1;
-        var disqus_identifier = 'http://khotyn.github.com/blog/2013/03/01/apache-poi-notes/';
-        var disqus_url = 'http://khotyn.github.com/blog/2013/03/01/apache-poi-notes/';
-        var disqus_script = 'embed.js';
+        var disqus_script = 'count.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
