@@ -9,7 +9,7 @@
   <meta name="author" content="khotyn">
 
   
-  <meta name="description" content="一、 为什么学 Clojure Clojure 一直是我想去学习的一门语言，从去年开始就想学，但是我一直忍着没学，没学的原因一方面是想看一看自己是不是三分钟热度，过了一段时间就不再对它感兴趣了。另一方面，我更想去多学一些计算机底层的技术，因为我自认为基础并不太好，未来会成为个人发展的一个障碍。 &hellip;">
+  <meta name="description" content="本周继续在看「Clojure Programming」这本书，这本书的第三章讲的是 Clojure 的集合和数据结构，作为这章的结束，作者举了一个「生命游戏」的例子来讲解 Clojure 数据结构的使用，作者一共提供了三种方式来解这个生命游戏，其中前两种方式比较好理解， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -74,6 +74,129 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/03/23/clojure-game-of-life/">Clojure 学习笔记：生命游戏</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-23T16:49:00+08:00" pubdate data-updated="true">Mar 23<span>rd</span>, 2013</time>
+        
+         | <a href="/blog/2013/03/23/clojure-game-of-life/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>本周继续在看「Clojure Programming」这本书，这本书的第三章讲的是 Clojure 的集合和数据结构，作为这章的结束，作者举了一个「生命游戏」的例子来讲解 Clojure 数据结构的使用，作者一共提供了三种方式来解这个生命游戏，其中前两种方式比较好理解，最后一种方式对我来说理解起来比较困难，不过经过几个小时的推敲，总算是基本搞明白了，这里就将我理解的过程记录一下。</p>
+
+<p>关于什么是「生命游戏」，大家可以直接看维基百科：<a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Game of Life</a>。简单地来说，生命游戏的规则就是在一个二维数组里面，有一些元素是“活着的”，有一些元素是“死亡的”，这个二维数组随着每一代的进化，有些元素会死去，有些元素会活过来，具体变化的规则如下：</p>
+
+<ul>
+<li>如果一个元素现在是“活着”的，并且它的邻居里面（周围的 8 个元素）活着的元素的数量少于 2 个，那么这个元素在下一代就会死去。</li>
+<li>如果一个元素现在是“活着”的，并且它的邻居里面活着的元素的数量等于 2 个或者 3 个，那么这个元素在下一代会依旧活着。</li>
+<li>如果一个元素现在是“活着”的，并且它的邻居里面活着的元素大于 3 个，那么这个元素在下一代周就会死去。</li>
+<li>如果一个元素是“死”的，并且它的邻居里面有三个元素是活着的，那么下一代这个元素就会复活。</li>
+</ul>
+
+
+<p>如果我们对这些规则进行简化，就可以得出以下的结论：</p>
+
+<ul>
+<li>如果一个元素的邻居有 3 个是活着的，那么无论如何，它在下一代中肯定是活着的。</li>
+<li>如果一个元素的邻居有 2 个是活着的，那么下一代中的死活状态和本代是一样的。</li>
+<li>如果是其他的情况，那么这个元素在下一代肯定会死去。</li>
+</ul>
+
+
+<p>根据这些规则，「Clojure Programming」这本书给出的代码如下（是的，一共才 11 行代码，不得不感慨 Clojure 真是精简，用 Java 写起来这得多少啊）：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="c1">;; 生命游戏</span>
+</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">neighbours</span>
+</span><span class='line'>  <span class="p">[[</span><span class="nv">x</span> <span class="nv">y</span><span class="p">]]</span>
+</span><span class='line'>  <span class="p">(</span><span class="nb">for </span><span class="p">[</span><span class="nv">dx</span> <span class="p">[</span><span class="mi">-1</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]</span> <span class="nv">dy</span> <span class="p">[</span><span class="mi">-1</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]</span> <span class="ss">:when</span> <span class="p">(</span><span class="nb">not= </span><span class="mi">0</span> <span class="nv">dx</span> <span class="nv">dy</span><span class="p">)]</span>
+</span><span class='line'>    <span class="p">[(</span><span class="nb">+ </span><span class="nv">dx</span> <span class="nv">x</span><span class="p">)</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">dy</span> <span class="nv">y</span><span class="p">)]))</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">step</span>
+</span><span class='line'>  <span class="s">&quot;Yields the next state of the world&quot;</span>
+</span><span class='line'>  <span class="p">[</span><span class="nv">cells</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="nb">set </span><span class="p">(</span><span class="nb">for </span><span class="p">[[</span><span class="nv">loc</span> <span class="nv">n</span><span class="p">]</span> <span class="p">(</span><span class="nf">frequencies</span> <span class="p">(</span><span class="nb">mapcat </span><span class="nv">neighbours</span> <span class="nv">cells</span><span class="p">))</span>
+</span><span class='line'>             <span class="ss">:when</span> <span class="p">(</span><span class="nb">or </span><span class="p">(</span><span class="nb">= </span><span class="nv">n</span> <span class="mi">3</span><span class="p">)</span> <span class="p">(</span><span class="nb">and </span><span class="p">(</span><span class="nb">= </span><span class="nv">n</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nf">cells</span> <span class="nv">loc</span><span class="p">)))]</span>
+</span><span class='line'>         <span class="nv">loc</span><span class="p">)))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这个源代码的前面一个方法比较简单，就是给定一个元素的座标，计算其邻居的各个元素的座标，主要的代码在第二个方法 step 上。</p>
+
+<p>第二个函数接受的参数是一个当前活着的元素座标的列表，结果是下一代存活的元素的集合。先看第二个函数的 for 循环，这个 for 里面有一个</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="nb">mapcat </span><span class="nv">neighbours</span> <span class="nv">cells</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这个 <code>mapcat</code> 方法其实是 map 和 concat 两个函数结合，其定义如下：</p>
+
+<blockquote><p>Returns the result of applying concat to the result of applying map
+to f and colls.  Thus function f should return a collection.</p></blockquote>
+
+<p>相当于</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="nb">concat </span><span class="p">(</span><span class="nb">map </span><span class="nv">neighbours</span> <span class="nv">cells</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在这段代码里面这段函数起到的作用就是将当前所有活着的元素的邻居收到一个集合里面。</p>
+
+<p>收集完成以后，函数对这个集合进行了 frequencies 操作，这个 <code>frequencies</code> 就是统计集合内每一个不同的元素出现的数量。最后对 <code>frequencies</code> 的结果进行解构，就得到 for 循环里面的 loc 和 n 的值，其中：loc 就是当前活着的元素的某个邻居的座标，n 就是这个邻居作为邻居出现次数。</p>
+
+<p>但是，这里有一个点需要注意的，如果一个元素 A 是另一个元素 B 的邻居，那么这个元素 A 的邻居也就包含了 B。换句话说，两个元素总是互为邻居的，也就是，n 是这个元素作为邻居出现的次数，<strong>同时也是这个元素周围活着的邻居数量</strong>。</p>
+
+<p>这样，for 循环的后面还有的 <code>:when</code> 就可以根据规则对 n 的值进行判断了：</p>
+
+<ul>
+<li>如果 n 为 3，无论如何这个元素在下一代都会活着，所以这个元素的座标就作为结果返回了（就是最后的 <code>loc</code> 那段代码）。</li>
+<li>如果 n 为 2，那么需要进行进一步的判断，如果当前元素在 <code>cells</code> 中，也就是说当前元素原来是活着的，根据规则，它下一代依旧会活着，它的座标也会被返回。</li>
+</ul>
+
+
+<p>最后，所有符合上面的条件的元素都会被返回，这个函数最后就返回了下一代中所有的存活的元素的座标了。</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -310,6 +433,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/09/21/a-message-to-garcia/">致加西亚的信&#8211;一本应该留在过去的书</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/09/14/perfect-afternoon/">理想的下午</a>
       </li>
     
@@ -323,10 +450,6 @@
     
       <li class="post">
         <a href="/blog/2013/09/03/crush/">Crush</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/08/03/dumping-class-from-jvm/">从 JVM 中 dump class 的几种方法</a>
       </li>
     
   </ul>
