@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 生活 | 码工作坊]]></title>
   <link href="http://khotyn.github.com/blog/categories/生活/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2013-09-24T19:16:21+08:00</updated>
+  <updated>2013-09-25T19:32:17+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -18,7 +18,7 @@
     <link href="http://khotyn.github.com/blog/2013/03/31/mass/"/>
     <updated>2013-03-31T22:31:00+08:00</updated>
     <id>http://khotyn.github.com/blog/2013/03/31/mass</id>
-    <content type="html"><![CDATA[<h3>一、坚持</h3>
+    <content type="html"><![CDATA[<h3 id="section">一、坚持</h3>
 
 <p>最近颇为得意的几件事儿，便是年后坚持做了几件事儿，每天背一点英语单词，每天写日记。</p>
 
@@ -26,7 +26,9 @@
 
 <p>写日记我是通过「Day One」这款 App 来记的，我买了 Mac 版和 iOS 版，三个多月使用下来非常棒，「Day One」支持 Markdown，整个应用做的也十分精美，让人看了就有写日记的冲动，特别有意思的时候它有时候会弹出一些话来让你写日记，比如，下面这句：</p>
 
-<blockquote><p>Keep a diary, and someday it'll keep you.</p></blockquote>
+<blockquote>
+  <p>Keep a diary, and someday it’ll keep you.</p>
+</blockquote>
 
 <p>其实日记是你最私密的东西，在里面，你可以写任何的在其他社交网络上不敢写的东西，可以把你最真实的感情写在里面，让你直面最真实的自己，而当你失落的时候，这些日记就是过去的你，会在背后支持着你。</p>
 

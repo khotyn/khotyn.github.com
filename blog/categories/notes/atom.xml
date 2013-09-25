@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Notes | 码工作坊]]></title>
   <link href="http://khotyn.github.com/blog/categories/notes/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2013-09-24T19:16:21+08:00</updated>
+  <updated>2013-09-25T19:32:17+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -23,21 +23,19 @@
 <p>关于什么是「生命游戏」，大家可以直接看维基百科：<a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Game of Life</a>。简单地来说，生命游戏的规则就是在一个二维数组里面，有一些元素是“活着的”，有一些元素是“死亡的”，这个二维数组随着每一代的进化，有些元素会死去，有些元素会活过来，具体变化的规则如下：</p>
 
 <ul>
-<li>如果一个元素现在是“活着”的，并且它的邻居里面（周围的 8 个元素）活着的元素的数量少于 2 个，那么这个元素在下一代就会死去。</li>
-<li>如果一个元素现在是“活着”的，并且它的邻居里面活着的元素的数量等于 2 个或者 3 个，那么这个元素在下一代会依旧活着。</li>
-<li>如果一个元素现在是“活着”的，并且它的邻居里面活着的元素大于 3 个，那么这个元素在下一代周就会死去。</li>
-<li>如果一个元素是“死”的，并且它的邻居里面有三个元素是活着的，那么下一代这个元素就会复活。</li>
+  <li>如果一个元素现在是“活着”的，并且它的邻居里面（周围的 8 个元素）活着的元素的数量少于 2 个，那么这个元素在下一代就会死去。</li>
+  <li>如果一个元素现在是“活着”的，并且它的邻居里面活着的元素的数量等于 2 个或者 3 个，那么这个元素在下一代会依旧活着。</li>
+  <li>如果一个元素现在是“活着”的，并且它的邻居里面活着的元素大于 3 个，那么这个元素在下一代周就会死去。</li>
+  <li>如果一个元素是“死”的，并且它的邻居里面有三个元素是活着的，那么下一代这个元素就会复活。</li>
 </ul>
-
 
 <p>如果我们对这些规则进行简化，就可以得出以下的结论：</p>
 
 <ul>
-<li>如果一个元素的邻居有 3 个是活着的，那么无论如何，它在下一代中肯定是活着的。</li>
-<li>如果一个元素的邻居有 2 个是活着的，那么下一代中的死活状态和本代是一样的。</li>
-<li>如果是其他的情况，那么这个元素在下一代肯定会死去。</li>
+  <li>如果一个元素的邻居有 3 个是活着的，那么无论如何，它在下一代中肯定是活着的。</li>
+  <li>如果一个元素的邻居有 2 个是活着的，那么下一代中的死活状态和本代是一样的。</li>
+  <li>如果是其他的情况，那么这个元素在下一代肯定会死去。</li>
 </ul>
-
 
 <p>根据这些规则，「Clojure Programming」这本书给出的代码如下（是的，一共才 11 行代码，不得不感慨 Clojure 真是精简，用 Java 写起来这得多少啊）：</p>
 
@@ -45,21 +43,16 @@
 ;; 生命游戏
 (defn neighbours
   [[x y]]
-  (for [dx [-1 0 1] dy [-1 0 1] :when (not= 0 dx dy)]</p>
-
-<pre><code>[(+ dx x) (+ dy y)]))
-</code></pre>
+  (for [dx [-1 0 1] dy [-1 0 1] :when (not= 0 dx dy)]
+    [(+ dx x) (+ dy y)]))</p>
 
 <p>(defn step
-  "Yields the next state of the world"
+  “Yields the next state of the world”
   [cells]
-  (set (for [[loc n] (frequencies (mapcat neighbours cells))</p>
-
-<pre><code>         :when (or (= n 3) (and (= n 2) (cells loc)))]
-     loc)))
-</code></pre>
-
-<p>```</p>
+  (set (for [[loc n] (frequencies (mapcat neighbours cells))
+             :when (or (= n 3) (and (= n 2) (cells loc)))]
+         loc)))
+```</p>
 
 <p>这个源代码的前面一个方法比较简单，就是给定一个元素的座标，计算其邻居的各个元素的座标，主要的代码在第二个方法 step 上。</p>
 
@@ -71,8 +64,10 @@ mapcat neighbours cells
 
 <p>这个 <code>mapcat</code> 方法其实是 map 和 concat 两个函数结合，其定义如下：</p>
 
-<blockquote><p>Returns the result of applying concat to the result of applying map
-to f and colls.  Thus function f should return a collection.</p></blockquote>
+<blockquote>
+  <p>Returns the result of applying concat to the result of applying map
+to f and colls.  Thus function f should return a collection.</p>
+</blockquote>
 
 <p>相当于</p>
 
@@ -89,10 +84,9 @@ to f and colls.  Thus function f should return a collection.</p></blockquote>
 <p>这样，for 循环的后面还有的 <code>:when</code> 就可以根据规则对 n 的值进行判断了：</p>
 
 <ul>
-<li>如果 n 为 3，无论如何这个元素在下一代都会活着，所以这个元素的座标就作为结果返回了（就是最后的 <code>loc</code> 那段代码）。</li>
-<li>如果 n 为 2，那么需要进行进一步的判断，如果当前元素在 <code>cells</code> 中，也就是说当前元素原来是活着的，根据规则，它下一代依旧会活着，它的座标也会被返回。</li>
+  <li>如果 n 为 3，无论如何这个元素在下一代都会活着，所以这个元素的座标就作为结果返回了（就是最后的 <code>loc</code> 那段代码）。</li>
+  <li>如果 n 为 2，那么需要进行进一步的判断，如果当前元素在 <code>cells</code> 中，也就是说当前元素原来是活着的，根据规则，它下一代依旧会活着，它的座标也会被返回。</li>
 </ul>
-
 
 <p>最后，所有符合上面的条件的元素都会被返回，这个函数最后就返回了下一代中所有的存活的元素的座标了。</p>
 ]]></content>
@@ -103,28 +97,27 @@ to f and colls.  Thus function f should return a collection.</p></blockquote>
     <link href="http://khotyn.github.com/blog/2013/03/17/learning-clojure-partone/"/>
     <updated>2013-03-17T20:44:00+08:00</updated>
     <id>http://khotyn.github.com/blog/2013/03/17/learning-clojure-partone</id>
-    <content type="html"><![CDATA[<h3>一、 为什么学 Clojure</h3>
+    <content type="html"><![CDATA[<h3 id="clojure">一、 为什么学 Clojure</h3>
 
 <p>Clojure 一直是我想去学习的一门语言，从去年开始就想学，但是我一直忍着没学，没学的原因一方面是想看一看自己是不是三分钟热度，过了一段时间就不再对它感兴趣了。另一方面，我更想去多学一些计算机底层的技术，因为我自认为基础并不太好，未来会成为个人发展的一个障碍。</p>
 
 <p>但是，从现在看来，我似乎对 Clojure 并不是脑子一热就想去学，而有一些更深层的原因。我想学 Clojure 一个主要的原因是因为最近一段时间一直在思考语言的抽象维度，表达能力的问题，对这个问题我虽然有一些感觉，但是因为了解的语言非常有限，所以一直都没有抓到问题的本质，找不到问题的答案是什么，而多了解一门不同类型的语言或许可以在一定程度上帮助我思考这个问题，如果这门语言和 Java 越不同，能给我带来的思维的转换就越大，显然 Lisp 会是很好的选择。而 Clojure 正是基于 JVM 的一种 Lisp 方言，对做 Java 开发的我来说再好不过。</p>
 
-<h3>二、Clojure 是一门什么样的语言</h3>
+<h3 id="clojure-">二、Clojure 是一门什么样的语言</h3>
 
 <p>面对这个问题，我的脑子中一下子塞入了各种名词：</p>
 
 <ul>
-<li>不变量</li>
-<li>函数式编程</li>
-<li>S 表达式</li>
-<li>一堆括号</li>
-<li>宏</li>
+  <li>不变量</li>
+  <li>函数式编程</li>
+  <li>S 表达式 </li>
+  <li>一堆括号</li>
+  <li>宏</li>
 </ul>
-
 
 <p>现在对 Clojure 的认识还很模糊，这个问题我希望能够一直带在整个学习过程中，希望在经过一段时间的学习以后可以回答这个问题。</p>
 
-<h3>三、环境安装</h3>
+<h3 id="section">三、环境安装</h3>
 
 <p>在 Mac 下可以直接通过 brew 来安装：</p>
 
@@ -136,22 +129,21 @@ brew install clojure
 
 <p>编辑器我选择是 Intellij IDEA，安装上一个 La Clojure 的插件即可，这个插件提供了代码高亮、格式化等功能，并且针对 Clojure 括号略多的情况，给括号提供了彩虹色的高亮，非常贴心。另外 La Clojure 内置的 REPL 在语法高亮、光标的移动方面都比 Clojure 自带的要好。</p>
 
-<h3>四、学习资料</h3>
+<h3 id="section-1">四、学习资料</h3>
 
 <p>关于 Clojure 的书比较著名的有三本：</p>
 
 <ul>
-<li><a href="http://book.douban.com/subject/4743790/">The Joy of Clojure</a></li>
-<li><a href="http://book.douban.com/subject/7915128/">Programming Clojure</a></li>
-<li><a href="http://book.douban.com/subject/6715378/">Clojure Programming</a></li>
+  <li><a href="http://book.douban.com/subject/4743790/">The Joy of Clojure</a></li>
+  <li><a href="http://book.douban.com/subject/7915128/">Programming Clojure</a></li>
+  <li><a href="http://book.douban.com/subject/6715378/">Clojure Programming</a></li>
 </ul>
-
 
 <p>目前这三本书中 The Joy of Clojure 正在翻译中，Programming Clojure 和 Clojure Programming 已经翻译好，可以在各大网站上预订了，想看中文版的朋友可以考虑去买纸质书。</p>
 
 <p>我选择了 Clojure Programming 这本书，没什么原因，刚好之前下载了这本书的英文版，看着看着就一直再看了。</p>
 
-<h3>五、下一篇</h3>
+<h3 id="section-2">五、下一篇</h3>
 
 <p>这第一篇笔记没有什么关于 Clojure 的具体内容，主要作用在于提醒自己学习要不忘初衷，下一篇中我会开始整理出一些具体内容出来，敬请期待。</p>
 ]]></content>

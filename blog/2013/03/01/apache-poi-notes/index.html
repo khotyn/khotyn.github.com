@@ -104,45 +104,45 @@
 
 <div class="entry-content"><p>最近在写一个解析 Excel 的程序，需要把从前端上传上来的 Excel 程序解析成 JSON 格式返回给前端，期间也试过 <a href="http://jexcelapi.sourceforge.net/">jxl</a> ，不过它只支持到 Excel 2003。后来转而使用 apache 的 <a href="http://POI.apache.org/">POI</a>，作为初次使用者，使用过程中遇到了不少的问题，在这篇博客中记录一下：</p>
 
-<h3>如何引入 XSSF</h3>
+<h3 id="xssf">如何引入 XSSF</h3>
 
 <p>刚下手写的时候，直接使用了 HSSFWorkbook 处理 Excel，后来发现它只能处理 2003 的 Excel，而不能处理 2007 版本的 Excel，翻了一下 POI 的文档，发现处理 2007 的 Excel 需要使用 XSSFWorkbook，但是引入的 POI 包中却找不到 XSSF 相关的类，原猜想是因为引入了版本较新的 POI，而官方的文档还是比较老的，因而被误导。结果发现使用 XSSF 需要额外引入 <strong>poi-ooxml</strong> 这个 jar 包， XSSF 相关的类都在这个 jar 包中，mvn 依赖如下：</p>
 
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;dependency&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;groupId&gt;</span>org.apache.poi<span class="nt">&lt;/groupId&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;artifactId&gt;</span>poi-ooxml<span class="nt">&lt;/artifactId&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;version&gt;</span>3.9<span class="nt">&lt;/version&gt;</span>
-</span><span class='line'><span class="nt">&lt;/dependency&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="bogus-wrapper"><notextile><figure class="code"> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="nt">&lt;dependency&gt;</span>
+</span><span class="line">    <span class="nt">&lt;groupId&gt;</span>org.apache.poi<span class="nt">&lt;/groupId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;artifactId&gt;</span>poi-ooxml<span class="nt">&lt;/artifactId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;version&gt;</span>3.9<span class="nt">&lt;/version&gt;</span>
+</span><span class="line"><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-
-<h3>兼容处理 Excel 2003 和 2007</h3>
+<h3 id="excel-2003--2007">兼容处理 Excel 2003 和 2007</h3>
 
 <p>引入了 <strong>poi-ooxml</strong> 以后就使用 XSSF 来处理，本以为 XSSF 既然能够处理 Excel 2007，那么 2003 也该能处理吧？得向下兼容不是？没想到不行！总不能用扩展名来区别是 2003 还是 2007 吧，后来发现了 <strong>WorkbookFactory</strong> 这个类，它的 <code>create(InputStream inp)</code> 方法可以根据版本来选择创建 <code>HSSFWorkbook</code> 还是 <code>XSSFWorkbook</code>，使用者无需关心版本的问题，非常方便！</p>
 
-<h3>以 String 的形式读取单元格的数据</h3>
+<h3 id="string-">以 String 的形式读取单元格的数据</h3>
 
 <p>要读取的 Excel 中有一些数据是数字的，单元格的类型是 Numberic 的，而我希望将单元格中的数据都以 String 的形式拿出来。于是当我看到 <code>Cell.getStringCellValue()</code> 这个方法的时候满心欢喜，但是当用了之后，这货居然直接给我一个异常，定眼一样，这方式是 get<strong>StringCell</strong>Value，而不是 get<strong>CellString</strong>Value，真是瞎了眼了。事实上，Cell 也根本没有 <code>getCellStringValue</code> 这样的方法，后来借助了 <a href="http://stackoverflow.com/questions/1072561/how-can-i-read-numeric-strings-in-excel-cells-as-string-not-numbers-with-apach">SOF</a>，查到了一个方法：</p>
 
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">setCellType</span><span class="o">(</span><span class="n">Cell</span><span class="o">.</span><span class="na">CELL_TYPE_STRING</span><span class="o">);</span>
-</span><span class='line'><span class="n">cellValue</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">getStringCellValue</span><span class="o">();</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">setCellType</span><span class="o">(</span><span class="n">Cell</span><span class="o">.</span><span class="na">CELL_TYPE_STRING</span><span class="o">);</span>
+</span><span class="line"><span class="n">cellValue</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">getStringCellValue</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>是的，就是先把单元格变成 String 类型的，然后再调用 <code>getStringCellValue()</code> 来获取数据，虽然这方法可行，但是总感觉有点猥琐，不知大家有没有更好的方法？</p>
 
-<h3>错误地使用 <code>getPhysicalNumberOfCells()</code></h3>
+<h3 id="getphysicalnumberofcells">错误地使用 <code>getPhysicalNumberOfCells()</code></h3>
 
 <p>遇到的最后一个坑就是使用了 <code>getPhysicalNumberOfCells()</code> 这个方法来获取一行中单元格的数量以对行的中单元格进行遍历，依靠这个方法来遍历会出现的情况就是如果行中间的某些单元格是空的，那么你就解析不到这一行最后的几个单元格，原因是因为按照文档的说明</p>
 
-<blockquote><p>Gets the number of defined cells (NOT number of cells in the actual row!). That is to say if only columns 0,4,5 have values then there would be 3.</p></blockquote>
+<blockquote>
+  <p>Gets the number of defined cells (NOT number of cells in the actual row!). That is to say if only columns 0,4,5 have values then there would be 3.</p>
+</blockquote>
 
 <p>这个方法只对有值的单元格进行计数，正确的遍历方法应该用 <code>getFirstCellNum()</code> 和 <code>getLastCellNum()</code> 来确定第一个单元格和最后一个单元格的位置，然后进行遍历，当然，要注意中间可能会出现空单元的情况，小心 NPE 异常。</p>
 
@@ -212,6 +212,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/09/25/java-bean-boolean/">Java Bean 的布尔类型属性获取问题</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/09/21/the-great-gatsby/">「了不起的盖茨比」</a>
       </li>
     
@@ -225,10 +229,6 @@
     
       <li class="post">
         <a href="/blog/2013/09/14/spring-tx-propagation/">Spring 事务的传播特性</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/05/thanks-my-friend/">谢谢我的小伙伴们</a>
       </li>
     
   </ul>

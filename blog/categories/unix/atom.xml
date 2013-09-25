@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Unix | 码工作坊]]></title>
   <link href="http://khotyn.github.com/blog/categories/unix/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2013-09-24T19:16:21+08:00</updated>
+  <updated>2013-09-25T19:32:17+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -22,7 +22,7 @@
 
 <p>cURL 的可用的参数非常非常多，你能想到的基本上都有，不过一般使用的就那么几个参数吧，这里就介绍下我常常用到的两个：</p>
 
-<h3>使用 Post 提交数据</h3>
+<h3 id="post-">使用 Post 提交数据</h3>
 
 <p>有些服务器端限制了你只能用 POST 的方式提交数据，这个时候如果你就不能通过在 URL 上加上参数的方式来提交数据了，cURL 提供了一个 <code>-d</code> 参数来让你可以用 POST 的方式把数据提交上去，例如：</p>
 
@@ -32,7 +32,7 @@ curl http://ka.178.com/receive/index -d "activity_id=3403"
 
 <p>这个请求只用了一个参数，多个参数可以 <code>&amp;</code> 符号作链接。</p>
 
-<h3>附带 Cookie 到请求上</h3>
+<h3 id="cookie-">附带 Cookie 到请求上</h3>
 
 <p>使用 cURL 的另一个经常需要做的事情就是需要拿到用户的登录信息，这些登录信息往往放在 cookie 里面，这样你就需要把 cookie 信息附加在请求上提交到服务器，让服务器认为你是处于登录的状态，cURL 提供了一个 <code>--cookie</code> 的参数让你可以附上 cookie：</p>
 
@@ -42,7 +42,7 @@ curl http://ka.178.com/receive/index -cookie "__utma=2582276614.13325.133516.3;"
 
 <p>如果嫌 <code>--cookie</code> 太长，可以用 <code>-b</code>，<code>-b</code> 是 <code>--cookie</code> 的简写。</p>
 
-<h3>显示出请求的头信息</h3>
+<h3 id="section">显示出请求的头信息</h3>
 
 <p>对于有一些请求，比如那些返回 302 状态码的请求，cURL 默认情况下是不会输出任何内容的，这种请求下，我们就不知道它是返回了 200 而响应体里面没有任何内容还是因为是 302 而没有任何内容呢，这个时候我们就可以通过 <code>-D</code>（<code>--dump-header</code>）参数来显示请求的响应头，不过 <code>-D</code> 参数后面要加上一个文件，如果我们想直接输出到终端，那么就可以这么干：</p>
 

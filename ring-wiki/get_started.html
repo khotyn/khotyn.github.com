@@ -97,62 +97,57 @@ $ cd hello-world 在 project.clj 中添加 ring-core 和 ring-jetty-adapter 依�
   
   <p>用 Leiningen 创建一个新项目：</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>lein new hello-world
-</span><span class='line'><span class="nv">$ </span><span class="nb">cd </span>hello-world
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">$ </span>lein new hello-world
+</span><span class="line"><span class="nv">$ </span><span class="nb">cd </span>hello-world
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>在 <code>project.clj</code> 中添加 ring-core 和 ring-jetty-adapter 依赖。</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defproject </span><span class="nv">hello-world</span> <span class="s">&quot;1.0.0-SNAPSHOT&quot;</span>
-</span><span class='line'>  <span class="ss">:description</span> <span class="s">&quot;FIXME: write&quot;</span>
-</span><span class='line'>  <span class="ss">:dependencies</span> <span class="p">[[</span><span class="nv">org.clojure/clojure</span> <span class="s">&quot;1.4.0&quot;</span><span class="p">]</span>
-</span><span class='line'>                 <span class="p">[</span><span class="nv">ring/ring-core</span> <span class="s">&quot;1.1.6&quot;</span><span class="p">]</span>
-</span><span class='line'>                 <span class="p">[</span><span class="nv">ring/ring-jetty-adapter</span> <span class="s">&quot;1.1.6&quot;</span><span class="p">]])</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="clojure"><span class="line"><span class="p">(</span><span class="kd">defproject </span><span class="nv">hello-world</span> <span class="s">&quot;1.0.0-SNAPSHOT&quot;</span>
+</span><span class="line">  <span class="ss">:description</span> <span class="s">&quot;FIXME: write&quot;</span>
+</span><span class="line">  <span class="ss">:dependencies</span> <span class="p">[[</span><span class="nv">org.clojure/clojure</span> <span class="s">&quot;1.4.0&quot;</span><span class="p">]</span>
+</span><span class="line">                 <span class="p">[</span><span class="nv">ring/ring-core</span> <span class="s">&quot;1.1.6&quot;</span><span class="p">]</span>
+</span><span class="line">                 <span class="p">[</span><span class="nv">ring/ring-jetty-adapter</span> <span class="s">&quot;1.1.6&quot;</span><span class="p">]])</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>接下来，编辑 <code>src/hello_world/core.clj</code>，添加一个基本的 handler。</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">ns </span><span class="nv">hello-world.core</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">handler</span> <span class="p">[</span><span class="nv">request</span><span class="p">]</span>
-</span><span class='line'>  <span class="p">{</span><span class="ss">:status</span> <span class="mi">200</span>
-</span><span class='line'>   <span class="ss">:headers</span> <span class="p">{</span><span class="s">&quot;Content-Type&quot;</span> <span class="s">&quot;text/html&quot;</span><span class="p">}</span>
-</span><span class='line'>   <span class="ss">:body</span> <span class="s">&quot;Hello World&quot;</span><span class="p">})</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="clojure"><span class="line"><span class="p">(</span><span class="kd">ns </span><span class="nv">hello-world.core</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="p">(</span><span class="kd">defn </span><span class="nv">handler</span> <span class="p">[</span><span class="nv">request</span><span class="p">]</span>
+</span><span class="line">  <span class="p">{</span><span class="ss">:status</span> <span class="mi">200</span>
+</span><span class="line">   <span class="ss">:headers</span> <span class="p">{</span><span class="s">&quot;Content-Type&quot;</span> <span class="s">&quot;text/html&quot;</span><span class="p">}</span>
+</span><span class="line">   <span class="ss">:body</span> <span class="s">&quot;Hello World&quot;</span><span class="p">})</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>现在，我们可以将这个 handler 和一个 adapter 连接在一起了。使用 Leiningen 开启一个 REPL：</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>lein repl
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">$ </span>lein repl
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>然后在 REPL 中，使用你的 handler 来运行 Jetty adapter。</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">=</span>&gt; <span class="o">(</span>use <span class="s1">&#39;ring.adapter.jetty)</span>
-</span><span class='line'><span class="s1">=&gt; (use &#39;</span>hello-world.core<span class="o">)</span>
-</span><span class='line'><span class="o">=</span>&gt; <span class="o">(</span>run-jetty handler <span class="o">{</span>:port 3000<span class="o">})</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="o">=</span>&gt; <span class="o">(</span>use <span class="s1">&#39;ring.adapter.jetty)</span>
+</span><span class="line"><span class="s1">=&gt; (use &#39;</span>hello-world.core<span class="o">)</span>
+</span><span class="line"><span class="o">=</span>&gt; <span class="o">(</span>run-jetty handler <span class="o">{</span>:port 3000<span class="o">})</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>这样，一个 Web 服务器就在 <a href="http://localhost:3000/">http://localhost:3000/</a> 跑起来了。</p>
 
@@ -195,6 +190,10 @@ $ cd hello-world 在 project.clj 中添加 ring-core 和 ring-jetty-adapter 依�
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/09/25/java-bean-boolean/">Java Bean 的布尔类型属性获取问题</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/09/21/the-great-gatsby/">「了不起的盖茨比」</a>
       </li>
     
@@ -208,10 +207,6 @@ $ cd hello-world 在 project.clj 中添加 ring-core 和 ring-jetty-adapter 依�
     
       <li class="post">
         <a href="/blog/2013/09/14/spring-tx-propagation/">Spring 事务的传播特性</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/05/thanks-my-friend/">谢谢我的小伙伴们</a>
       </li>
     
   </ul>

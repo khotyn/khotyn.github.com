@@ -106,31 +106,31 @@
 
 <p>所幸的是今天无聊翻了翻 grep 的 man page，发现了几个更加方便的方法也更加通用的办法，在这里和大家分享一下：</p>
 
-<h3>grep 的 invert match</h3>
+<h3 id="grep--invert-match">grep 的 invert match</h3>
 
 <p>今天翻 grep 的 man page，发现了一个 <code>-v</code> 参数，它的说明是这样的：</p>
 
-<blockquote><p>Selected lines are those not matching any of the specified patterns.</p></blockquote>
+<blockquote>
+  <p>Selected lines are those not matching any of the specified patterns.</p>
+</blockquote>
 
 <p>正是我们想要，可以传入一个正则表达式，它帮你匹配不符合这个正则表达式的行，而且 <code>-v</code> 参数各个 grep 的版本都支持，无需担心换个系统就不能用的情况。</p>
 
-<h3>采用 sed 来删除符合某个 pattern 的行</h3>
+<h3 id="sed--pattern-">采用 sed 来删除符合某个 pattern 的行</h3>
 
 <p>其实不用 grep，用 sed 也可以做到这个需求，sed 本身就是一个强大的行处理工具，sed 可以用如下的方式把符合某个 pattern 的行给删除掉：</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>sed '/pattern/D'</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">sed '/pattern/D'</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>怎么样？也是非常方便的吧，它可以做到和 grep 一样的功能，非常有效。</p>
 
-<h3>采用 sed 来打印不符合某个 pattern 的行</h3>
+<h3 id="sed--pattern--1">采用 sed 来打印不符合某个 pattern 的行</h3>
 
 <p>要用 sed 来解决这个问题，其实不止上面一个方法，还可以用以下的方法来做：</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>sed -n '/pattern/!p'</span></code></pre></td></tr></table></div></figure>
-
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">sed -n '/pattern/!p'</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>解释一下这段 sed 脚本的作用，首先是 <code>-n</code> 参数，大家知道 sed 的默认将处理和没有处理过的行都定向到输出流上，而 <code>-n</code> 参数是用来关闭这个功能，我们当然不希望 sed 将所有的行都打印出来。然后脚本的开始是一个行的选择器，前面是一个正则表达式（sed 的正则表达式都是放在两个斜杠之间的），后面的是一个<code>!</code>号，这样就表示选择反向选择，即选择不符合 pattern 的行，然后最后是一个 <code>p</code> 命令，把这样的行打印出来，这里的 pattern 当然可以是需求中的那个连续的字符串，这样，我们就达到了需求的目的了。</p>
 
@@ -202,6 +202,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/09/25/java-bean-boolean/">Java Bean 的布尔类型属性获取问题</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/09/21/the-great-gatsby/">「了不起的盖茨比」</a>
       </li>
     
@@ -215,10 +219,6 @@
     
       <li class="post">
         <a href="/blog/2013/09/14/spring-tx-propagation/">Spring 事务的传播特性</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/05/thanks-my-friend/">谢谢我的小伙伴们</a>
       </li>
     
   </ul>
