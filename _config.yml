@@ -3,7 +3,7 @@
 # ----------------------- #
 
 url: http://khotyn.github.com
-title: 码工作坊
+title: 小径分岔的花园
 subtitle: 
 author: khotyn
 simple_search: http://google.com/search
@@ -58,7 +58,7 @@ default_asides: [asides/recent_posts.html, asides/github.html, asides/twitter.ht
 # ----------------------- #
 
 # Github repositories
-github_user:
+github_user: khotyn
 github_repo_count: 0
 github_show_profile_link: true
 github_skip_forks: true
