@@ -1,0 +1,34 @@
+---
+layout: post
+title: "Git flow 分支管理模型简介"
+date: 2013-10-01 10:43
+comments: true
+categories: [Programming]
+---
+
+有一次和 [@imsoz](https://twitter.com/imsoz) 在聊天的时候，他给我介绍了一个叫做 Git flow 的分支管理模型，我听了很有兴趣，于是昨天花了一点时间去了解了一下。
+
+#### Git flow 分支模型
+
+Git flow 是一个分支模型，它提供了一个经过实践检验的分支管理的模型。整个分支模型的工作图大概是下面这样样子的：
+
+![image](http://nvie.com/img/2009/12/Screen-shot-2009-12-24-at-11.32.03.png)
+
+它包含有两个长期分支和三个支持的分支：
+
+* master 分支：使用过 git 的同学应该都这个分支很熟悉，这个分支代表了可以用于生产环境的代码。
+* develop 分支：用于开发的分支，或者叫做“集成分支”，这里的代码可以用来做 nightly build。
+
+上面两个是长期的分支，这两个分支在开发的过程中会一直存在下去。除了这两个长期分支，还有三个用于支持的分支：
+
+* feature 分支：一般上从 develop 分支拉出来，最后要 merge 回 develop 分支，或者废弃掉。feature 分支是用来开发一个在下一次的产品 release 中可能被加上去的特性的，一个 feature 分支在特性开发完毕后就结束了，所以 feature 分支只是短暂地存在。
+* release 分支：release 分支用来支持准备一个将要被 release 的产品版本，在这个分支上，我们可能会修改版本号，做一些 release 相关的事情，或者做一些 bug 的 hotfix，release 分支从 develop 分支拉出来，当你认为你的下一次的 release 所需要的特性都已经开发完毕的时候，你就可以从 develop 分支拉出 release 分支来，最后 release 分支需要 merge 回 develop 分支和 master 分支。
+* hotfix 分支：顾名思义，hotfix 分支就是当生产环境的代码出现了重大的 bug 的时候需要的分支，这个时候你可以从 master 分支中拉出一个 hotfix 分支，在修复完 bug 后，记得要把 hotfix 的分支合并回到 develop 和 master 分支上。
+
+上面就是 Git flow 的整个分支模型，相对来说还是比较简单的，更加具体的说明可以看这篇关于 Git flow 分支模型最原始的 blog：[http://nvie.com/posts/a-successful-git-branching-model/](http://nvie.com/posts/a-successful-git-branching-model/)
+
+#### Git flow 扩展
+
+但是有一个问题就是上面的这些分支的创建，合并，删除等等操作，都是需要好几步的，比较费时间，费精力，Git flow 还提供了一个 git 的扩展，让我们可以非常方便地在项目中使用上述的分支模型，具体的使用方式作者都已经写在了 github 上，大家可以自己去看：[https://github.com/nvie/gitflow](https://github.com/nvie/gitflow)。在 Mac 下可以用 `brew install git-flow` 来安装。
+
+之前我也了解过 git 的一些使用，并且已经在一些项目中尝试去使用 git，但是在分支管理这一块一直比较头疼，而 Git flow 恰好给我提供了一个现成的经过实践的分支模型，刚好公司后面有一个项目可能也会用到 git，到时候我会尝试下在项目组中推广使用 Git flow，让实践去检验一把。
