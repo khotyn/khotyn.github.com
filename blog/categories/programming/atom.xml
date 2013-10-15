@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Programming | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/programming/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2013-10-15T01:25:48+08:00</updated>
+  <updated>2013-10-16T00:59:11+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,38 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[代码之美]]></title>
+    <link href="http://khotyn.github.com/blog/2013/10/16/beautiful-code/"/>
+    <updated>2013-10-16T00:55:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/10/16/beautiful-code</id>
+    <content type="html"><![CDATA[<p>今天的工作基本上就是在重构实习生写的 JS 代码，改的昏天暗地，他们基本把整个工程的 JS 代码都放到了一个文件中，代码中一会儿以空格缩进，一会儿以 tab 缩进，到处都是不必要的变量，我的代码洁癖又犯了，忍不住直接进行了重构，对 JS 进行模块化的拆分，每一个模块都有相对独立的功能，改了之后舒畅了很多，就像拿掉了卡在喉咙中鱼刺。</p>
+
+<p>工作这几年以来，我也遇到过几个和我一样，有着或者或少代码洁癖的人，看到 IDE 中出现的警告信息就会感到不舒服（从 Eclipse 转到 Intellij IDEA 以后，洁癖的程度越来越严重了，Intellij IDEA 会对你的代码风格做更彻底的检查），看到以 tab 来做缩进简直就像看到异教徒一样，看到代码中已经被注释掉的废弃代码那肯定得马上删掉。</p>
+
+<p>可惜的是，工作遇到的更多的人，在这方面要随意的多，他们更多追求的是把工作完成，让功能能够跑起来，其实一定程度上来说，他们是对的，他们是更加实用主义的程序员，实用主义能够帮助我们更快地达到自己的目标，而不会被和目标无关的东西所牵绊。但是，我觉得，一个程序员在追求程序的实用主义的时候，也应该去追求程序本身的美感。</p>
+
+<p>或许有人会问，什么是程序的美感，关于这一点，我们可以从很多的侧面去描述：</p>
+
+<ul>
+  <li>更人性化的用户体验</li>
+  <li>更简洁的架构</li>
+  <li>程序内一致的代码风格</li>
+  <li>更易读的代码</li>
+</ul>
+
+<p>但是，“美”本身是用语言是无法完整描述的，你可以说娜塔丽•波特曼很美，你也可以说加西莫多很多，但是他们之间的差距是如此之大，除了他们都是人之外你都找不到他们的共同点。所以“美”就是“美”，只有你身在其中的时候你才能够感受到。</p>
+
+<p>或许对于很多人而言，“代码美”根本就是个扯淡的东西。其实写代码的过程和做木工的过程是很像的，说白了，都是设计出一样东西，然后拿来用而已。看看下面的无印良品木制家居，不得不承认，它比我们平时从市面上看到的普通的木制家居要舒服地多。同样一段代码也可以比另一段代码看起来更加“舒服”，更加“美”，只是每一个人对这种“美”的感受能力不同而已，有些能够感受到，有些不能感受到（在这一点上，不得不承认，我对“代码美”的感受能力是比较差的）。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DePKb6au/13WWB6.png" alt="image" /></p>
+
+<p>想要去培养这种对“程序美”的感受能力，一个很好的方式就是去阅读优秀的开源代码，比如 Tomcat，Dubbo 等等，有时候，当你看到一段不错的代码，一个简洁的有用的架构设计的时候，你会感到来自内心深处的愉悦，这就是“美”的一个侧面。我相信，培养这样的感受能力，是非常有益于身心健康的，并且我也相信那些透露出“美”的代码在某种程度上也是更加优秀的代码（内王而外圣）。</p>
+
+<p>这个世界已经够丑陋了，如果我们已经解决了温饱问题，又有了这么多的自由时间，不如做点“漂亮”点的东西出来，写一些更有用，更“美”的代码出来~</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Git flow 分支管理模型简介]]></title>
@@ -509,182 +541,6 @@ sudo classDump 17118 'com.khotyn.*' dump
   <li>用下面的命令将修改过的两个类打到 sa-jdi.jar 中去：<code>jar uf sa-jdi.jar sun/jvm/hotspot/tools/jcore/ClassDump.class sun/jvm/hotspot/tools/jcore/RegexClassFilter.class</code></li>
   <li>然后配合仓库中的 classDump 脚本就可以用了。</li>
 </ul>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[「Sed & Awk」阅读笔记之 Sed 高级命令]]></title>
-    <link href="http://khotyn.github.com/blog/2013/07/30/sed-part-two/"/>
-    <updated>2013-07-30T21:41:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/07/30/sed-part-two</id>
-    <content type="html"><![CDATA[<p>上一篇文章中，我介绍了一下 <a href="../../../../2013/07/28/sed-and-awk-part-one/">sed 的基础</a>，包括执行方式、地址选择器以及基本命令，在这一篇文章中，我们继续来了解一下 sed 的高级命令，之所以称它们为高级命令，是因为这些命令会改变 sed 的执行流，废话不说，我们来看看这些命令吧：</p>
-
-<h3 id="section">高级命令</h3>
-
-<h4 id="n-next">N (Next)</h4>
-
-<p>这里要介绍的第一个命令是 <code>N</code>，它和我们前面介绍过的 <code>n</code> 命令很像，也是要读取下一行的内容，不同的是，<code>N</code> 读取下一行的内容并且将这些内容附加到 pattern space 当前的内容后面。这样，当你需要连着处理多行内容的时候，<code>N</code> 命令就会特别有用，比如，我们有下面一段文本：</p>
-
-<p><code>
-one two three four
-one two three 
-four three two
-three four
-</code></p>
-
-<p>如果我们要把 <code>two three four</code> 替换成 <code>2 3 4</code>，注意例子中的 <code>two three four</code> 可能在不同的行中，那么我们就可以用 <code>N</code> 命令来处理：</p>
-
-<p><code>
-N
-s/\n/ /
-s/two three four/2 3 4/
-</code></p>
-
-<p>输出的内容为：</p>
-
-<p><code>
-one 2 3 4 one two three
-four three 2 3 4
-</code></p>
-
-<p>这个结果不是我们想要的，不过的确是符合了上面的 sed 脚本的执行结果：</p>
-
-<ol>
-  <li>首先，sed 脚本读取了文本的第一行，这个时候 pattern space 中的内容为 <code>one two three four</code></li>
-  <li>然后 sed 脚本执行 N 命令，将下一行读取并附加到当前的 pattern space 内容的后面，这个时候，pattern space 中的内容就变为 <code>one two three four\none two three</code></li>
-  <li>下一个命令，将换行符 <code>\n</code> 替换成一个空格，pattern space 中的内容为 <code>one two three four one two three</code></li>
-  <li>然后下一个命令，将 pattern space 中的 <code>two three four</code> 替换成 <code>2 3 4</code>，这个时候 pattern space 中的内容为 <code>one 2 3 4 one two three</code></li>
-  <li>到达脚本的结尾，输出 pattern space 中的内容，也就是我们输出内容的第一行。</li>
-  <li>然后 sed 脚本读取文本的下一行，注意因为之前第二行已经被 <code>N</code> 命令读取了，所以 sed 脚本开始读取第三行，依旧按照前面的命令执行，最后就输出了输出内容中的第二行。</li>
-</ol>
-
-<p>虽然这个结果不是我们想要的，不过算是了解了 N 的作用了。</p>
-
-<h4 id="d-delete">D (Delete)</h4>
-
-<p>同样，前面我们介绍过 <code>d</code> 命令，它用来删除 pattern space 中的内容，并且读取下一行到 pattern space 中，sed 脚本也随之从头开始执行。<code>D</code> 命令和 <code>d</code> 命令稍微有点不同，<code>D</code> 命令会删除 pattern space 中的第一行的内容，它不会从文本中读取新的行进来，当然 sed 脚本还是会从头开始执行，如果我们有这么一个文本：</p>
-
-<p>```
-blank
-blank</p>
-
-<p>blank</p>
-
-<p>blank</p>
-
-<p>blank</p>
-
-<p>blank
-```</p>
-
-<p>这个文本中的有些段落之间有多个空行，我们希望把多余的空行去掉，也就是如果段落之间有多个空行，就删掉只剩下一个，我们的 sed 脚本可以这么写：</p>
-
-<p>```
-/^$/{
-	N
-	/^\n$/D
-}</p>
-
-<p>```</p>
-
-<p>这个脚本先匹配出空行，然后读取空行的下一行，如果两行都是空行的话，就把 pattern space 中的第一个空行删除掉，然后继续读取下一行到 pattern space 中，结果就是把多余的空行都删除掉，只剩下一个空行了。</p>
-
-<h4 id="p-print">P (Print)</h4>
-
-<p><code>P</code> 命令和 <code>p</code> 命令也稍微不同，<code>P</code> 命令不像 <code>p</code> 命令那样会把 pattern space 中的所有内容打印出来，它只会将 pattern space 的第一行打印出来，这里就不做过多的介绍了。</p>
-
-<h4 id="h-hold-h-hold-g-get-g-get-x-exchange">h (hold), H (Hold), g (get), G (Get), x (exchange)</h4>
-
-<p>这里面有五个命令，之所以一起介绍是因为，这五个命令都是操作 hold space 的，之前我们已经知道了 pattern space 了，hold space 可以认为就是一个内容的临时存放点，你可以将 pattern space 中的内容放到 hold space 中，等到需要使用的时候再将 hold space 中的内容拿回到 pattern space 中，我们来看一下这五个命令的作用吧：</p>
-
-<ul>
-  <li>h：将 pattern space 中的内容拷贝到 hold space 中，hold space 中原来的内容会被覆盖。</li>
-  <li>H：将 pattern space 中的内容添加到 hold space 当前内容的后面。</li>
-  <li>g：将 hold space 中的内容拷贝到 pattern space 中，pattern space 中原来的内容将会被覆盖。</li>
-  <li>G：将 hold space 中的内容添加到 pattern space 中目前的内容后面。</li>
-  <li>x：交换 pattern space 和 hold space 中的内容。</li>
-</ul>
-
-<p>下面我们来看一个简单的例子：</p>
-
-<p>```
-1</p>
-
-<p>2</p>
-
-<p>11</p>
-
-<p>22</p>
-
-<p>111</p>
-
-<p>222
-```</p>
-
-<p>现在我们要将上面的 1 和 2 的位置调换，就是先出现 2 再出现 1，我们的脚本可以这么写：</p>
-
-<p><code>
-/1/{
-	h
-	d
-}
-/2/{
-	G
-}
-</code></p>
-
-<p>这段脚本先匹配 1 所在的行，然后放到 hold space 中，将 pattern space 中的内容清除掉，然后匹配到 2 所在的行，将 hold space 中的内容添加到 pattern space 后面，这样，pattern space 中就是先有 2，再有 1 了。</p>
-
-<p>最后，我们得到的结果就是：</p>
-
-<p><code>
-2
-1
-22
-11
-222
-111
-</code></p>
-
-<h4 id="b">b</h4>
-
-<p><code>b</code> 命令是一个跳转命令，它是无条件的，它的语法是这样的：</p>
-
-<p><code>
-[address]b [label]
-</code></p>
-
-<p>[label] 是要跳转到的标签，你可以在 sed 脚本中用 <code>:</code> 开头来表示一个标签，比如下面的：</p>
-
-<p><code>
-:start
-s/start/end/g
-b start
-</code></p>
-
-<p>如果 <code>b</code> 后面不带参数，那么就表示直接跳到脚本的末尾了。</p>
-
-<h4 id="t">t</h4>
-
-<p>除了 <code>b</code> 这样一个跳转命令以外，sed 还有一个 <code>t</code> 的条件跳转命令，如果在当前行有一个替换被成功执行了，那么 <code>t</code> 就会跳转到特定的标签上，它的语法 <code>b</code> 是类似的。</p>
-
-<p><code>
-[address]t [label]
-</code></p>
-
-<p>看下面这段代码：</p>
-
-<p><code>
-:begin
-s/start/end/
-t begin
-</code></p>
-
-<p>这条 <code>t</code> 命令只有在当前行的 start 成功被替换成 end 的时候才会跳转到 :begin 标签那里。</p>
-
-<h3 id="section-1">总结</h3>
-
-<p>sed 的高级命令相对于基本命令来说不怎么常用，但是在处理特定的问题的时候，这些命令还是很有用的。不过，不管怎么说，sed 都不是一门完备的语言，所以其适用的问题域也是比较有限的，sed 最大的优势在于逐行处理文本上，用适当的工具处理适当的问题，才能发挥出工具最大的威力。</p>
 ]]></content>
   </entry>
   
