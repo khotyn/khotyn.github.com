@@ -109,6 +109,50 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/09/03/crush/">Crush</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-03T23:09:00+08:00" pubdate data-updated="true">Sep 3<span>rd</span>, 2013</time>
+        
+         | <a href="/blog/2013/09/03/crush/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>失恋了，命运总是在你觉得一切都在好的方向上发展的时候给你致命一击，换工作，为了靠近一点，换住的地方，为了更靠近一点，放弃原来的朋友，只为能够和她更加经常地见面，你们约好了明天一起去看电影，周末一起搬家，说好了要去哪里玩，要去吃什么好吃的东西，但是却敌不过命运女神的玩笑，你觉得你的世界已经奔溃了，觉得工作已经索然无味，觉得食物是可有可无的，你也明白如果不见面了，那么时间肯定会带走一切，但是，在这一刻，你恨不得狠狠地给自己捅上一刀，好让自己好受一点。</p>
+
+<p>不过，人生总该如此，就应该在最幸福的时候也保持警惕，在最开心的时候也要保持头脑的清醒。正如保罗•柯艾略说：“昨日的伤痛是光明战士今日的力量”，人总要经历这种事情才会成长，只是，在这个过程中，心里会长上一层层的茧，你也在怕自己是不是不会再爱了。</p>
+
+<p>难能可贵的是，只有当遇到这种事情的时候，你才能够感受到朋友的弥足珍贵，那些多年以来一直在一起的朋友，是你生命中很重要的一笔财富，他们会在你最低谷的时候给予你安慰，告诉你你的世界还是有些许温度的。</p>
+
+<p>一直以来很喜欢传奇程序员 <a href="http://en.wikipedia.org/wiki/Jamie_Zawinski">Zawinski</a> 的日记里面的一句话：“痛苦造就性格”，在你最痛苦的时候，才是最能够体现你的品格的时候，所以，我也不能就这么消沉下去，沉溺于过去的人是没有光明的~</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/08/03/dumping-class-from-jvm/">从 JVM 中 Dump Class 的几种方法</a></h1>
     
     
@@ -1991,105 +2035,6 @@ n
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/10/bash-job-control/">Bash Job Control</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-10T19:43:00+08:00" pubdate data-updated="true">Jul 10<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/10/bash-job-control/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>这两天在给 <a href="https://github.com/khotyn/hotcode">HotCode</a> 写<a href="https://github.com/khotyn/hotcode/blob/master/test.sh">测试脚本</a>，其中用到了 Bash 的任务控制功能，说白了就是把一个任务放到后台，拉到前台之类的操作，这里做一下总结。</p>
-
-<h3 id="section">开启任务控制</h3>
-
-<p>首先，如果要在 Bash 脚本中使用 Bash 的任务控制功能，必须先执行下面这个命令：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">set</span> -m
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这个命令的意思其实就是开启 Bash 的任务控制功能，见 Bash Manual 的 <a href="https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html">The Set Buildin</a>。</p>
-
-<h3 id="section-1">把任务放到后台执行</h3>
-
-<p>要把任务放到后台非常容易，只要在命令后面加入一个 <code>&amp;</code> 即可，像这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line">bash test.sh &amp;
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>命令的输出类似于这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="o">[</span>1<span class="o">]</span> 51668
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>其中前面的 <code>[1]</code> 代表的是这个任务的任务编号，而 <code>51668</code> 则是这个任务的进程 ID。</p>
-
-<h3 id="section-2">查看在后台执行的任务的执行情况</h3>
-
-<p><code>jobs</code> 命令可以查看在后台执行的任务的情况</p>
-
-<p>它的输出类似于下面这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="o">[</span>1<span class="o">]</span>  + running    bash test.sh
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>前面的 <code>[1]</code> 就是任务编号，后面的 <code>running</code> 表示任务当前运行的状态。</p>
-
-<p><code>jobs</code> 命令后面可以加一些参数，比如下面这些：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">jobs</span> -r <span class="c">###只输出正在运行的任务</span>
-</span><span class="line"><span class="nb">jobs</span> -s <span class="c">###只输出已经执行完的任务</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>具体看 <a href="https://www.gnu.org/software/bash/manual/html_node/Job-Control-Builtins.html#Job-Control-Builtins">Job Control Buildins</a>。</p>
-
-<h3 id="section-3">把任务调度到前台</h3>
-
-<p>要把任务调度到前台只要用 <code>fg</code> 命令就可以，后面加上一个任务编号表示要把哪个后台任务调度到前台：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">fg</span> %1
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>上面这个命令就是把任务编号为 1 的任务调度到前台。</p>
-
-<p>Bash 的任务调度还是比较简单的，不过的确是非常地有用。</p>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/3/">&larr; Older</a></li>
@@ -2107,6 +2052,10 @@ n
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2013/10/24/brave-new-world/">在更大的世界遇见更好的自己</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/10/16/beautiful-code/">代码之美</a>
       </li>
     
@@ -2120,10 +2069,6 @@ n
     
       <li class="post">
         <a href="/blog/2013/09/25/java-bean-boolean/">Java Bean 的布尔类型属性获取问题</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/21/the-great-gatsby/">「了不起的盖茨比」</a>
       </li>
     
   </ul>

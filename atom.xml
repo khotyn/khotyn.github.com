@@ -4,7 +4,7 @@
   <title><![CDATA[小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2013-10-16T00:59:11+08:00</updated>
+  <updated>2013-10-24T08:36:20+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,27 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[在更大的世界遇见更好的自己]]></title>
+    <link href="http://khotyn.github.com/blog/2013/10/24/brave-new-world/"/>
+    <updated>2013-10-24T08:31:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/10/24/brave-new-world</id>
+    <content type="html"><![CDATA[<p><img src="http://pic.yupoo.com/khotyn/Dg6bDXhi/Zb6Cy.jpg" alt="image" /></p>
+
+<p>今天和朋友聊天，说起眼见的问题，以前在业务团队的时候大家都奔着业务而去，完成业务上的需求，最多了解一下所用到的框架，鲜有关注业界的开源软件的动态。</p>
+
+<p>而到了中间件团队，所有人都得规划、实施、推广自己的产品，如果只是做一些平庸的事情，那实在对不起你所在的团队，所以只能硬着头皮去花时间关注业界的开源软件的动态，慢慢地，也就开阔了自己的眼见，碰到一个问题以后，发现还可以用这样的方法解决，这是之前从来没有想到的。</p>
+
+<p>最近其实一直在反思，当时这么快下决定转岗到现在的部门到底对不对？诚然，当时转岗的决定，有其他的非常私人的考虑，在新的岗位，各种不习惯，但是这里有很多新鲜的事情，可以作为学习的对象；有一些很强的人，可以作为学习的榜样。当你进入了一个更大的世界，你又重新回到了婴儿的时代，疯狂快速地吸收着周围的一切。</p>
+
+<p>晚上跑步的时候突然想起了 Clyde 三年前和我说的他的梦想：“等我老了的时候，我希望成为一个讲故事的人”，当时我并不明白他到底想表达什么，只能随便应付几句。现在，我似乎有点想明白了，那些有着很多精彩的故事的人，无非就是旅行家，船员之类的，想要成为一个讲故事的人，必须有足够的人生经历，和这个世界有更大的交集。最近在看德田秋声的「霉」，永远待在一个地方，生活大概就像「霉」中的男女主人公过的那样，平淡，烦躁，偶尔有点阳光，能够讲述的大概也就是些平淡无奇的故事。</p>
+
+<p>一直很佩服身边的一些朋友和同事，他们能够把一件事情坚持两三年，有些人跑地并不快，但是他们总能比你更加坚持，跑得更远，和他们相比，我的生活是不是太过肤浅，似乎从来没有坚持一件事情超过一年，对于那个超过一年的世界，我陌生无比，这大概是因为我一直都比较缺乏意志力和专注力。</p>
+
+<p>旧世界纵然舒适无比，但是前方永远有一个更吸引人，更宽广，更深邃的世界，多年以后，希望在那个世界遇见更好的自己。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[代码之美]]></title>
@@ -2341,76 +2362,6 @@ n
   <li>当前一个节点释放锁的时候，它就唤醒当前线程的这个节点，然后当前线程的节点就可以成功获取到锁了</li>
   <li>这个时候它就到整个队列的头部了，然后 release 操作的时候又可以唤醒下一个。</li>
 </ul>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Bash Job Control]]></title>
-    <link href="http://khotyn.github.com/blog/2013/07/10/bash-job-control/"/>
-    <updated>2013-07-10T19:43:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/07/10/bash-job-control</id>
-    <content type="html"><![CDATA[<p>这两天在给 <a href="https://github.com/khotyn/hotcode">HotCode</a> 写<a href="https://github.com/khotyn/hotcode/blob/master/test.sh">测试脚本</a>，其中用到了 Bash 的任务控制功能，说白了就是把一个任务放到后台，拉到前台之类的操作，这里做一下总结。</p>
-
-<h3 id="section">开启任务控制</h3>
-
-<p>首先，如果要在 Bash 脚本中使用 Bash 的任务控制功能，必须先执行下面这个命令：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">set</span> -m
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这个命令的意思其实就是开启 Bash 的任务控制功能，见 Bash Manual 的 <a href="https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html">The Set Buildin</a>。</p>
-
-<h3 id="section-1">把任务放到后台执行</h3>
-
-<p>要把任务放到后台非常容易，只要在命令后面加入一个 <code>&amp;</code> 即可，像这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line">bash test.sh &amp;
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>命令的输出类似于这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="o">[</span>1<span class="o">]</span> 51668
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>其中前面的 <code>[1]</code> 代表的是这个任务的任务编号，而 <code>51668</code> 则是这个任务的进程 ID。</p>
-
-<h3 id="section-2">查看在后台执行的任务的执行情况</h3>
-
-<p><code>jobs</code> 命令可以查看在后台执行的任务的情况</p>
-
-<p>它的输出类似于下面这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="o">[</span>1<span class="o">]</span>  + running    bash test.sh
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>前面的 <code>[1]</code> 就是任务编号，后面的 <code>running</code> 表示任务当前运行的状态。</p>
-
-<p><code>jobs</code> 命令后面可以加一些参数，比如下面这些：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">jobs</span> -r <span class="c">###只输出正在运行的任务</span>
-</span><span class="line"><span class="nb">jobs</span> -s <span class="c">###只输出已经执行完的任务</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>具体看 <a href="https://www.gnu.org/software/bash/manual/html_node/Job-Control-Builtins.html#Job-Control-Builtins">Job Control Buildins</a>。</p>
-
-<h3 id="section-3">把任务调度到前台</h3>
-
-<p>要把任务调度到前台只要用 <code>fg</code> 命令就可以，后面加上一个任务编号表示要把哪个后台任务调度到前台：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">fg</span> %1
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>上面这个命令就是把任务编号为 1 的任务调度到前台。</p>
-
-<p>Bash 的任务调度还是比较简单的，不过的确是非常地有用。</p>
-
 ]]></content>
   </entry>
   
