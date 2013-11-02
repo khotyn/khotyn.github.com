@@ -109,6 +109,108 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/11/02/jvmtop-impl/">Jvmtop 介绍和实现分析</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-02T15:36:00+08:00" pubdate data-updated="true">Nov 2<span>nd</span>, 2013</time>
+        
+         | <a href="/blog/2013/11/02/jvmtop-impl/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h3 id="section">简介</h3>
+
+<p>jvmtop 是一个分析工具，顾名思义，它是一个针对 jvm 的 工具，展示的方式和 unix 的 top 命令相似。</p>
+
+<p>jvmtop 的项目地址是：<a href="https://code.google.com/p/jvmtop/">jvmtop</a>，安装 jvmtop 除了项目地址上的方式以外，还可以通过 jenv 安装：<code>jenv install jvmtop</code>。</p>
+
+<p>jvmtop 提供了两个视图，一个是概览视图，可以展示出当前机器的所有的 JVM 的情况，命令是 </p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">jvmtop.sh</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>显示出的信息类似下面这样：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg" alt="image" /></p>
+
+<p>其中，各个字段的意义分别如下：</p>
+
+<ul>
+  <li>PID：进程 ID</li>
+  <li>MAIN-CLASS：main 类的名字</li>
+  <li>HPCUR：当前被使用的 heap 的大小</li>
+  <li>HPMAX：最大可用的 heap 的大小</li>
+  <li>NHCUR：当前被使用的非 heap 大小（比如：perm gen）</li>
+  <li>NHMAX：最大可用的非 heap 大小</li>
+  <li>CPU：CPU 的使用情况</li>
+  <li>GC：消耗在 GC 上的时间比例</li>
+  <li>VM：JVM 的提供者，大版本号，小版本号，图中的意思是 Apple 提供的 JDK 6U51 版本。</li>
+  <li>USERNAME：当前的用户名</li>
+  <li>#T：线程数量</li>
+  <li>DL：是否有现成发生死锁</li>
+</ul>
+
+<p>还有一个视图是详情视图，展示一个 JVM 的详细情况，使用的命令如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">jvmtop.sh &lt;pid&gt;</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>显示的信息类似下面这样：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png" alt="image" /></p>
+
+<p>其中，各个字段的意义如下：</p>
+
+<ul>
+  <li>TID：线程 ID</li>
+  <li>NAME：线程名</li>
+  <li>STATE：线程状态</li>
+  <li>CPU：线程当前的 CPU 占用情况</li>
+  <li>TOTALCPU：从线程被创建开始总体的 CPU 占用情况</li>
+  <li>BLOCKBY：阻塞这个线程的线程 ID</li>
+</ul>
+
+<p>更加详细的用法大家可以用下面的用 <code>jvmtop.sh -h</code> 来查看。</p>
+
+<h3 id="section-1">实现</h3>
+
+<p>jvmtop 的实现相对来说还是比较简单的，整个 jvmtop 才 14 个类。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png" alt="image" /></p>
+
+<p>其中 JvmTop.java 是入口类。</p>
+
+<p>jvmtop 在启动后，会首先用 <code>sun.jvmstat.monitor.*</code> 下面的类以及 <code>com.sun.tools.attach.VirtualMachine</code> 获取到当前机器的所有的 JVM，然后通过 attachment api 将 <code>management-agent.jar</code> 这个 agent 加载到目标 JVM 上，这样，通过 JMX，就可以拿到当前的 JVM 的各种信息了，具体各个信息需要用什么样的 MBean 去拿，大家可以看对应的源代码。</p>
+
+<p>其实，如果需要一个 JVM 的静态的信息，比如，PID，MAIN-CLASS，JVM-ARGS 等等静态信息，直接用 <code>sun.jvmstat.monitor.*</code> 下的 API 就可以，只有需要动态信息的时候，我们才需要通过 attachment api 把 JMX 的功能打开，通过各种 MBean 去获取这些信息。如果后续需要实现类似的功能，也可以通过这样的思路去做。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/10/24/brave-new-world/">在更大的世界遇见更好的自己</a></h1>
     
     
@@ -1055,56 +1157,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/09/05/thanks-my-friend/">谢谢我的小伙伴们</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-09-05T22:05:00+08:00" pubdate data-updated="true">Sep 5<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/09/05/thanks-my-friend/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>Those who were dancing where thought to be crazy by those who can not hear the music, and now the music is over~</strong></p>
-
-<p>谢谢我的小伙伴们，在我最低落的时候一直陪伴着我，你们是我最好的朋友。</p>
-
-<p>滨江的三个小伙伴，虽然因为一个错误的决定而离开了一起待了四年的你们，但是相信我们会是一生的朋友~，我会常去滨江看你们的~</p>
-
-<p>感谢孙大娘，作为我最好的女性朋友，可以听一个大男人打电话哭，真是太难得了~</p>
-
-<p>感谢宋蛋蛋和鲁哥，一起陪喝酒，陪骑车，陪吃饭，陪搬家，虽然你们的感情走的也不是很顺，但是还是希望你们能够最后能够有所斩获~</p>
-
-<p>我一直以来都在警告自己不要受感情的影响，但是人总有感性赢过理性的时候，谢谢你们把我拉了回来。现在，我的世界依然充满希望，我依然希望可以写出更好的代码，对系统更有自己的感觉，依然期盼着什么时候可以去海南和台湾环岛，依然想要完成自己的第一个全程马拉松，依然对出国工作和学习抱有一些期待，依然想要赚更多的钱，过想要的生活，依然努力避免成为自己讨厌的样子。</p>
-
-<p>恩，这下我知道怎么笑得更加开心了~</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -1120,6 +1172,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2013/11/02/jvmtop-impl/">jvmtop 介绍和实现分析</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/10/24/brave-new-world/">在更大的世界遇见更好的自己</a>
       </li>
     
@@ -1133,10 +1189,6 @@
     
       <li class="post">
         <a href="/blog/2013/10/01/git-flow/">Git flow 分支管理模型简介</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/25/java-bean-boolean/">Java Bean 的布尔类型属性获取问题</a>
       </li>
     
   </ul>

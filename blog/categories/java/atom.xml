@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Java | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/java/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2013-10-24T08:36:20+08:00</updated>
+  <updated>2013-11-02T16:54:13+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,81 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[jvmtop 介绍和实现分析]]></title>
+    <link href="http://khotyn.github.com/blog/2013/11/02/jvmtop-impl/"/>
+    <updated>2013-11-02T15:36:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/11/02/jvmtop-impl</id>
+    <content type="html"><![CDATA[<h3 id="section">简介</h3>
+
+<p>jvmtop 是一个分析工具，顾名思义，它是一个针对 jvm 的 工具，展示的方式和 unix 的 top 命令相似。</p>
+
+<p>jvmtop 的项目地址是：<a href="https://code.google.com/p/jvmtop/">jvmtop</a>，安装 jvmtop 除了项目地址上的方式以外，还可以通过 jenv 安装：<code>jenv install jvmtop</code>。</p>
+
+<p>jvmtop 提供了两个视图，一个是概览视图，可以展示出当前机器的所有的 JVM 的情况，命令是 </p>
+
+<p><code>
+jvmtop.sh
+</code></p>
+
+<p>显示出的信息类似下面这样：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg" alt="image" /></p>
+
+<p>其中，各个字段的意义分别如下：</p>
+
+<ul>
+  <li>PID：进程 ID</li>
+  <li>MAIN-CLASS：main 类的名字</li>
+  <li>HPCUR：当前被使用的 heap 的大小</li>
+  <li>HPMAX：最大可用的 heap 的大小</li>
+  <li>NHCUR：当前被使用的非 heap 大小（比如：perm gen）</li>
+  <li>NHMAX：最大可用的非 heap 大小</li>
+  <li>CPU：CPU 的使用情况</li>
+  <li>GC：消耗在 GC 上的时间比例</li>
+  <li>VM：JVM 的提供者，大版本号，小版本号，图中的意思是 Apple 提供的 JDK 6U51 版本。</li>
+  <li>USERNAME：当前的用户名</li>
+  <li>#T：线程数量</li>
+  <li>DL：是否有现成发生死锁</li>
+</ul>
+
+<p>还有一个视图是详情视图，展示一个 JVM 的详细情况，使用的命令如下：</p>
+
+<p><code>
+jvmtop.sh &lt;pid&gt;
+</code></p>
+
+<p>显示的信息类似下面这样：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png" alt="image" /></p>
+
+<p>其中，各个字段的意义如下：</p>
+
+<ul>
+  <li>TID：线程 ID</li>
+  <li>NAME：线程名</li>
+  <li>STATE：线程状态</li>
+  <li>CPU：线程当前的 CPU 占用情况</li>
+  <li>TOTALCPU：从线程被创建开始总体的 CPU 占用情况</li>
+  <li>BLOCKBY：阻塞这个线程的线程 ID</li>
+</ul>
+
+<p>更加详细的用法大家可以用下面的用 <code>jvmtop.sh -h</code> 来查看。</p>
+
+<h3 id="section-1">实现</h3>
+
+<p>jvmtop 的实现相对来说还是比较简单的，整个 jvmtop 才 14 个类。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png" alt="image" /></p>
+
+<p>其中 JvmTop.java 是入口类。</p>
+
+<p>jvmtop 在启动后，会首先用 <code>sun.jvmstat.monitor.*</code> 下面的类以及 <code>com.sun.tools.attach.VirtualMachine</code> 获取到当前机器的所有的 JVM，然后通过 attachment api 将 <code>management-agent.jar</code> 这个 agent 加载到目标 JVM 上，这样，通过 JMX，就可以拿到当前的 JVM 的各种信息了，具体各个信息需要用什么样的 MBean 去拿，大家可以看对应的源代码。</p>
+
+<p>其实，如果需要一个 JVM 的静态的信息，比如，PID，MAIN-CLASS，JVM-ARGS 等等静态信息，直接用 <code>sun.jvmstat.monitor.*</code> 下的 API 就可以，只有需要动态信息的时候，我们才需要通过 attachment api 把 JMX 的功能打开，通过各种 MBean 去获取这些信息。如果后续需要实现类似的功能，也可以通过这样的思路去做。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Java Bean 的布尔类型属性获取问题]]></title>
@@ -720,142 +795,6 @@ V remove(Object key, int hash, Object value) {
 <p>在前面的章节中，我们涉及到的操作都是在单个 Segment 中进行的，但是 ConcurrentHashMap 有一些操作是在多个 Segment 中进行，比如 size 操作，ConcurrentHashMap 的 size 操作也采用了一种比较巧的方式，来尽量避免对所有的 Segment 都加锁。</p>
 
 <p>前面我们提到了一个 Segment 中的有一个 modCount 变量，代表的是对 Segment 中元素的数量造成影响的操作的次数，这个值只增不减，size 操作就是遍历了两次 Segment，每次记录 Segment 的 modCount 值，然后将两次的 modCount 进行比较，如果相同，则表示期间没有发生过写入操作，就将原先遍历的结果返回，如果不相同，则把这个过程再重复做一次，如果再不相同，则就需要将所有的 Segment 都锁住，然后一个一个遍历了，具体的实现大家可以看 ConcurrentHashMap 的源码，这里就不贴了。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Java 并发编程 J.U.C 之 Condition]]></title>
-    <link href="http://khotyn.github.com/blog/2013/07/12/juc-condition/"/>
-    <updated>2013-07-12T07:36:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/07/12/juc-condition</id>
-    <content type="html"><![CDATA[<p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_condition/">黄金档</a>的文章。</strong></p>
-
-<p>在上一篇中，我们了解了下 <a href="http://blog.khotyn.com/blog/2013/07/10/juc-lock-acquire-release/">J.U.C 的锁的获取与释放的过程</a>，这个过程主要通过在 A.Q.S 中维持一个等待队列来实现，其中我们也提到了，在 A.Q.S 中除了一个等待队列之外，还有一个 Condition 队列，在了解 Condition 队列之前，先来看一下 Condition 是怎么回事：</p>
-
-<blockquote>
-  <p>The synchronizer framework provides a ConditionObject class for use by synchronizers that maintain exclusive synchronization and conform to the Lock interface. Any number of condition objects may be attached to a lock object, providing classic monitor-style await, signal, and signalAll operations, including those with timeouts, along with some inspection and monitoring methods.</p>
-</blockquote>
-
-<p>上面的这一段内容摘自 Doug Lea 的 <a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf">AQS 论文</a>，从上面这一段话可以看出，Condition 主要是为了在 J.U.C 框架中提供和 Java 传统的监视器风格的 wait，notify 和 notifyAll 方法类似的功能，那么先来解释一下这三个方法的作用：</p>
-
-<ul>
-  <li>Object.wait() 方法：使当前线程释放 Object 上的监视器并且挂起，直到有另外的线程调用 Object.notify() 方法或者 Object.notifyAll() 方法唤醒当前线程，当被唤醒后，Object.wait() 方法会尝试重新获取监视器，成功获取后继续往下执行。注意 Object.wait() 方法只有在当前线程持有 Object 的监视器的时候才能够调用，不然会抛出异常。</li>
-  <li>Object.notify() 方法：用于唤醒另外一个调用了 Object.wait() 方法的线程，如果有多个都调用了 Object.wait() 方法，那么就会选择一个线程去 notify()，具体选择哪一个和具体的实现有关，当前线程在调用 Object.notify() 方法以后会就释放Object的监视器，和 wait() 方法一样，Object.notify() 方法只有在当前线程持有 Object 的监视器的时候才能够调用，不然就会抛出异常。</li>
-  <li>Object.notifyAll() 方法：唤醒所有调用了 Object.wait() 方法的线程，如果有多个线程调用了 Object.wait() 方法，那么就会引发这些线程之间的竞争，最后谁成功获取到 Object 的监视器和具体的实现有关，当前线程在调用 Object.notifyAll() 方法以后会就释放 Object 的监视器，和 wait() 方法一样，Object.notifyAll() 方法只有在当前线程只有 Object 的监视器的时候才能够调用，不然就会抛出异常。</li>
-</ul>
-
-<p>那么 Condition 是如何实现 wait，notify 和 notifyAll 方法的功能呢？我们接下来看：</p>
-
-<p>在 Condition 中，wait，notify 和 notifyAll 方法分别对应了 await，signal 和 signalAll 方法，当然 Condition 也提供了超时的、不可被中断的 await() 方法，不过我们主要还是看一看 await，notify 和 notifyAll 的实现，先看 await：</p>
-
-<h3 id="await-">await 方法</h3>
-
-<p><code>java
-public final void await() throws InterruptedException {
-    if (Thread.interrupted())
-        throw new InterruptedException();
-    Node node = addConditionWaiter();
-    int savedState = fullyRelease(node);
-    int interruptMode = 0;
-    while (!isOnSyncQueue(node)) {
-        LockSupport.park(this);
-        if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
-            break;
-    }
-    if (acquireQueued(node, savedState) &amp;&amp; interruptMode != THROW_IE)
-        interruptMode = REINTERRUPT;
-    if (node.nextWaiter != null)
-        unlinkCancelledWaiters();
-    if (interruptMode != 0)
-        reportInterruptAfterWait(interruptMode);
-}
-</code></p>
-
-<p>整个 await 的过程如下：</p>
-
-<ul>
-  <li>在第 2 行处，如果当前线程被中断，则抛出中断异常。</li>
-  <li>在第 4 行处，将节点加入到 Condition 队列中去，这里如果 lastWaiter 是 cancel 状态，那么会把它踢出 Condition 队列。</li>
-  <li>在第 5 行处，调用 tryRelease，释放当前线程的锁</li>
-  <li>在第 7 行处，判断节点是否在等待队列中（signal 操作会将 Node 从 Condition 队列中拿出并且放入到等待队列中去），如果不在等待队列中了，就 park 当前线程，如果在，就退出循环，这个时候如果被中断，那么就退出循环</li>
-  <li>在第 12 行处，这个时候线程已经被 signal() 或者 signalAll() 操作给唤醒了，退出了 4 中的 while 循环，尝试再次获取锁，调用 acquireQueued 方法。</li>
-</ul>
-
-<p>可以看到，这个 await 的操作过程和 Object.wait() 方法是一样，只不过 await() 采用了 Condition 队列的方式实现了 Object.wait() 的功能。</p>
-
-<h3 id="signal--signalall-">signal 和 signalAll 方法</h3>
-
-<p>在了解了 await 方法的实现以后，signal 和 signalAll 方法的实现就相对简单了，先看看 signal 方法：</p>
-
-<p><code>java
-public final void signal() {
-    if (!isHeldExclusively())
-        throw new IllegalMonitorStateException();
-    Node first = firstWaiter;
-    if (first != null)
-        doSignal(first);
-}
-</code></p>
-
-<p>这里先判断当前线程是否持有锁，如果没有持有，则抛出异常，然后判断整个 condition 队列是否为空，不为空则调用 doSignal 方法来唤醒线程，看看 doSignal 方法都干了一些什么：</p>
-
-<p><code>java
-private void doSignal(Node first) {
-    do {
-        if ( (firstWaiter = first.nextWaiter) == null)
-            lastWaiter = null;
-        first.nextWaiter = null;
-    } while (!transferForSignal(first) &amp;&amp;
-             (first = firstWaiter) != null);
-}
-</code></p>
-
-<p>这个 while 循环的作用就是将 firstWaiter 往 Condition 队列的后面移一位，并且唤醒 first，看看 while 循环中 tranferForSignal：</p>
-
-<p>```java
-final boolean transferForSignal(Node node) {
-    /*
-     * If cannot change waitStatus, the node has been cancelled.
-     */
-    if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))
-        return false;</p>
-
-<pre><code>/*
- * Splice onto queue and try to set waitStatus of predecessor to
- * indicate that thread is (probably) waiting. If cancelled or
- * attempt to set waitStatus fails, wake up to resync (in which
- * case the waitStatus can be transiently and harmlessly wrong).
- */
-Node p = enq(node);
-int c = p.waitStatus;
-if (c &gt; 0 || !compareAndSetWaitStatus(p, c, Node.SIGNAL))
-    LockSupport.unpark(node.thread);
-return true; } ```
-</code></pre>
-
-<p>这段代码的作用就是修改 Node 的 waitStatus 为 0，然后将 Node 插入到等待队列中，并且唤醒 Node。</p>
-
-<p>signalAll 和 signal 方法类似，主要的不同在于它不是调用 doSignal 方法，而是调用 doSignalAll 方法：</p>
-
-<p><code>java
-private void doSignalAll(Node first) {
-    lastWaiter = firstWaiter  = null;
-    do {
-        Node next = first.nextWaiter;
-        first.nextWaiter = null;
-        transferForSignal(first);
-        first = next;
-    } while (first != null);
-}
-</code></p>
-
-<p>这个方法就相当于把 Condition 队列中的所有 Node 全部取出插入到等待队列中去。</p>
-
-<h3 id="section">总结</h3>
-
-<p>在了解了 await，signal 和 signalAll 方法的实现以后，我们再来通过一副 gif 动画来看一看这一个整体的过程：</p>
-
-<p><img src="http://farm3.staticflickr.com/2888/9263654699_6b959eecb2_o.gif" alt="image" /></p>
 ]]></content>
   </entry>
   

@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>再论如何匹配不包含连续字符串的行 - 小径分岔的花园</title>
+  <title>jvmtop 介绍和实现分析 - 小径分岔的花园</title>
   <meta name="author" content="khotyn">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://khotyn.github.com/blog/2013/07/24/match-line-not-contain-a-string">
+  <link rel="canonical" href="http://khotyn.github.com/blog/2013/11/02/jvmtop-impl">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -107,7 +107,7 @@
   
   <header class="page-header">
     
-      <h1 class="entry-title">再论如何匹配不包含连续字符串的行</h1>
+      <h1 class="entry-title">Jvmtop 介绍和实现分析</h1>
     
     
       <p class="meta">
@@ -123,7 +123,7 @@
   
 
 
-<time datetime="2013-07-24T22:35:00+08:00" pubdate data-updated="true">Jul 24<span>th</span>, 2013</time>
+<time datetime="2013-11-02T15:36:00+08:00" pubdate data-updated="true">Nov 2<span>nd</span>, 2013</time>
         
          | <a href="#disqus_thread">Comments</a>
         
@@ -132,39 +132,71 @@
   </header>
 
 
-<div class="entry-content"><p>在前一篇文章中，我讨论过如何使用<a href="http://blog.khotyn.com/blog/2013/07/24/zero-width-assert/">使用零宽断言来匹配不包含连续字符串的行</a>，这个方法采用了零宽断言这种不怎么常见的正则表达式用法，虽然行之有效，但是总归是个麻烦的方法，而且，零宽断言很多的正则表达式解释器都不支持，用 grep 的话，得加上 -P 参数，让 grep 采用 Perl 的方式解释正则表达式，更加遗憾的一点是 -P 参数似乎只有在 GNU 的版本中才有，在我的 Mac 上的 BSD 版本的 grep 中，并没有这个参数。</p>
+<div class="entry-content"><h3 id="section">简介</h3>
 
-<p>所幸的是今天无聊翻了翻 grep 的 man page，发现了几个更加方便的方法也更加通用的办法，在这里和大家分享一下：</p>
+<p>jvmtop 是一个分析工具，顾名思义，它是一个针对 jvm 的 工具，展示的方式和 unix 的 top 命令相似。</p>
 
-<h3 id="grep--invert-match">grep 的 invert match</h3>
+<p>jvmtop 的项目地址是：<a href="https://code.google.com/p/jvmtop/">jvmtop</a>，安装 jvmtop 除了项目地址上的方式以外，还可以通过 jenv 安装：<code>jenv install jvmtop</code>。</p>
 
-<p>今天翻 grep 的 man page，发现了一个 <code>-v</code> 参数，它的说明是这样的：</p>
-
-<blockquote>
-  <p>Selected lines are those not matching any of the specified patterns.</p>
-</blockquote>
-
-<p>正是我们想要，可以传入一个正则表达式，它帮你匹配不符合这个正则表达式的行，而且 <code>-v</code> 参数各个 grep 的版本都支持，无需担心换个系统就不能用的情况。</p>
-
-<h3 id="sed--pattern-">采用 sed 来删除符合某个 pattern 的行</h3>
-
-<p>其实不用 grep，用 sed 也可以做到这个需求，sed 本身就是一个强大的行处理工具，sed 可以用如下的方式把符合某个 pattern 的行给删除掉：</p>
+<p>jvmtop 提供了两个视图，一个是概览视图，可以展示出当前机器的所有的 JVM 的情况，命令是 </p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">sed '/pattern/D'</span></code></pre></td></tr></table></div></figure></notextile></div>
+</pre></td><td class="code"><pre><code class=""><span class="line">jvmtop.sh</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>怎么样？也是非常方便的吧，它可以做到和 grep 一样的功能，非常有效。</p>
+<p>显示出的信息类似下面这样：</p>
 
-<h3 id="sed--pattern--1">采用 sed 来打印不符合某个 pattern 的行</h3>
+<p><img src="http://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg" alt="image" /></p>
 
-<p>要用 sed 来解决这个问题，其实不止上面一个方法，还可以用以下的方法来做：</p>
+<p>其中，各个字段的意义分别如下：</p>
+
+<ul>
+  <li>PID：进程 ID</li>
+  <li>MAIN-CLASS：main 类的名字</li>
+  <li>HPCUR：当前被使用的 heap 的大小</li>
+  <li>HPMAX：最大可用的 heap 的大小</li>
+  <li>NHCUR：当前被使用的非 heap 大小（比如：perm gen）</li>
+  <li>NHMAX：最大可用的非 heap 大小</li>
+  <li>CPU：CPU 的使用情况</li>
+  <li>GC：消耗在 GC 上的时间比例</li>
+  <li>VM：JVM 的提供者，大版本号，小版本号，图中的意思是 Apple 提供的 JDK 6U51 版本。</li>
+  <li>USERNAME：当前的用户名</li>
+  <li>#T：线程数量</li>
+  <li>DL：是否有现成发生死锁</li>
+</ul>
+
+<p>还有一个视图是详情视图，展示一个 JVM 的详细情况，使用的命令如下：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">sed -n '/pattern/!p'</span></code></pre></td></tr></table></div></figure></notextile></div>
+</pre></td><td class="code"><pre><code class=""><span class="line">jvmtop.sh &lt;pid&gt;</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>解释一下这段 sed 脚本的作用，首先是 <code>-n</code> 参数，大家知道 sed 的默认将处理和没有处理过的行都定向到输出流上，而 <code>-n</code> 参数是用来关闭这个功能，我们当然不希望 sed 将所有的行都打印出来。然后脚本的开始是一个行的选择器，前面是一个正则表达式（sed 的正则表达式都是放在两个斜杠之间的），后面的是一个<code>!</code>号，这样就表示选择反向选择，即选择不符合 pattern 的行，然后最后是一个 <code>p</code> 命令，把这样的行打印出来，这里的 pattern 当然可以是需求中的那个连续的字符串，这样，我们就达到了需求的目的了。</p>
+<p>显示的信息类似下面这样：</p>
 
-<p>总结一下，推荐大家还是用 grep 的 invert match 或者 sed 来完成这个功能，零宽断言在解决这个问题上感觉有点杀鸡焉用牛刀（<strong>零宽断言还有很多适用的场景，不仅仅可以用来解决这个问题</strong>）。</p>
+<p><img src="http://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png" alt="image" /></p>
+
+<p>其中，各个字段的意义如下：</p>
+
+<ul>
+  <li>TID：线程 ID</li>
+  <li>NAME：线程名</li>
+  <li>STATE：线程状态</li>
+  <li>CPU：线程当前的 CPU 占用情况</li>
+  <li>TOTALCPU：从线程被创建开始总体的 CPU 占用情况</li>
+  <li>BLOCKBY：阻塞这个线程的线程 ID</li>
+</ul>
+
+<p>更加详细的用法大家可以用下面的用 <code>jvmtop.sh -h</code> 来查看。</p>
+
+<h3 id="section-1">实现</h3>
+
+<p>jvmtop 的实现相对来说还是比较简单的，整个 jvmtop 才 14 个类。</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png" alt="image" /></p>
+
+<p>其中 JvmTop.java 是入口类。</p>
+
+<p>jvmtop 在启动后，会首先用 <code>sun.jvmstat.monitor.*</code> 下面的类以及 <code>com.sun.tools.attach.VirtualMachine</code> 获取到当前机器的所有的 JVM，然后通过 attachment api 将 <code>management-agent.jar</code> 这个 agent 加载到目标 JVM 上，这样，通过 JMX，就可以拿到当前的 JVM 的各种信息了，具体各个信息需要用什么样的 MBean 去拿，大家可以看对应的源代码。</p>
+
+<p>其实，如果需要一个 JVM 的静态的信息，比如，PID，MAIN-CLASS，JVM-ARGS 等等静态信息，直接用 <code>sun.jvmstat.monitor.*</code> 下的 API 就可以，只有需要动态信息的时候，我们才需要通过 attachment api 把 JMX 的功能打开，通过各种 MBean 去获取这些信息。如果后续需要实现类似的功能，也可以通过这样的思路去做。</p>
 </div>
 
 
@@ -187,12 +219,12 @@
   
 
 
-<time datetime="2013-07-24T22:35:00+08:00" pubdate data-updated="true">Jul 24<span>th</span>, 2013</time>
+<time datetime="2013-11-02T15:36:00+08:00" pubdate data-updated="true">Nov 2<span>nd</span>, 2013</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/programming/'>Programming</a>, <a class='category' href='/blog/categories/regex/'>Regex</a>, <a class='category' href='/blog/categories/shell/'>Shell</a>
+    <a class='category' href='/blog/categories/java/'>Java</a>, <a class='category' href='/blog/categories/programming/'>Programming</a>
   
 </span>
 
@@ -216,14 +248,10 @@
     <ul class="pager">
       
       <li class="previous"><a class="basic-alignment left"
-        href="/blog/2013/07/24/zero-width-assert/" title="Previous Post:
-        使用零宽断言来匹配不包含连续字符串的行">&laquo; 使用零宽断言来匹配不包含连续字符串的行</a></li>
+        href="/blog/2013/10/24/brave-new-world/" title="Previous Post:
+        在更大的世界遇见更好的自己">&laquo; 在更大的世界遇见更好的自己</a></li>
       
       <li><a href="/blog/archives">Blog Archives</a></li>
-      
-      <li class="next"><a class="basic-alignment right" href="/blog/2013/07/28/sed-and-awk-part-one/"
-        title="Next Post: 「Sed & awk」阅读笔记之 sed 基础">「Sed & awk」阅读笔记之 sed 基础
-        &raquo;</a></li>
       
     </ul>
   </footer>
@@ -304,8 +332,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://khotyn.github.com/blog/2013/07/24/match-line-not-contain-a-string/';
-        var disqus_url = 'http://khotyn.github.com/blog/2013/07/24/match-line-not-contain-a-string/';
+        var disqus_identifier = 'http://khotyn.github.com/blog/2013/11/02/jvmtop-impl/';
+        var disqus_url = 'http://khotyn.github.com/blog/2013/11/02/jvmtop-impl/';
         var disqus_script = 'embed.js';
       
     (function () {
