@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Programming | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/programming/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2013-11-06T19:18:27+08:00</updated>
+  <updated>2013-12-07T19:52:28+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,58 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Google Guava 之 EventBus]]></title>
+    <link href="http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus/"/>
+    <updated>2013-12-07T19:49:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus</id>
+    <content type="html"><![CDATA[<p>Google 的 Guava 库是一个 Java 程序员必须了解的库，它提供了一些非常强大的功能，比如函数式风格的集合操作，Cache Builder 等等的功能，另外 Google Guava 还提供了一个非常方便的观察者模式的实现：EventBus。这篇文章就来介绍一下 EventBus 的使用。</p>
+
+<h3 id="eventbus-">EventBus 对象</h3>
+
+<p>在举例说明 EventBus 的使用方式之前，我们先来看一下 EventBus 对象，EventBus 对象整个负责了观察者模式监听者的注册，事件的分发，所以，在使用 EventBus 的时候，你就省去了非常多的工作，你只要去使用 EventBus 就可以了，不用再去自己实现一个 Publisher 的类，使用 EventBus 的第一步就是你需要一个 EventBus 的实例：</p>
+
+<p><code>java
+EventBus eventBus = new EventBus();
+</code></p>
+
+<h3 id="section">注册监听者</h3>
+
+<p>使用 EventBus 监听事件，只需要在你的处理事件的方法上添加一个 <code>@Subscribe</code> 注解就可以：</p>
+
+<p><code>java
+static class Subscriber {
+    @Subscribe
+    public void subscribe(Event event) {
+        System.out.println(event.getWord());
+    }
+}
+</code></p>
+
+<p>这里的事件对象 <code>Event</code> 可以是任何的对象，可以是 <code>Object</code>，但是也可以是任何你自定义的消息对象。</p>
+
+<p>建立一个类以后，就可以往 EventBus 中注册 Subscriber：</p>
+
+<p><code>java
+eventBus.register(new Subscriber());
+</code></p>
+
+<h3 id="section-1">分发事件</h3>
+
+<p>在注册完事件后，就可以去分发事件了，分发的代码非常简单：</p>
+
+<p><code>java
+eventBus.post(new Event("Hello world"));
+</code></p>
+
+<p>这样，所有的注册在 EventBus 中的监听者，只要它的监听方法的参数是 <code>Event</code> 或者 <code>Event</code> 的超类，那么都会收到事件。</p>
+
+<h3 id="section-2">结论</h3>
+
+<p>EventBus 作为一个 In-JVM 的观察者模式的实现，非常使用，使用起来非常简单，可以减少不少的工作，建议在项目中可以多多使用。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[jvmtop 介绍和实现分析]]></title>
@@ -248,258 +300,6 @@ if (isAlive())
 <p>那么，这么看来，Velocity 1.5 的处理是正确的，那么 1.7 增加对 <code>Boolean</code> 的支持是为什么呢？</p>
 
 <p>其实，Java Bean 的规范在 <code>is</code> 这种 Accessor 的规定上，是有点不怎么符合开发人员的直觉的，很多人都会在这个问题上纠结：<strong><code>Boolean</code> 类型的属性的 Accessor 是不是应该用 is 开头？</strong>，我觉得大部分人的直觉对这个答案的回答应该都是<em>是</em>，所以 Velocity 这样处理只不过是顺着大多数人的直觉的意思罢了，无可厚非。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Spring 事务的传播特性]]></title>
-    <link href="http://khotyn.github.com/blog/2013/09/14/spring-tx-propagation/"/>
-    <updated>2013-09-14T18:06:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/09/14/spring-tx-propagation</id>
-    <content type="html"><![CDATA[<p>最近工作中涉及到了一个分布式事务的产品，这个产品是在 Spring 的事务上做的，我对其中涉及到的 Spring 的事务的传播特性不是很了解，所以今天花了一个下午的时间认真了解了一下，写了一堆的测试代码。</p>
-
-<p>进入正题，Spring 的事务的传播特性分为以下的七种：</p>
-
-<ul>
-  <li>PROPAGATION_REQUIRED</li>
-  <li>PROPAGATION_SUPPORTS</li>
-  <li>PROPAGATION_MANDATORY</li>
-  <li>PROPAGATION_REQUIRES_NEW</li>
-  <li>PROPAGATION_NOT_SUPPORTED</li>
-  <li>PROPAGATION_NEVER</li>
-  <li>PROPAGATION_NESTED</li>
-</ul>
-
-<p>下面一种种来解释：</p>
-
-<h4 id="propagationrequired">PROPAGATION_REQUIRED</h4>
-
-<p>默认的事务传播特性，通常情况下我们用这个事务传播特性就可以了。如果当前事务上下文中没有事务，那么就会新创建一个事务。如果当前的事务上下文中已经有一个事务了，那么新开启的事务会开启一个新的逻辑事务范围，但是会和原有的事务共用一个物理事务，我们暂且不关心逻辑事务和物理事务的区别，先看看这样会导致怎样的代码行为：</p>
-
-<p><code>java
-@Override
-public void txRollbackInnerTxRollbackPropagationRequires() {
-    transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-        @Override
-        protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-            jdbcTemplate.update("insert into user (name, password) values (?, ?)", "Huang",
-                "1111112");
-            transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-                @Override
-                protected void doInTransactionWithoutResult(TransactionStatus status) {
-                    jdbcTemplate.update("insert into user (name, password) values (?, ?)",
-                        "Huang", "1111112");
-                    // 内部事务设置了 setRollbackOnly，
-                    status.setRollbackOnly();
-                }
-            });
-        }
-    });
-}
-</code></p>
-
-<p>这段代码在一个嵌套的事务内部（内外层的事务都是 PROPAGATION_REQUIRED 的）设置了回滚，那么对于外部的事务来说，它会收到一个 <code>UnexpectedRollbackException</code>，因为内部的事务和外部的事务是共用一个物理事务的，所以显然内部的事务必然会导致外部事务的回滚，但是因为这个回滚并不是外部事务自己设置的，所以外层事务回滚的时候会需要抛出一个 <code>UnexpectedRollbackException</code>，让事务的调用方知道这个回滚并不是外部事务自己想要回滚，是始料未及的。</p>
-
-<p>但是，如果内层的事务不是通过设置 <code>setRollbackOnly()</code> 来回滚，而是抛出了 <code>RuntimeException</code> 来回滚，那么外层的事务接收到了内层抛出的 <code>RuntimeException</code> 也会跟着回滚，这个是可以预料到的行为，所以不会有 <code>UnexpectedRollbackException</code> 。</p>
-
-<h4 id="propagationsupports">PROPAGATION_SUPPORTS</h4>
-
-<p>PROPAGATION_SUPPORTS 的特性是如果事务上下文中已经存在一个事务，那么新的事务（传播特性为 PROPAGATION_SUPPORTS）就会和原来的事务共用一个物理事务，其行为和 PROPAGATION_REQUIRED 一样。但是，如果当前事务上下文中没有事务，那么 PROPAGATION_SUPPORTS 就按无事务的方式执行代码：</p>
-
-<p><code>java
-@Override
-public void txRollbackInnerTxRollbackPropagationSupports() {
-    supportsTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-        @Override
-        protected void doInTransactionWithoutResult(TransactionStatus status) {
-            jdbcTemplate.update("insert into user (name, password) values (?, ?)", "Huang",
-                "1111112");
-            throw new CustomRuntimeException();
-        }
-    });
-}
-</code></p>
-
-<p>看上面这段代码，虽然我们在事务（PROPAGATION_SUPPORTS 的）中抛出了一个 <code>RuntimeException</code>，但是因为其事务上下文中没有事务存在，所以这段代码实际上是以无事务的方式执行的，因此代码中的 <code>jdbcTemplate.update()</code> 操作也不会被回滚。</p>
-
-<h4 id="propagationmandatory">PROPAGATION_MANDATORY</h4>
-
-<p>PROPAGATION_MANDATORY 要求事务上下文中必须存在事务，如果事务上下文中存在事务，那么其行为和 <code>PROPAGATION_REQUIRED</code> 一样。如果当前事务上下文中没有事务，那么就会抛出 <code>IllegalTransactionStateException</code>，比如下面这段代码就会这样：</p>
-
-<p><code>java
-@Override
-public void txRollbackInnerTxRollbackPropagationMandatory() {
-    mandatoryTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-        @Override
-        protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-            jdbcTemplate.update("insert into user (name, password) values (?, ?)", "Huang",
-                "1111112");
-        }
-    });
-}
-</code></p>
-
-<h4 id="propagationrequiresnew">PROPAGATION_REQUIRES_NEW</h4>
-
-<p>PROPAGATION_REQUIRES_NEW 无论当前事务上下文中有没有事务，都会开启一个新的事务，并且和原来的事务完全是隔离的，外层事务的回滚不会影响到内层的事务，内层事务的回滚也不会影响到外层的事务（<strong>这个说法得稍微打点折扣：因为如果内层抛出 <code>RuntimeException</code> 的话，那么外层还是会收到这个异常并且触发回滚</strong>），我们分析下几段代码：</p>
-
-<p>```java
-@Override
-public void txRollbackInnerTxRollbackPropagationRequiresNew() {
-    transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-        @Override
-        protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {</p>
-
-<pre><code>        requiresNewTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus status) {
-                jdbcTemplate.update("insert into user (name, password) values (?, ?)",
-                    "Huang", "1111112");
-            }
-        });
-
-        // 外部事务发生回滚，内部事务应该不受影响还是能够提交
-        throw new RuntimeException();
-    }
-}); } ```
-</code></pre>
-
-<p>这段代码外层的事务回滚了，但是不会影响到内层的事务的提交，内层事务不受外层的事务的影响。再看：</p>
-
-<p><code>java
-@Override
-public void txRollbackInnerTxRollbackPropagationRequiresNew2() {
-    transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-        @Override
-        protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-            jdbcTemplate.update("insert into user (name, password) values (?, ?)", "Huang",
-                "1111112");
-            // Nested transaction committed.
-            requiresNewTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-                @Override
-                protected void doInTransactionWithoutResult(TransactionStatus status) {
-                    jdbcTemplate.update("insert into user (name, password) values (?, ?)",
-                        "Huang", "1111112");
-                    // 内部事务发生回滚，但是外部事务不应该发生回滚
-                    status.setRollbackOnly();
-                }
-            });
-        }
-    });
-}
-</code></p>
-
-<p>这段代码在内层事务上设置了 <code>setRollbackOnly</code>，内层事务肯定会回滚，但是由于内层事务和外层事务是隔离的，所以外层事务不会被回滚。再看：</p>
-
-<p>```java
-@Override
-public void txRollbackInnerTxRollbackPropagationRequiresNew3() {
-    transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-        @Override
-        protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-            jdbcTemplate.update(“insert into user (name, password) values (?, ?)”, “Huang”,
-                “1111112”);</p>
-
-<pre><code>        requiresNewTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus status) {
-                jdbcTemplate.update("insert into user (name, password) values (?, ?)",
-                    "Huang", "1111112");
-                // 内部事务抛出 RuntimeException，外部事务接收到异常，依旧会发生回滚
-                throw new RuntimeException();
-            }
-        });
-    }
-}); } ```
-</code></pre>
-
-<p>这段代码在内层事务抛出了一个 <code>RuntimeException</code>，虽然内层事务和外层事务在事务上是隔离，但是 <code>RuntimeException</code> 显然还会抛到外层去，所以外层事务也会发生回滚。</p>
-
-<h4 id="propagationnotsupported">PROPAGATION_NOT_SUPPORTED</h4>
-
-<p>PROPAGATION_NOT_SUPPORTED 不管当前事务上下文中有没有事务，代码都会在按照无事务的方式执行，看下面这段代码：</p>
-
-<p><code>java
-@Override
-public void txRollbackInnerTxRollbackPropagationNotSupport() {
-    transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-        @Override
-        protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-            jdbcTemplate.update("insert into user (name, password) values (?, ?)", "Huang",
-                "1111112");
-            notSupportedTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-                @Override
-                protected void doInTransactionWithoutResult(TransactionStatus status) {
-                    jdbcTemplate.update("insert into user (name, password) values (?, ?)",
-                        "Huang", "1111112");
-                }
-            });
-            // 外部事务回滚，不会把内部的也连着回滚 
-            transactionStatus.setRollbackOnly();
-        }
-    });
-}
-</code></p>
-
-<p>上面这段代码中虽然外部事务发生了回滚，但是由于内部的事务是 PROPAGATION_NOT_SUPPORTED，根本不在外层的事务范围内，所以内层事务不会发生回滚。</p>
-
-<h4 id="propagationnever">PROPAGATION_NEVER</h4>
-
-<p>PROPAGATION_NEVER 如果当前事务上下文中存在事务，就会抛出 <code>IllegalTransactionStateException</code> 异常，自己也会按照非事务的方式执行</p>
-
-<p><code>java
-@Override
-public void txRollbackInnerTxRollbackPropagationNever2() {
-    transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-        @Override
-        protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-            jdbcTemplate.update("insert into user (name, password) values (?, ?)", "Huang",
-                "1111112");
-            neverTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-                @Override
-                protected void doInTransactionWithoutResult(TransactionStatus status) {
-                    jdbcTemplate.update("insert into user (name, password) values (?, ?)",
-                        "Huang", "1111112");
-                }
-            });
-        }
-    });
-}
-</code></p>
-
-<p>比如上面这段代码，在一个 PROPAGATION_REQUIRES 里面嵌入了一个 PROPAGATION_NEVER，内层就会抛出一个 <code>IllegalTransactionStateException</code>，导致外层事务被回滚。</p>
-
-<h4 id="propagationnested">PROPAGATION_NESTED</h4>
-
-<p>PROPAGATION_NESTED 只能应用于像 DataSource 这样的事务，可以通过在一个事务内部开启一个 PROPAGATION_NESTED 而达到一个事务内部有多个保存点的效果，一个内嵌的事务发生回滚，只会回滚到它自己的保存点，外层事务还会继续，比如下面这段代码：</p>
-
-<p>```java
-@Override
-public void txRollbackInnerTxRollbackPropagationNested() {
-    nestedTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-        @Override
-        protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-            jdbcTemplate.update(“insert into user (name, password) values (?, ?)”, “Huang”,
-                “1111112”);</p>
-
-<pre><code>        nestedTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus status) {
-                jdbcTemplate.update("insert into user (name, password) values (?, ?)",
-                    "Huang", "1111112");
-                // 内部事务设置了 rollbackOnly，外部事务应该不受影响，可以继续提交
-                status.setRollbackOnly();
-            }
-        });
-    }
-}); } ```
-</code></pre>
-
-<p>内层的事务发生了回滚，只会回滚其内部的操作，不会影响到外层的事务。</p>
-
-<h3 id="section">总结</h3>
-
-<p>Spring 的事务传播特性种类繁多，大多数都来自于 EJB 的事务，大家可以自己写一些小的程序来测试 Spring 各个事务特性的行为，加深印象，我自己也写了一个工程，通过单元测试去测试各个事务传播特性的行为，大家有兴趣的话，可以下过来跑一下：<a href="https://github.com/khotyn/spring-tx-test">https://github.com/khotyn/spring-tx-test</a></p>
 ]]></content>
   </entry>
   

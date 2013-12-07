@@ -109,6 +109,92 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/12/07/google-guava-eventbus/">Google Guava 之 EventBus</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-12-07T19:49:00+08:00" pubdate data-updated="true">Dec 7<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/12/07/google-guava-eventbus/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Google 的 Guava 库是一个 Java 程序员必须了解的库，它提供了一些非常强大的功能，比如函数式风格的集合操作，Cache Builder 等等的功能，另外 Google Guava 还提供了一个非常方便的观察者模式的实现：EventBus。这篇文章就来介绍一下 EventBus 的使用。</p>
+
+<h3 id="eventbus-">EventBus 对象</h3>
+
+<p>在举例说明 EventBus 的使用方式之前，我们先来看一下 EventBus 对象，EventBus 对象整个负责了观察者模式监听者的注册，事件的分发，所以，在使用 EventBus 的时候，你就省去了非常多的工作，你只要去使用 EventBus 就可以了，不用再去自己实现一个 Publisher 的类，使用 EventBus 的第一步就是你需要一个 EventBus 的实例：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">EventBus</span> <span class="n">eventBus</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EventBus</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3 id="section">注册监听者</h3>
+
+<p>使用 EventBus 监听事件，只需要在你的处理事件的方法上添加一个 <code>@Subscribe</code> 注解就可以：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">static</span> <span class="kd">class</span> <span class="nc">Subscriber</span> <span class="o">{</span>
+</span><span class="line">    <span class="nd">@Subscribe</span>
+</span><span class="line">    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">subscribe</span><span class="o">(</span><span class="n">Event</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">event</span><span class="o">.</span><span class="na">getWord</span><span class="o">());</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这里的事件对象 <code>Event</code> 可以是任何的对象，可以是 <code>Object</code>，但是也可以是任何你自定义的消息对象。</p>
+
+<p>建立一个类以后，就可以往 EventBus 中注册 Subscriber：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eventBus</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="k">new</span> <span class="n">Subscriber</span><span class="o">());</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3 id="section-1">分发事件</h3>
+
+<p>在注册完事件后，就可以去分发事件了，分发的代码非常简单：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eventBus</span><span class="o">.</span><span class="na">post</span><span class="o">(</span><span class="k">new</span> <span class="n">Event</span><span class="o">(</span><span class="s">&quot;Hello world&quot;</span><span class="o">));</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这样，所有的注册在 EventBus 中的监听者，只要它的监听方法的参数是 <code>Event</code> 或者 <code>Event</code> 的超类，那么都会收到事件。</p>
+
+<h3 id="section-2">结论</h3>
+
+<p>EventBus 作为一个 In-JVM 的观察者模式的实现，非常使用，使用起来非常简单，可以减少不少的工作，建议在项目中可以多多使用。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/11/06/abreact-pleasant/">发泄快感</a></h1>
     
     
@@ -726,55 +812,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/09/14/perfect-afternoon/">理想的下午</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-09-14T21:50:00+08:00" pubdate data-updated="true">Sep 14<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/09/14/perfect-afternoon/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>每个人都有自己理想的下午，有些人喜欢在家里宅着躺在床上，被子病了得有人照顾不是？有些人喜欢在一个秋季的阳光明媚的下午，约几个好友爬山登高，流一把汗，呼吸呼吸新鲜的空气。有些人喜欢把家里打扫的干干净净，然后美滋滋地看上一部喜欢的电影。</p>
-
-<p>而我的理想的下午，不在家，那必须是个安静的地方，稍微有点人气，不至于感到寂寞，看一本自己喜欢的书，把自己沉浸在一个或美好，或悲伤的故事里，或者写一些代码，精炼自己的技艺，让自己对这个世界的理解更进一步。</p>
-
-<p>理想的下午，约上几个志同道合的朋友是必须的，不必太多，一两个就成，有着一些共同的想法，追求着共同的理想，相互知道对方的一些秘密，相互之间有一些默契，需要的时候交流交流彼此的想法，从对方身上学一些东西，但也不必为各自的沉默而感到尴尬。</p>
-
-<p>每个人都有自己状态最棒的时候，而我感觉最好的时候，便是在这样一个理想的下午，不必为生活或者工作上的事情烦心，放下心中的焦虑与不安，那是完完全全属于你自己的下午，在这样的下午，你只干自己喜欢的事情；在这样的下午，你真真切切感受到生活的温度；在这样的下午，做回真真的自己。</p>
-
-<p>对了，就像一次长跑，完全沉浸在跑步的节奏里面，你无需知道终点到底在什么地方，需要做的只是找到自己的节奏，迈开脚步向前跑~，在这种状态下，你可以放下包袱自由地思考，思考生命和星空的意义，思考“从哪里来”、“到哪里去”这样的究级的问题，而不必担心别人说你不着边际。</p>
-
-<p>嗯~，给自己多几个理想的下午，算是自私一点吧，在这些理想的下午，完完全全地为自己而活~</p>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -790,6 +827,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2013/12/07/google-guava-eventbus/">Google Guava 之 EventBus</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/06/abreact-pleasant/">发泄快感</a>
       </li>
     
@@ -803,10 +844,6 @@
     
       <li class="post">
         <a href="/blog/2013/10/16/beautiful-code/">代码之美</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/10/15/positive-illusion-and-depressive-realism/">乐观错觉与悲观现实</a>
       </li>
     
   </ul>

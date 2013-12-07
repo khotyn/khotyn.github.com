@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Clojure 学习笔记：开始 - 小径分岔的花园</title>
+  <title>Google Guava 之 EventBus - 小径分岔的花园</title>
   <meta name="author" content="khotyn">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://khotyn.github.com/blog/2013/03/17/learning-clojure-partone">
+  <link rel="canonical" href="http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -107,7 +107,7 @@
   
   <header class="page-header">
     
-      <h1 class="entry-title">Clojure 学习笔记：开始</h1>
+      <h1 class="entry-title">Google Guava 之 EventBus</h1>
     
     
       <p class="meta">
@@ -123,7 +123,7 @@
   
 
 
-<time datetime="2013-03-17T20:44:00+08:00" pubdate data-updated="true">Mar 17<span>th</span>, 2013</time>
+<time datetime="2013-12-07T19:49:00+08:00" pubdate data-updated="true">Dec 7<span>th</span>, 2013</time>
         
          | <a href="#disqus_thread">Comments</a>
         
@@ -132,54 +132,55 @@
   </header>
 
 
-<div class="entry-content"><h3 id="clojure">一、 为什么学 Clojure</h3>
+<div class="entry-content"><p>Google 的 Guava 库是一个 Java 程序员必须了解的库，它提供了一些非常强大的功能，比如函数式风格的集合操作，Cache Builder 等等的功能，另外 Google Guava 还提供了一个非常方便的观察者模式的实现：EventBus。这篇文章就来介绍一下 EventBus 的使用。</p>
 
-<p>Clojure 一直是我想去学习的一门语言，从去年开始就想学，但是我一直忍着没学，没学的原因一方面是想看一看自己是不是三分钟热度，过了一段时间就不再对它感兴趣了。另一方面，我更想去多学一些计算机底层的技术，因为我自认为基础并不太好，未来会成为个人发展的一个障碍。</p>
+<h3 id="eventbus-">EventBus 对象</h3>
 
-<p>但是，从现在看来，我似乎对 Clojure 并不是脑子一热就想去学，而有一些更深层的原因。我想学 Clojure 一个主要的原因是因为最近一段时间一直在思考语言的抽象维度，表达能力的问题，对这个问题我虽然有一些感觉，但是因为了解的语言非常有限，所以一直都没有抓到问题的本质，找不到问题的答案是什么，而多了解一门不同类型的语言或许可以在一定程度上帮助我思考这个问题，如果这门语言和 Java 越不同，能给我带来的思维的转换就越大，显然 Lisp 会是很好的选择。而 Clojure 正是基于 JVM 的一种 Lisp 方言，对做 Java 开发的我来说再好不过。</p>
+<p>在举例说明 EventBus 的使用方式之前，我们先来看一下 EventBus 对象，EventBus 对象整个负责了观察者模式监听者的注册，事件的分发，所以，在使用 EventBus 的时候，你就省去了非常多的工作，你只要去使用 EventBus 就可以了，不用再去自己实现一个 Publisher 的类，使用 EventBus 的第一步就是你需要一个 EventBus 的实例：</p>
 
-<h3 id="clojure-">二、Clojure 是一门什么样的语言</h3>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">EventBus</span> <span class="n">eventBus</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EventBus</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>面对这个问题，我的脑子中一下子塞入了各种名词：</p>
+<h3 id="section">注册监听者</h3>
 
-<ul>
-  <li>不变量</li>
-  <li>函数式编程</li>
-  <li>S 表达式 </li>
-  <li>一堆括号</li>
-  <li>宏</li>
-</ul>
+<p>使用 EventBus 监听事件，只需要在你的处理事件的方法上添加一个 <code>@Subscribe</code> 注解就可以：</p>
 
-<p>现在对 Clojure 的认识还很模糊，这个问题我希望能够一直带在整个学习过程中，希望在经过一段时间的学习以后可以回答这个问题。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">static</span> <span class="kd">class</span> <span class="nc">Subscriber</span> <span class="o">{</span>
+</span><span class="line">    <span class="nd">@Subscribe</span>
+</span><span class="line">    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">subscribe</span><span class="o">(</span><span class="n">Event</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">event</span><span class="o">.</span><span class="na">getWord</span><span class="o">());</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<h3 id="section">三、环境安装</h3>
+<p>这里的事件对象 <code>Event</code> 可以是任何的对象，可以是 <code>Object</code>，但是也可以是任何你自定义的消息对象。</p>
 
-<p>在 Mac 下可以直接通过 brew 来安装：</p>
+<p>建立一个类以后，就可以往 EventBus 中注册 Subscriber：</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">brew install clojure</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eventBus</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="k">new</span> <span class="n">Subscriber</span><span class="o">());</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>Clojure 官网也提供了其他的安装方式：<a href="http://clojure.org/getting_started">http://clojure.org/getting_started</a></p>
+<h3 id="section-1">分发事件</h3>
 
-<p>编辑器我选择是 Intellij IDEA，安装上一个 La Clojure 的插件即可，这个插件提供了代码高亮、格式化等功能，并且针对 Clojure 括号略多的情况，给括号提供了彩虹色的高亮，非常贴心。另外 La Clojure 内置的 REPL 在语法高亮、光标的移动方面都比 Clojure 自带的要好。</p>
+<p>在注册完事件后，就可以去分发事件了，分发的代码非常简单：</p>
 
-<h3 id="section-1">四、学习资料</h3>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eventBus</span><span class="o">.</span><span class="na">post</span><span class="o">(</span><span class="k">new</span> <span class="n">Event</span><span class="o">(</span><span class="s">&quot;Hello world&quot;</span><span class="o">));</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>关于 Clojure 的书比较著名的有三本：</p>
+<p>这样，所有的注册在 EventBus 中的监听者，只要它的监听方法的参数是 <code>Event</code> 或者 <code>Event</code> 的超类，那么都会收到事件。</p>
 
-<ul>
-  <li><a href="http://book.douban.com/subject/4743790/">The Joy of Clojure</a></li>
-  <li><a href="http://book.douban.com/subject/7915128/">Programming Clojure</a></li>
-  <li><a href="http://book.douban.com/subject/6715378/">Clojure Programming</a></li>
-</ul>
+<h3 id="section-2">结论</h3>
 
-<p>目前这三本书中 The Joy of Clojure 正在翻译中，Programming Clojure 和 Clojure Programming 已经翻译好，可以在各大网站上预订了，想看中文版的朋友可以考虑去买纸质书。</p>
-
-<p>我选择了 Clojure Programming 这本书，没什么原因，刚好之前下载了这本书的英文版，看着看着就一直再看了。</p>
-
-<h3 id="section-2">五、下一篇</h3>
-
-<p>这第一篇笔记没有什么关于 Clojure 的具体内容，主要作用在于提醒自己学习要不忘初衷，下一篇中我会开始整理出一些具体内容出来，敬请期待。</p>
+<p>EventBus 作为一个 In-JVM 的观察者模式的实现，非常使用，使用起来非常简单，可以减少不少的工作，建议在项目中可以多多使用。</p>
 </div>
 
 
@@ -202,12 +203,12 @@
   
 
 
-<time datetime="2013-03-17T20:44:00+08:00" pubdate data-updated="true">Mar 17<span>th</span>, 2013</time>
+<time datetime="2013-12-07T19:49:00+08:00" pubdate data-updated="true">Dec 7<span>th</span>, 2013</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/clojure/'>Clojure</a>, <a class='category' href='/blog/categories/notes/'>Notes</a>
+    <a class='category' href='/blog/categories/programming/'>Programming</a>
   
 </span>
 
@@ -231,14 +232,10 @@
     <ul class="pager">
       
       <li class="previous"><a class="basic-alignment left"
-        href="/blog/2013/03/10/northwand/" title="Previous Post:
-        北壁">&laquo; 北壁</a></li>
+        href="/blog/2013/11/06/abreact-pleasant/" title="Previous Post:
+        发泄快感">&laquo; 发泄快感</a></li>
       
       <li><a href="/blog/archives">Blog Archives</a></li>
-      
-      <li class="next"><a class="basic-alignment right" href="/blog/2013/03/23/clojure-game-of-life/"
-        title="Next Post: Clojure 学习笔记：生命游戏">Clojure 学习笔记：生命游戏
-        &raquo;</a></li>
       
     </ul>
   </footer>
@@ -319,8 +316,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://khotyn.github.com/blog/2013/03/17/learning-clojure-partone/';
-        var disqus_url = 'http://khotyn.github.com/blog/2013/03/17/learning-clojure-partone/';
+        var disqus_identifier = 'http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus/';
+        var disqus_url = 'http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus/';
         var disqus_script = 'embed.js';
       
     (function () {
