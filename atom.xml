@@ -4,7 +4,7 @@
   <title><![CDATA[小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2013-12-23T20:31:01+08:00</updated>
+  <updated>2014-01-01T11:05:43+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,29 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[转让自用 13 寸 MacBook Pro]]></title>
+    <link href="http://khotyn.github.com/blog/2014/01/01/sell-mac-book-pro/"/>
+    <updated>2014-01-01T11:02:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2014/01/01/sell-mac-book-pro</id>
+    <content type="html"><![CDATA[<p>转让自用的 13 寸 MacBook Pro，2009 年年中的款，型号 MB990，入手时间 2010 年初，使用时间三年不到，除了电池的续航能力有所下降，其他没有出现任何问题，内存我自己升级到了 8 G，平时的开发也都是用这台开发（你知道开个 Eclipse 或者 Intellij IDEA 是很耗资源的），也比较顺畅，<strong>价格方面是 2500</strong>，当然可刀~，暂时只接受杭州的当面交易。</p>
+
+<p>有意向的可以直接在这篇博客下面回复，或者给我发邮件联系我，hting1#gmail.com</p>
+
+<p>关于这个型号的 MBP 的其他参数，可以直接看下面这张图：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DqBJdz79/medish.jpg" alt="image" /></p>
+
+<p>上几张本本的照片：</p>
+
+<p>合上后，有些许划痕</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DqBPAi4B/medish.jpg" alt="image" /></p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DqBQFoio/medish.jpg" alt="image" /></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Google Guava 之 EventBus]]></title>
@@ -2030,199 +2053,6 @@ n
 <p>在前面的章节中，我们涉及到的操作都是在单个 Segment 中进行的，但是 ConcurrentHashMap 有一些操作是在多个 Segment 中进行，比如 size 操作，ConcurrentHashMap 的 size 操作也采用了一种比较巧的方式，来尽量避免对所有的 Segment 都加锁。</p>
 
 <p>前面我们提到了一个 Segment 中的有一个 modCount 变量，代表的是对 Segment 中元素的数量造成影响的操作的次数，这个值只增不减，size 操作就是遍历了两次 Segment，每次记录 Segment 的 modCount 值，然后将两次的 modCount 进行比较，如果相同，则表示期间没有发生过写入操作，就将原先遍历的结果返回，如果不相同，则把这个过程再重复做一次，如果再不相同，则就需要将所有的 Segment 都锁住，然后一个一个遍历了，具体的实现大家可以看 ConcurrentHashMap 的源码，这里就不贴了。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Java 并发编程 J.U.C 之 Condition]]></title>
-    <link href="http://khotyn.github.com/blog/2013/07/12/juc-condition/"/>
-    <updated>2013-07-12T07:36:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/07/12/juc-condition</id>
-    <content type="html"><![CDATA[<p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_condition/">黄金档</a>的文章。</strong></p>
-
-<p>在上一篇中，我们了解了下 <a href="http://blog.khotyn.com/blog/2013/07/10/juc-lock-acquire-release/">J.U.C 的锁的获取与释放的过程</a>，这个过程主要通过在 A.Q.S 中维持一个等待队列来实现，其中我们也提到了，在 A.Q.S 中除了一个等待队列之外，还有一个 Condition 队列，在了解 Condition 队列之前，先来看一下 Condition 是怎么回事：</p>
-
-<blockquote>
-  <p>The synchronizer framework provides a ConditionObject class for use by synchronizers that maintain exclusive synchronization and conform to the Lock interface. Any number of condition objects may be attached to a lock object, providing classic monitor-style await, signal, and signalAll operations, including those with timeouts, along with some inspection and monitoring methods.</p>
-</blockquote>
-
-<p>上面的这一段内容摘自 Doug Lea 的 <a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf">AQS 论文</a>，从上面这一段话可以看出，Condition 主要是为了在 J.U.C 框架中提供和 Java 传统的监视器风格的 wait，notify 和 notifyAll 方法类似的功能，那么先来解释一下这三个方法的作用：</p>
-
-<ul>
-  <li>Object.wait() 方法：使当前线程释放 Object 上的监视器并且挂起，直到有另外的线程调用 Object.notify() 方法或者 Object.notifyAll() 方法唤醒当前线程，当被唤醒后，Object.wait() 方法会尝试重新获取监视器，成功获取后继续往下执行。注意 Object.wait() 方法只有在当前线程持有 Object 的监视器的时候才能够调用，不然会抛出异常。</li>
-  <li>Object.notify() 方法：用于唤醒另外一个调用了 Object.wait() 方法的线程，如果有多个都调用了 Object.wait() 方法，那么就会选择一个线程去 notify()，具体选择哪一个和具体的实现有关，当前线程在调用 Object.notify() 方法以后会就释放Object的监视器，和 wait() 方法一样，Object.notify() 方法只有在当前线程持有 Object 的监视器的时候才能够调用，不然就会抛出异常。</li>
-  <li>Object.notifyAll() 方法：唤醒所有调用了 Object.wait() 方法的线程，如果有多个线程调用了 Object.wait() 方法，那么就会引发这些线程之间的竞争，最后谁成功获取到 Object 的监视器和具体的实现有关，当前线程在调用 Object.notifyAll() 方法以后会就释放 Object 的监视器，和 wait() 方法一样，Object.notifyAll() 方法只有在当前线程只有 Object 的监视器的时候才能够调用，不然就会抛出异常。</li>
-</ul>
-
-<p>那么 Condition 是如何实现 wait，notify 和 notifyAll 方法的功能呢？我们接下来看：</p>
-
-<p>在 Condition 中，wait，notify 和 notifyAll 方法分别对应了 await，signal 和 signalAll 方法，当然 Condition 也提供了超时的、不可被中断的 await() 方法，不过我们主要还是看一看 await，notify 和 notifyAll 的实现，先看 await：</p>
-
-<h3 id="await-">await 方法</h3>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">await</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">InterruptedException</span> <span class="o">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">Thread</span><span class="o">.</span><span class="na">interrupted</span><span class="o">())</span>
-</span><span class="line">        <span class="k">throw</span> <span class="k">new</span> <span class="nf">InterruptedException</span><span class="o">();</span>
-</span><span class="line">    <span class="n">Node</span> <span class="n">node</span> <span class="o">=</span> <span class="n">addConditionWaiter</span><span class="o">();</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">savedState</span> <span class="o">=</span> <span class="n">fullyRelease</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">interruptMode</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-</span><span class="line">    <span class="k">while</span> <span class="o">(!</span><span class="n">isOnSyncQueue</span><span class="o">(</span><span class="n">node</span><span class="o">))</span> <span class="o">{</span>
-</span><span class="line">        <span class="n">LockSupport</span><span class="o">.</span><span class="na">park</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
-</span><span class="line">        <span class="k">if</span> <span class="o">((</span><span class="n">interruptMode</span> <span class="o">=</span> <span class="n">checkInterruptWhileWaiting</span><span class="o">(</span><span class="n">node</span><span class="o">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span>
-</span><span class="line">            <span class="k">break</span><span class="o">;</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">acquireQueued</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="n">savedState</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="n">interruptMode</span> <span class="o">!=</span> <span class="n">THROW_IE</span><span class="o">)</span>
-</span><span class="line">        <span class="n">interruptMode</span> <span class="o">=</span> <span class="n">REINTERRUPT</span><span class="o">;</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">nextWaiter</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
-</span><span class="line">        <span class="n">unlinkCancelledWaiters</span><span class="o">();</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">interruptMode</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span>
-</span><span class="line">        <span class="n">reportInterruptAfterWait</span><span class="o">(</span><span class="n">interruptMode</span><span class="o">);</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>整个 await 的过程如下：</p>
-
-<ul>
-  <li>在第 2 行处，如果当前线程被中断，则抛出中断异常。</li>
-  <li>在第 4 行处，将节点加入到 Condition 队列中去，这里如果 lastWaiter 是 cancel 状态，那么会把它踢出 Condition 队列。</li>
-  <li>在第 5 行处，调用 tryRelease，释放当前线程的锁</li>
-  <li>在第 7 行处，判断节点是否在等待队列中（signal 操作会将 Node 从 Condition 队列中拿出并且放入到等待队列中去），如果不在等待队列中了，就 park 当前线程，如果在，就退出循环，这个时候如果被中断，那么就退出循环</li>
-  <li>在第 12 行处，这个时候线程已经被 signal() 或者 signalAll() 操作给唤醒了，退出了 4 中的 while 循环，尝试再次获取锁，调用 acquireQueued 方法。</li>
-</ul>
-
-<p>可以看到，这个 await 的操作过程和 Object.wait() 方法是一样，只不过 await() 采用了 Condition 队列的方式实现了 Object.wait() 的功能。</p>
-
-<h3 id="signal--signalall-">signal 和 signalAll 方法</h3>
-
-<p>在了解了 await 方法的实现以后，signal 和 signalAll 方法的实现就相对简单了，先看看 signal 方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">signal</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(!</span><span class="n">isHeldExclusively</span><span class="o">())</span>
-</span><span class="line">        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalMonitorStateException</span><span class="o">();</span>
-</span><span class="line">    <span class="n">Node</span> <span class="n">first</span> <span class="o">=</span> <span class="n">firstWaiter</span><span class="o">;</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">first</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
-</span><span class="line">        <span class="n">doSignal</span><span class="o">(</span><span class="n">first</span><span class="o">);</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这里先判断当前线程是否持有锁，如果没有持有，则抛出异常，然后判断整个 condition 队列是否为空，不为空则调用 doSignal 方法来唤醒线程，看看 doSignal 方法都干了一些什么：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">private</span> <span class="kt">void</span> <span class="nf">doSignal</span><span class="o">(</span><span class="n">Node</span> <span class="n">first</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="k">do</span> <span class="o">{</span>
-</span><span class="line">        <span class="k">if</span> <span class="o">(</span> <span class="o">(</span><span class="n">firstWaiter</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="na">nextWaiter</span><span class="o">)</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
-</span><span class="line">            <span class="n">lastWaiter</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class="line">        <span class="n">first</span><span class="o">.</span><span class="na">nextWaiter</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class="line">    <span class="o">}</span> <span class="k">while</span> <span class="o">(!</span><span class="n">transferForSignal</span><span class="o">(</span><span class="n">first</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
-</span><span class="line">             <span class="o">(</span><span class="n">first</span> <span class="o">=</span> <span class="n">firstWaiter</span><span class="o">)</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">);</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这个 while 循环的作用就是将 firstWaiter 往 Condition 队列的后面移一位，并且唤醒 first，看看 while 循环中 tranferForSignal：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">transferForSignal</span><span class="o">(</span><span class="n">Node</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="cm">/*</span>
-</span><span class="line"><span class="cm">     * If cannot change waitStatus, the node has been cancelled.</span>
-</span><span class="line"><span class="cm">     */</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(!</span><span class="n">compareAndSetWaitStatus</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="n">Node</span><span class="o">.</span><span class="na">CONDITION</span><span class="o">,</span> <span class="mi">0</span><span class="o">))</span>
-</span><span class="line">        <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="cm">/*</span>
-</span><span class="line"><span class="cm">     * Splice onto queue and try to set waitStatus of predecessor to</span>
-</span><span class="line"><span class="cm">     * indicate that thread is (probably) waiting. If cancelled or</span>
-</span><span class="line"><span class="cm">     * attempt to set waitStatus fails, wake up to resync (in which</span>
-</span><span class="line"><span class="cm">     * case the waitStatus can be transiently and harmlessly wrong).</span>
-</span><span class="line"><span class="cm">     */</span>
-</span><span class="line">    <span class="n">Node</span> <span class="n">p</span> <span class="o">=</span> <span class="n">enq</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">waitStatus</span><span class="o">;</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">c</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="o">!</span><span class="n">compareAndSetWaitStatus</span><span class="o">(</span><span class="n">p</span><span class="o">,</span> <span class="n">c</span><span class="o">,</span> <span class="n">Node</span><span class="o">.</span><span class="na">SIGNAL</span><span class="o">))</span>
-</span><span class="line">        <span class="n">LockSupport</span><span class="o">.</span><span class="na">unpark</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">thread</span><span class="o">);</span>
-</span><span class="line">    <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这段代码的作用就是修改 Node 的 waitStatus 为 0，然后将 Node 插入到等待队列中，并且唤醒 Node。</p>
-
-<p>signalAll 和 signal 方法类似，主要的不同在于它不是调用 doSignal 方法，而是调用 doSignalAll 方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">private</span> <span class="kt">void</span> <span class="nf">doSignalAll</span><span class="o">(</span><span class="n">Node</span> <span class="n">first</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">lastWaiter</span> <span class="o">=</span> <span class="n">firstWaiter</span>  <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class="line">    <span class="k">do</span> <span class="o">{</span>
-</span><span class="line">        <span class="n">Node</span> <span class="n">next</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="na">nextWaiter</span><span class="o">;</span>
-</span><span class="line">        <span class="n">first</span><span class="o">.</span><span class="na">nextWaiter</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class="line">        <span class="n">transferForSignal</span><span class="o">(</span><span class="n">first</span><span class="o">);</span>
-</span><span class="line">        <span class="n">first</span> <span class="o">=</span> <span class="n">next</span><span class="o">;</span>
-</span><span class="line">    <span class="o">}</span> <span class="k">while</span> <span class="o">(</span><span class="n">first</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">);</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这个方法就相当于把 Condition 队列中的所有 Node 全部取出插入到等待队列中去。</p>
-
-<h3 id="section">总结</h3>
-
-<p>在了解了 await，signal 和 signalAll 方法的实现以后，我们再来通过一副 gif 动画来看一看这一个整体的过程：</p>
-
-<p><img src="http://farm3.staticflickr.com/2888/9263654699_6b959eecb2_o.gif" alt="image" /></p>
 ]]></content>
   </entry>
   
