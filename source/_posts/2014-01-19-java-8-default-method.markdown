@@ -10,7 +10,7 @@ categories: [Java, Programming]
 
 由于 lambda 的引入，Java 8 对原来的集合类做了大幅的更新，让集合操作可以支持 lambda 表达式。在看新的的集合类的代码的时候，发现了 java 8 似乎增加了一个新的方法描述符，比如在 `java.lang.Iterable` 里面就新加入了下面这个方法：
 
-```
+```java
 default void forEach(Consumer<? super T> action) {
     Objects.requireNonNull(action);
     for (T t : this) {
@@ -23,7 +23,7 @@ default void forEach(Consumer<? super T> action) {
 
 这个 default 就是在 java 8 中新引入的，它可以让你的接口有一个默认的实现，接口的实现类可以不用去实现 default method，比如，下面这段代码，是可以正常编译通过的：
 
-```
+```java
 class Impl implements A {
 
 }
@@ -39,7 +39,7 @@ interface A {
 
 那么，如果一个类实现了两个接口，这两个接口里面有方法签名相同的 default method，那运行的时候到底会选择哪一个？答案是编译不通过，如果出现这种情况，实现类必须实现 default method，以消除歧义，比如下面这样。
 
-```
+```java
 class MultiImpl implements A, B {
 
     /**
@@ -68,7 +68,7 @@ interface B {
 
 当然，在的实现类中，也可以直接调用某个接口的 default method：
 
-```
+```java
 class MultiImplInvokeSuper implements A, B {
     @Override
     public String foo() {
