@@ -4,7 +4,7 @@
   <title><![CDATA[小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2014-01-06T09:57:33+08:00</updated>
+  <updated>2014-01-19T22:39:48+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,125 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Java 8 之 default method]]></title>
+    <link href="http://khotyn.github.com/blog/2014/01/19/java-8-default-method/"/>
+    <updated>2014-01-19T22:13:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2014/01/19/java-8-default-method</id>
+    <content type="html"><![CDATA[<p>如果进度正常，新版本的 Java，Java 8 将在三月份发布，Java 开发人员期待已久的 lambda 也将在 Java 8 中得到支持。目前，Java 8 的早期版本已经可以在 Java 的网站上下载到了，Intellij IDEA 也已经在其最新的版本支持了 Java 8。所以，最近花了点时间了解了一下 Java 8 中新增加的一些特性。</p>
+
+<p>由于 lambda 的引入，Java 8 对原来的集合类做了大幅的更新，让集合操作可以支持 lambda 表达式。在看新的的集合类的代码的时候，发现了 java 8 似乎增加了一个新的方法描述符，比如在 <code>java.lang.Iterable</code> 里面就新加入了下面这个方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="k">default</span> <span class="kt">void</span> <span class="nf">forEach</span><span class="o">(</span><span class="n">Consumer</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">T</span><span class="o">&gt;</span> <span class="n">action</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="n">Objects</span><span class="o">.</span><span class="na">requireNonNull</span><span class="o">(</span><span class="n">action</span><span class="o">);</span>
+</span><span class="line">    <span class="k">for</span> <span class="o">(</span><span class="n">T</span> <span class="n">t</span> <span class="o">:</span> <span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">action</span><span class="o">.</span><span class="na">accept</span><span class="o">(</span><span class="n">t</span><span class="o">);</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在方法的最前面，是一个 <code>default</code> 描述符。等等，Iterable 不是个接口吗，怎么有具体的实现代码了？</p>
+
+<p>这个 default 就是在 java 8 中新引入的，它可以让你的接口有一个默认的实现，接口的实现类可以不用去实现 default method，比如，下面这段代码，是可以正常编译通过的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">class</span> <span class="nc">Impl</span> <span class="kd">implements</span> <span class="n">A</span> <span class="o">{</span>
+</span><span class="line">
+</span><span class="line"><span class="o">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">interface</span> <span class="nc">A</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">default</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;A&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>引入 default 的带来的一个好处就是在现有的接口上增加方法而不用让其实现修改代码，通过这种机制，Java 8 可以通过平滑的方式在原有的 Java 的 API 上引入 lambda 的支持。</p>
+
+<p>那么，如果一个类实现了两个接口，这两个接口里面有方法签名相同的 default method，那运行的时候到底会选择哪一个？答案是编译不通过，如果出现这种情况，实现类必须实现 default method，以消除歧义，比如下面这样。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">class</span> <span class="nc">MultiImpl</span> <span class="kd">implements</span> <span class="n">A</span><span class="o">,</span> <span class="n">B</span> <span class="o">{</span>
+</span><span class="line">
+</span><span class="line">    <span class="cm">/**</span>
+</span><span class="line"><span class="cm">     * 由于 A，B 中都有 String foo() 接口，不知道要调用哪个，所以实现类必须实现一下</span>
+</span><span class="line"><span class="cm">     *</span>
+</span><span class="line"><span class="cm">     * @return</span>
+</span><span class="line"><span class="cm">     */</span>
+</span><span class="line">    <span class="nd">@Override</span>
+</span><span class="line">    <span class="kd">public</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;C&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">interface</span> <span class="nc">A</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">default</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;A&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">interface</span> <span class="nc">B</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">default</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;B&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>当然，在的实现类中，也可以直接调用某个接口的 default method：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">class</span> <span class="nc">MultiImplInvokeSuper</span> <span class="kd">implements</span> <span class="n">A</span><span class="o">,</span> <span class="n">B</span> <span class="o">{</span>
+</span><span class="line">    <span class="nd">@Override</span>
+</span><span class="line">    <span class="kd">public</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">B</span><span class="o">.</span><span class="na">super</span><span class="o">.</span><span class="na">foo</span><span class="o">();</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[转让自用 13 寸 MacBook Pro]]></title>
@@ -1684,377 +1803,6 @@ n
 </pre></td><td class="code"><pre><code class=""><span class="line">curl -D /dev/stdout http://xxxxx.com/xxxx.html</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>直接将内容输出到设备 stdout 下就可以（感谢 Unix，一切皆文件！）。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Java 并发编程之 ConcurrentHashMap]]></title>
-    <link href="http://khotyn.github.com/blog/2013/07/12/juc-concurrenthashmap/"/>
-    <updated>2013-07-12T23:02:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/07/12/juc-concurrenthashmap</id>
-    <content type="html"><![CDATA[<p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_concurrenthashmap/">黄金档</a>的文章。</strong></p>
-
-<p>ConcurrentHashMap 是一个线程安全的 Hash Table，它的主要功能是提供了一组和 HashTable 功能相同但是线程安全的方法。ConcurrentHashMap 可以做到读取数据不加锁，并且其内部的结构可以让其在进行写操作的时候能够将锁的粒度保持地尽量地小，不用对整个 ConcurrentHashMap 加锁。</p>
-
-<h3 id="concurrenthashmap-">ConcurrentHashMap 的内部结构</h3>
-
-<p>ConcurrentHashMap 为了提高本身的并发能力，在内部采用了一个叫做 Segment 的结构，一个 Segment 其实就是一个类 Hash Table 的结构，Segment 内部维护了一个链表数组，我们用下面这一幅图来看下 ConcurrentHashMap 的内部结构：</p>
-
-<p><img src="http://pic.yupoo.com/goldendoc/Ba4GCFe1/nuEZ0.png" alt="image" /></p>
-
-<p>从上面的结构我们可以了解到，ConcurrentHashMap 定位一个元素的过程需要进行两次 Hash 操作，第一次 Hash 定位到 Segment，第二次 Hash 定位到元素所在的链表的头部，因此，这一种结构的带来的副作用是 Hash 的过程要比普通的 HashMap 要长，但是带来的好处是写操作的时候可以只对元素所在的 Segment 进行加锁即可，不会影响到其他的 Segment，这样，在最理想的情况下，ConcurrentHashMap 可以最高同时支持 Segment 数量大小的写操作（刚好这些写操作都非常平均地分布在所有的 Segment 上），所以，通过这一种结构，ConcurrentHashMap 的并发能力可以大大的提高。</p>
-
-<h3 id="segment">Segment</h3>
-
-<p>我们再来具体了解一下Segment的数据结构：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">static</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Segment</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">ReentrantLock</span> <span class="kd">implements</span> <span class="n">Serializable</span> <span class="o">{</span>
-</span><span class="line">    <span class="kd">transient</span> <span class="kd">volatile</span> <span class="kt">int</span> <span class="n">count</span><span class="o">;</span>
-</span><span class="line">    <span class="kd">transient</span> <span class="kt">int</span> <span class="n">modCount</span><span class="o">;</span>
-</span><span class="line">    <span class="kd">transient</span> <span class="kt">int</span> <span class="n">threshold</span><span class="o">;</span>
-</span><span class="line">    <span class="kd">transient</span> <span class="kd">volatile</span> <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[]</span> <span class="n">table</span><span class="o">;</span>
-</span><span class="line">    <span class="kd">final</span> <span class="kt">float</span> <span class="n">loadFactor</span><span class="o">;</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>详细解释一下 Segment 里面的成员变量的意义：</p>
-
-<ul>
-  <li>count：Segment 中元素的数量</li>
-  <li>modCount：对 table 的大小造成影响的操作的数量（比如 put 或者 remove 操作）</li>
-  <li>threshold：阈值，Segment 里面元素的数量超过这个值依旧就会对 Segment 进行扩容</li>
-  <li>table：链表数组，数组中的每一个元素代表了一个链表的头部</li>
-  <li>loadFactor：负载因子，用于确定 threshold</li>
-</ul>
-
-<h3 id="concurrenthashmap--1">ConcurrentHashMap 的初始化</h3>
-
-<p>下面我们来结合源代码来具体分析一下 ConcurrentHashMap 的实现，先看下初始化方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="nf">ConcurrentHashMap</span><span class="o">(</span><span class="kt">int</span> <span class="n">initialCapacity</span><span class="o">,</span>
-</span><span class="line">                         <span class="kt">float</span> <span class="n">loadFactor</span><span class="o">,</span> <span class="kt">int</span> <span class="n">concurrencyLevel</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(!(</span><span class="n">loadFactor</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">||</span> <span class="n">initialCapacity</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">concurrencyLevel</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="o">)</span>
-</span><span class="line">        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalArgumentException</span><span class="o">();</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">concurrencyLevel</span> <span class="o">&gt;</span> <span class="n">MAX_SEGMENTS</span><span class="o">)</span>
-</span><span class="line">        <span class="n">concurrencyLevel</span> <span class="o">=</span> <span class="n">MAX_SEGMENTS</span><span class="o">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="c1">// Find power-of-two sizes best matching arguments</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">sshift</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">ssize</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
-</span><span class="line">    <span class="k">while</span> <span class="o">(</span><span class="n">ssize</span> <span class="o">&lt;</span> <span class="n">concurrencyLevel</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">        <span class="o">++</span><span class="n">sshift</span><span class="o">;</span>
-</span><span class="line">        <span class="n">ssize</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="o">;</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line">    <span class="n">segmentShift</span> <span class="o">=</span> <span class="mi">32</span> <span class="o">-</span> <span class="n">sshift</span><span class="o">;</span>
-</span><span class="line">    <span class="n">segmentMask</span> <span class="o">=</span> <span class="n">ssize</span> <span class="o">-</span> <span class="mi">1</span><span class="o">;</span>
-</span><span class="line">    <span class="k">this</span><span class="o">.</span><span class="na">segments</span> <span class="o">=</span> <span class="n">Segment</span><span class="o">.</span><span class="na">newArray</span><span class="o">(</span><span class="n">ssize</span><span class="o">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&gt;</span> <span class="n">MAXIMUM_CAPACITY</span><span class="o">)</span>
-</span><span class="line">        <span class="n">initialCapacity</span> <span class="o">=</span> <span class="n">MAXIMUM_CAPACITY</span><span class="o">;</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">initialCapacity</span> <span class="o">/</span> <span class="n">ssize</span><span class="o">;</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">c</span> <span class="o">*</span> <span class="n">ssize</span> <span class="o">&lt;</span> <span class="n">initialCapacity</span><span class="o">)</span>
-</span><span class="line">        <span class="o">++</span><span class="n">c</span><span class="o">;</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">cap</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
-</span><span class="line">    <span class="k">while</span> <span class="o">(</span><span class="n">cap</span> <span class="o">&lt;</span> <span class="n">c</span><span class="o">)</span>
-</span><span class="line">        <span class="n">cap</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="o">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">this</span><span class="o">.</span><span class="na">segments</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="o">++</span><span class="n">i</span><span class="o">)</span>
-</span><span class="line">        <span class="k">this</span><span class="o">.</span><span class="na">segments</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Segment</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;(</span><span class="n">cap</span><span class="o">,</span> <span class="n">loadFactor</span><span class="o">);</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>CurrentHashMap 的初始化一共有三个参数，一个 initialCapacity，表示初始的容量，一个 loadFactor，表示负载参数，最后一个是 concurrentLevel，代表 ConcurrentHashMap 内部的 Segment 的数量，ConcurrentLevel 一经指定，不可改变，后续如果 ConcurrentHashMap 的元素数量增加导致 ConrruentHashMap 需要扩容，ConcurrentHashMap 不会增加 Segment 的数量，而只会增加 Segment 中链表数组的容量大小，这样的好处是扩容过程不需要对整个 ConcurrentHashMap 做 rehash，而只需要对 Segment 里面的元素做一次 rehash 就可以了。</p>
-
-<p>整个 ConcurrentHashMap 的初始化方法还是非常简单的，先是根据 concurrentLevel 来 new 出 Segment，这里 Segment 的数量是不小于 concurrentLevel 的最大的 2 的指数，就是说 Segment 的数量永远是 2 的指数个，这样的好处是方便采用移位操作来进行 hash，加快 hash 的过程。接下来就是根据 intialCapacity 确定 Segment 的容量的大小，每一个 Segment 的容量大小也是 2 的指数，同样是为了加快 hash 的过程。</p>
-
-<p>这边需要特别注意一下两个变量，分别是 segmentShift 和 segmentMask，这两个变量在后面将会起到很大的作用，假设构造函数确定了 Segment 的数量是 2 的 n 次方，那么 segmentShift 就等于 32 减去 n，而 segmentMask 就等于 2 的 n 次方减一。</p>
-
-<h3 id="concurrenthashmap--get-">ConcurrentHashMap 的 get 操作</h3>
-
-<p>前面提到过 ConcurrentHashMap 的 get 操作是不用加锁的，我们这里看一下其实现：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="n">V</span> <span class="nf">get</span><span class="o">(</span><span class="n">Object</span> <span class="n">key</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">hash</span> <span class="o">=</span> <span class="n">hash</span><span class="o">(</span><span class="n">key</span><span class="o">.</span><span class="na">hashCode</span><span class="o">());</span>
-</span><span class="line">    <span class="k">return</span> <span class="nf">segmentFor</span><span class="o">(</span><span class="n">hash</span><span class="o">).</span><span class="na">get</span><span class="o">(</span><span class="n">key</span><span class="o">,</span> <span class="n">hash</span><span class="o">);</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>看第三行，segmentFor 这个函数用于确定操作应该在哪一个 segment 中进行，几乎对 ConcurrentHashMap 的所有操作都需要用到这个函数，我们看下这个函数的实现：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">final</span> <span class="n">Segment</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">segmentFor</span><span class="o">(</span><span class="kt">int</span> <span class="n">hash</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">segments</span><span class="o">[(</span><span class="n">hash</span> <span class="o">&gt;&gt;&gt;</span> <span class="n">segmentShift</span><span class="o">)</span> <span class="o">&amp;</span> <span class="n">segmentMask</span><span class="o">];</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这个函数用了位操作来确定 Segment，根据传入的 hash 值向右无符号右移 segmentShift 位，然后和 segmentMask 进行与操作，结合我们之前说的 segmentShift 和 segmentMask 的值，就可以得出以下结论：假设 Segment 的数量是 2 的n次方，根据元素的 hash 值的高 n 位就可以确定元素到底在哪一个 Segment 中。</p>
-
-<p>在确定了需要在哪一个 segment 中进行操作以后，接下来的事情就是调用对应的 Segment 的 get 方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">V</span> <span class="nf">get</span><span class="o">(</span><span class="n">Object</span> <span class="n">key</span><span class="o">,</span> <span class="kt">int</span> <span class="n">hash</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">count</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// read-volatile</span>
-</span><span class="line">        <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">e</span> <span class="o">=</span> <span class="n">getFirst</span><span class="o">(</span><span class="n">hash</span><span class="o">);</span>
-</span><span class="line">        <span class="k">while</span> <span class="o">(</span><span class="n">e</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="k">if</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">hash</span> <span class="o">==</span> <span class="n">hash</span> <span class="o">&amp;&amp;</span> <span class="n">key</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">key</span><span class="o">))</span> <span class="o">{</span>
-</span><span class="line">                <span class="n">V</span> <span class="n">v</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-</span><span class="line">                <span class="k">if</span> <span class="o">(</span><span class="n">v</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
-</span><span class="line">                    <span class="k">return</span> <span class="n">v</span><span class="o">;</span>
-</span><span class="line">                <span class="k">return</span> <span class="nf">readValueUnderLock</span><span class="o">(</span><span class="n">e</span><span class="o">);</span> <span class="c1">// recheck</span>
-</span><span class="line">            <span class="o">}</span>
-</span><span class="line">            <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>先看第二行代码，这里对 count 进行了一次判断，其中 count 表示 Segment 中元素的数量，我们可以来看一下 count 的定义：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">transient</span> <span class="kd">volatile</span> <span class="kt">int</span> <span class="n">count</span><span class="o">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>可以看到 count 是 volatile 的，实际上这里里面利用了 volatile 的语义：</p>
-
-<blockquote>
-  <p>对volatile字段的写入操作happens-before于每一个后续的同一个字段的读操作。</p>
-</blockquote>
-
-<p>因为实际上 put、remove 等操作也会更新 count 的值，所以当竞争发生的时候， volatile 的语义可以保证写操作在读操作之前，也就保证了写操作对后续的读操作都是可见的，这样后面 get 的后续操作就可以拿到完整的元素内容。</p>
-
-<p>然后，在第三行，调用了 getFirst() 来取得链表的头部：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">getFirst</span><span class="o">(</span><span class="kt">int</span> <span class="n">hash</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[]</span> <span class="n">tab</span> <span class="o">=</span> <span class="n">table</span><span class="o">;</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">tab</span><span class="o">[</span><span class="n">hash</span> <span class="o">&amp;</span> <span class="o">(</span><span class="n">tab</span><span class="o">.</span><span class="na">length</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)];</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>同样，这里也是用位操作来确定链表的头部，hash 值和 HashTable 的长度减一做与操作，最后的结果就是 hash 值的低 n 位，其中 n 是 HashTable 的长度以 2 为底的结果。</p>
-
-<p>在确定了链表的头部以后，就可以对整个链表进行遍历，看第 4 行，取出 key 对应的 value 的值，如果拿出的 value 的值是 null，则可能这个 key，value 对正在 put 的过程中，如果出现这种情况，那么就加锁来保证取出的 value 是完整的，如果不是 null，则直接返回 value。</p>
-
-<h3 id="concurrenthashmap--put-">ConcurrentHashMap 的 put 操作</h3>
-
-<p>看完了 get 操作，再看下 put 操作，put 操作的前面也是确定 Segment 的过程，这里不再赘述，直接看关键的 segment 的 put 方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">V</span> <span class="nf">put</span><span class="o">(</span><span class="n">K</span> <span class="n">key</span><span class="o">,</span> <span class="kt">int</span> <span class="n">hash</span><span class="o">,</span> <span class="n">V</span> <span class="n">value</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">onlyIfAbsent</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">lock</span><span class="o">();</span>
-</span><span class="line">    <span class="k">try</span> <span class="o">{</span>
-</span><span class="line">        <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">count</span><span class="o">;</span>
-</span><span class="line">        <span class="k">if</span> <span class="o">(</span><span class="n">c</span><span class="o">++</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="o">)</span> <span class="c1">// ensure capacity</span>
-</span><span class="line">            <span class="n">rehash</span><span class="o">();</span>
-</span><span class="line">        <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[]</span> <span class="n">tab</span> <span class="o">=</span> <span class="n">table</span><span class="o">;</span>
-</span><span class="line">        <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="n">hash</span> <span class="o">&amp;</span> <span class="o">(</span><span class="n">tab</span><span class="o">.</span><span class="na">length</span> <span class="o">-</span> <span class="mi">1</span><span class="o">);</span>
-</span><span class="line">        <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">first</span> <span class="o">=</span> <span class="n">tab</span><span class="o">[</span><span class="n">index</span><span class="o">];</span>
-</span><span class="line">        <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">e</span> <span class="o">=</span> <span class="n">first</span><span class="o">;</span>
-</span><span class="line">        <span class="k">while</span> <span class="o">(</span><span class="n">e</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">hash</span> <span class="o">!=</span> <span class="n">hash</span> <span class="o">||</span> <span class="o">!</span><span class="n">key</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">key</span><span class="o">)))</span>
-</span><span class="line">            <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">V</span> <span class="n">oldValue</span><span class="o">;</span>
-</span><span class="line">        <span class="k">if</span> <span class="o">(</span><span class="n">e</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">oldValue</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-</span><span class="line">            <span class="k">if</span> <span class="o">(!</span><span class="n">onlyIfAbsent</span><span class="o">)</span>
-</span><span class="line">                <span class="n">e</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">        <span class="k">else</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">oldValue</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class="line">            <span class="o">++</span><span class="n">modCount</span><span class="o">;</span>
-</span><span class="line">            <span class="n">tab</span><span class="o">[</span><span class="n">index</span><span class="o">]</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;(</span><span class="n">key</span><span class="o">,</span> <span class="n">hash</span><span class="o">,</span> <span class="n">first</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
-</span><span class="line">            <span class="n">count</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span> <span class="c1">// write-volatile</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">oldValue</span><span class="o">;</span>
-</span><span class="line">    <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
-</span><span class="line">        <span class="n">unlock</span><span class="o">();</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>首先对 Segment 的 put 操作是加锁完成的，然后在第五行，如果 Segment 中元素的数量超过了阈值（由构造函数中的 loadFactor 算出）这需要进行对 Segment 扩容，并且要进行 rehash，关于 rehash 的过程大家可以自己去了解，这里不详细讲了。</p>
-
-<p>第 8 和第 9 行的操作就是 getFirst 的过程，确定链表头部的位置。</p>
-
-<p>第 11 行这里的这个 while 循环是在链表中寻找和要 put 的元素相同 key 的元素，如果找到，就直接更新更新 key 的 value，如果没有找到，则进入 21 行这里，生成一个新的 HashEntry 并且把它加到整个 Segment 的头部，然后再更新 count 的值。</p>
-
-<h3 id="concurrenthashmap--remove-">ConcurrentHashMap 的 remove 操作</h3>
-
-<p>Remove 操作的前面一部分和前面的 get 和 put 操作一样，都是定位 Segment 的过程，然后再调用 Segment 的 remove 方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">V</span> <span class="nf">remove</span><span class="o">(</span><span class="n">Object</span> <span class="n">key</span><span class="o">,</span> <span class="kt">int</span> <span class="n">hash</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">lock</span><span class="o">();</span>
-</span><span class="line">    <span class="k">try</span> <span class="o">{</span>
-</span><span class="line">        <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">count</span> <span class="o">-</span> <span class="mi">1</span><span class="o">;</span>
-</span><span class="line">        <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;[]</span> <span class="n">tab</span> <span class="o">=</span> <span class="n">table</span><span class="o">;</span>
-</span><span class="line">        <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="n">hash</span> <span class="o">&amp;</span> <span class="o">(</span><span class="n">tab</span><span class="o">.</span><span class="na">length</span> <span class="o">-</span> <span class="mi">1</span><span class="o">);</span>
-</span><span class="line">        <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">first</span> <span class="o">=</span> <span class="n">tab</span><span class="o">[</span><span class="n">index</span><span class="o">];</span>
-</span><span class="line">        <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">e</span> <span class="o">=</span> <span class="n">first</span><span class="o">;</span>
-</span><span class="line">        <span class="k">while</span> <span class="o">(</span><span class="n">e</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">hash</span> <span class="o">!=</span> <span class="n">hash</span> <span class="o">||</span> <span class="o">!</span><span class="n">key</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">key</span><span class="o">)))</span>
-</span><span class="line">            <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">V</span> <span class="n">oldValue</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class="line">        <span class="k">if</span> <span class="o">(</span><span class="n">e</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">V</span> <span class="n">v</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-</span><span class="line">            <span class="k">if</span> <span class="o">(</span><span class="n">value</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">value</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">v</span><span class="o">))</span> <span class="o">{</span>
-</span><span class="line">                <span class="n">oldValue</span> <span class="o">=</span> <span class="n">v</span><span class="o">;</span>
-</span><span class="line">                <span class="c1">// All entries following removed node can stay</span>
-</span><span class="line">                <span class="c1">// in list, but all preceding ones need to be</span>
-</span><span class="line">                <span class="c1">// cloned.</span>
-</span><span class="line">                <span class="o">++</span><span class="n">modCount</span><span class="o">;</span>
-</span><span class="line">                <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">newFirst</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
-</span><span class="line">                <span class="k">for</span> <span class="o">(</span><span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="n">first</span><span class="o">;</span> <span class="n">p</span> <span class="o">!=</span> <span class="n">e</span><span class="o">;</span> <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">next</span><span class="o">)</span>
-</span><span class="line">                    <span class="n">newFirst</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashEntry</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span><span class="n">V</span><span class="o">&gt;(</span><span class="n">p</span><span class="o">.</span><span class="na">key</span><span class="o">,</span> <span class="n">p</span><span class="o">.</span><span class="na">hash</span><span class="o">,</span>
-</span><span class="line">                                                  <span class="n">newFirst</span><span class="o">,</span> <span class="n">p</span><span class="o">.</span><span class="na">value</span><span class="o">);</span>
-</span><span class="line">                <span class="n">tab</span><span class="o">[</span><span class="n">index</span><span class="o">]</span> <span class="o">=</span> <span class="n">newFirst</span><span class="o">;</span>
-</span><span class="line">                <span class="n">count</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span> <span class="c1">// write-volatile</span>
-</span><span class="line">            <span class="o">}</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">oldValue</span><span class="o">;</span>
-</span><span class="line">    <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
-</span><span class="line">        <span class="n">unlock</span><span class="o">();</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>首先 remove 操作也是确定需要删除的元素的位置，不过这里删除元素的方法不是简单地把待删除元素的前面的一个元素的 next 指向后面一个就完事了，我们之前已经说过 HashEntry 中的 next 是 final 的，一经赋值以后就不可修改，在定位到待删除元素的位置以后，程序就将待删除元素前面的那一些元素全部复制一遍，然后再一个一个重新接到链表上去，看一下下面这一幅图来了解这个过程：</p>
-
-<p><img src="http://pic.yupoo.com/goldendoc/Ba3OfBv8/medish.jpg" alt="image" /></p>
-
-<p>假设链表中原来的元素如上图所示，现在要删除元素 3，那么删除元素 3 以后的链表就如下图所示：</p>
-
-<p><img src="http://pic.yupoo.com/goldendoc/Ba3OfPQE/medish.jpg" alt="image" /></p>
-
-<h3 id="concurrenthashmap--size-">ConcurrentHashMap 的 size 操作</h3>
-
-<p>在前面的章节中，我们涉及到的操作都是在单个 Segment 中进行的，但是 ConcurrentHashMap 有一些操作是在多个 Segment 中进行，比如 size 操作，ConcurrentHashMap 的 size 操作也采用了一种比较巧的方式，来尽量避免对所有的 Segment 都加锁。</p>
-
-<p>前面我们提到了一个 Segment 中的有一个 modCount 变量，代表的是对 Segment 中元素的数量造成影响的操作的次数，这个值只增不减，size 操作就是遍历了两次 Segment，每次记录 Segment 的 modCount 值，然后将两次的 modCount 进行比较，如果相同，则表示期间没有发生过写入操作，就将原先遍历的结果返回，如果不相同，则把这个过程再重复做一次，如果再不相同，则就需要将所有的 Segment 都锁住，然后一个一个遍历了，具体的实现大家可以看 ConcurrentHashMap 的源码，这里就不贴了。</p>
 ]]></content>
   </entry>
   

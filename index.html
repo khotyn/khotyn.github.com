@@ -109,6 +109,154 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2014/01/19/java-8-default-method/">Java 8 之 Default Method</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-19T22:13:00+08:00" pubdate data-updated="true">Jan 19<span>th</span>, 2014</time>
+        
+         | <a href="/blog/2014/01/19/java-8-default-method/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>如果进度正常，新版本的 Java，Java 8 将在三月份发布，Java 开发人员期待已久的 lambda 也将在 Java 8 中得到支持。目前，Java 8 的早期版本已经可以在 Java 的网站上下载到了，Intellij IDEA 也已经在其最新的版本支持了 Java 8。所以，最近花了点时间了解了一下 Java 8 中新增加的一些特性。</p>
+
+<p>由于 lambda 的引入，Java 8 对原来的集合类做了大幅的更新，让集合操作可以支持 lambda 表达式。在看新的的集合类的代码的时候，发现了 java 8 似乎增加了一个新的方法描述符，比如在 <code>java.lang.Iterable</code> 里面就新加入了下面这个方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="k">default</span> <span class="kt">void</span> <span class="nf">forEach</span><span class="o">(</span><span class="n">Consumer</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">T</span><span class="o">&gt;</span> <span class="n">action</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="n">Objects</span><span class="o">.</span><span class="na">requireNonNull</span><span class="o">(</span><span class="n">action</span><span class="o">);</span>
+</span><span class="line">    <span class="k">for</span> <span class="o">(</span><span class="n">T</span> <span class="n">t</span> <span class="o">:</span> <span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">action</span><span class="o">.</span><span class="na">accept</span><span class="o">(</span><span class="n">t</span><span class="o">);</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在方法的最前面，是一个 <code>default</code> 描述符。等等，Iterable 不是个接口吗，怎么有具体的实现代码了？</p>
+
+<p>这个 default 就是在 java 8 中新引入的，它可以让你的接口有一个默认的实现，接口的实现类可以不用去实现 default method，比如，下面这段代码，是可以正常编译通过的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">class</span> <span class="nc">Impl</span> <span class="kd">implements</span> <span class="n">A</span> <span class="o">{</span>
+</span><span class="line">
+</span><span class="line"><span class="o">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">interface</span> <span class="nc">A</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">default</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;A&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>引入 default 的带来的一个好处就是在现有的接口上增加方法而不用让其实现修改代码，通过这种机制，Java 8 可以通过平滑的方式在原有的 Java 的 API 上引入 lambda 的支持。</p>
+
+<p>那么，如果一个类实现了两个接口，这两个接口里面有方法签名相同的 default method，那运行的时候到底会选择哪一个？答案是编译不通过，如果出现这种情况，实现类必须实现 default method，以消除歧义，比如下面这样。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">class</span> <span class="nc">MultiImpl</span> <span class="kd">implements</span> <span class="n">A</span><span class="o">,</span> <span class="n">B</span> <span class="o">{</span>
+</span><span class="line">
+</span><span class="line">    <span class="cm">/**</span>
+</span><span class="line"><span class="cm">     * 由于 A，B 中都有 String foo() 接口，不知道要调用哪个，所以实现类必须实现一下</span>
+</span><span class="line"><span class="cm">     *</span>
+</span><span class="line"><span class="cm">     * @return</span>
+</span><span class="line"><span class="cm">     */</span>
+</span><span class="line">    <span class="nd">@Override</span>
+</span><span class="line">    <span class="kd">public</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;C&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">interface</span> <span class="nc">A</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">default</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;A&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">interface</span> <span class="nc">B</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">default</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;B&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>当然，在的实现类中，也可以直接调用某个接口的 default method：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">class</span> <span class="nc">MultiImplInvokeSuper</span> <span class="kd">implements</span> <span class="n">A</span><span class="o">,</span> <span class="n">B</span> <span class="o">{</span>
+</span><span class="line">    <span class="nd">@Override</span>
+</span><span class="line">    <span class="kd">public</span> <span class="n">String</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">B</span><span class="o">.</span><span class="na">super</span><span class="o">.</span><span class="na">foo</span><span class="o">();</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2014/01/01/sell-mac-book-pro/">转让自用 13 寸 MacBook Pro</a></h1>
     
     
@@ -776,46 +924,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/09/21/the-great-gatsby/">「了不起的盖茨比」</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-09-21T21:46:00+08:00" pubdate data-updated="true">Sep 21<span>st</span>, 2013</time>
-        
-         | <a href="/blog/2013/09/21/the-great-gatsby/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><img src="http://pic.yupoo.com/khotyn/DbacwzbA/T4XiW.png" alt="image" /></p>
-
-<p>我们继续奋力向前，逆水行舟，被不断地向后推，直至回到往昔岁月。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -831,6 +939,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/01/19/java-8-default-method/">Java 8 之 default method</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/01/sell-mac-book-pro/">转让自用 13 寸 MacBook Pro</a>
       </li>
     
@@ -844,10 +956,6 @@
     
       <li class="post">
         <a href="/blog/2013/11/02/jvmtop-impl/">jvmtop 介绍和实现分析</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/10/24/brave-new-world/">在更大的世界遇见更好的自己</a>
       </li>
     
   </ul>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Programming | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/programming/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2014-01-06T09:57:33+08:00</updated>
+  <updated>2014-01-19T22:39:48+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,84 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Java 8 之 default method]]></title>
+    <link href="http://khotyn.github.com/blog/2014/01/19/java-8-default-method/"/>
+    <updated>2014-01-19T22:13:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2014/01/19/java-8-default-method</id>
+    <content type="html"><![CDATA[<p>如果进度正常，新版本的 Java，Java 8 将在三月份发布，Java 开发人员期待已久的 lambda 也将在 Java 8 中得到支持。目前，Java 8 的早期版本已经可以在 Java 的网站上下载到了，Intellij IDEA 也已经在其最新的版本支持了 Java 8。所以，最近花了点时间了解了一下 Java 8 中新增加的一些特性。</p>
+
+<p>由于 lambda 的引入，Java 8 对原来的集合类做了大幅的更新，让集合操作可以支持 lambda 表达式。在看新的的集合类的代码的时候，发现了 java 8 似乎增加了一个新的方法描述符，比如在 <code>java.lang.Iterable</code> 里面就新加入了下面这个方法：</p>
+
+<p><code>java
+default void forEach(Consumer&lt;? super T&gt; action) {
+    Objects.requireNonNull(action);
+    for (T t : this) {
+        action.accept(t);
+    }
+}
+</code></p>
+
+<p>在方法的最前面，是一个 <code>default</code> 描述符。等等，Iterable 不是个接口吗，怎么有具体的实现代码了？</p>
+
+<p>这个 default 就是在 java 8 中新引入的，它可以让你的接口有一个默认的实现，接口的实现类可以不用去实现 default method，比如，下面这段代码，是可以正常编译通过的：</p>
+
+<p>```java
+class Impl implements A {</p>
+
+<p>}</p>
+
+<p>interface A {
+    default String foo() {
+        return “A”;
+    }
+}
+```</p>
+
+<p>引入 default 的带来的一个好处就是在现有的接口上增加方法而不用让其实现修改代码，通过这种机制，Java 8 可以通过平滑的方式在原有的 Java 的 API 上引入 lambda 的支持。</p>
+
+<p>那么，如果一个类实现了两个接口，这两个接口里面有方法签名相同的 default method，那运行的时候到底会选择哪一个？答案是编译不通过，如果出现这种情况，实现类必须实现 default method，以消除歧义，比如下面这样。</p>
+
+<p>```java
+class MultiImpl implements A, B {</p>
+
+<pre><code>/**
+ * 由于 A，B 中都有 String foo() 接口，不知道要调用哪个，所以实现类必须实现一下
+ *
+ * @return
+ */
+@Override
+public String foo() {
+    return "C";
+} }
+</code></pre>
+
+<p>interface A {
+    default String foo() {
+        return “A”;
+    }
+}</p>
+
+<p>interface B {
+    default String foo() {
+        return “B”;
+    }
+}
+```</p>
+
+<p>当然，在的实现类中，也可以直接调用某个接口的 default method：</p>
+
+<p><code>java
+class MultiImplInvokeSuper implements A, B {
+    @Override
+    public String foo() {
+        return B.super.foo();
+    }
+}
+</code></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Google Guava 之 EventBus]]></title>
@@ -207,99 +285,6 @@ jvmtop.sh &lt;pid&gt;
 <p>但是有一个问题就是上面的这些分支的创建，合并，删除等等操作，都是需要好几步的，比较费时间，费精力，Git flow 还提供了一个 git 的扩展，让我们可以非常方便地在项目中使用上述的分支模型，具体的使用方式作者都已经写在了 github 上，大家可以自己去看：<a href="https://github.com/nvie/gitflow">https://github.com/nvie/gitflow</a>。在 Mac 下可以用 <code>brew install git-flow</code> 来安装。</p>
 
 <p>之前我也了解过 git 的一些使用，并且已经在一些项目中尝试去使用 git，但是在分支管理这一块一直比较头疼，而 Git flow 恰好给我提供了一个现成的经过实践的分支模型，刚好公司后面有一个项目可能也会用到 git，到时候我会尝试下在项目组中推广使用 Git flow，让实践去检验一把。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Java Bean 的布尔类型属性获取问题]]></title>
-    <link href="http://khotyn.github.com/blog/2013/09/25/java-bean-boolean/"/>
-    <updated>2013-09-25T18:38:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/09/25/java-bean-boolean</id>
-    <content type="html"><![CDATA[<h3 id="velocity--java-bean-">Velocity 对 Java Bean 中布尔类型的属性的获取问题</h3>
-
-<p>今天朋友遇到一个问题，是 Velocity 下面一个 <code>Boolean</code> 类型的变量在模板上没有办法输出，我大致简化一下这个问题，现在我们有一个简单的 Java Bean：</p>
-
-<p>```java
-public class SimpleBean {
-    private Boolean hasKatong = false;</p>
-
-<pre><code>public Boolean isHasKatong() {
-    return hasKatong;
-}
-
-public void setHasKatong(Boolean hasKatong) {
-    this.hasKatong = hasKatong;
-} } ```
-</code></pre>
-
-<p>然后有一个简单的模板：</p>
-
-<p><code>java
-$simpleBean.hasKatong
-</code></p>
-
-<p>模板合并的代码如下：</p>
-
-<p><code>java
-public static void main(String[] args) throws Exception {
-    Properties p = new Properties();
-    p.put("resource.loader", "class");
-    p.put("class.resource.loader.class",
-        "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-    Velocity.init(p);
-    VelocityContext context = new VelocityContext();
-    context.put("simpleBean", new SimpleBean());
-    Template template = Velocity.getTemplate("mytemplate.vm");
-    StringWriter sw = new StringWriter();
-    template.merge(context, sw);
-    System.out.println(sw.toString());
-}
-</code></p>
-
-<p>大家猜测一下这段代码的输出会是什么？可能大多数人都会认为是 <code>false</code>，但是在 Velocity 1.5 下，这段代码不会输出任何东西，反而会有一个 Warning：</p>
-
-<blockquote>
-  <p>INFO: Null reference [template ‘mytemplate.vm’, line 1, column 1] : $simpleBean.hasKatong cannot be resolved.</p>
-</blockquote>
-
-<p>而在 Velocity 1.7 下，输出就是如大家所预测的那样，是 <code>false</code>。</p>
-
-<p>具体的分析过程并不复杂，Velocity 1.5 和 1.7 在寻找 isXXXX 这样的方法的时候处理稍微有一点不一样，具体在 <code>BooleanPropertyExecutor</code> 这个类上，在找到方法，对方法的返回值的判断上有一点不一样，1.5 是这样的：</p>
-
-<p><code>java
-if (isAlive()) {
-    if (getMethod().getReturnType() != Boolean.TYPE) {
-        setMethod(null);
-    }
-}
-</code></p>
-
-<p>而 1.7 的是这样的：</p>
-
-<p><code>java
-if (isAlive())
-{
-    if( getMethod().getReturnType() != Boolean.TYPE &amp;&amp;
-        getMethod().getReturnType() != Boolean.class )
-    {
-        setMethod(null);
-    }
-}
-</code></p>
-
-<p>可以看到，1.7 中增加了对返回值是 <code>Boolean</code> 的支持，而 1.5 只支持返回值是 <code>boolean</code> 的方法，那么既然知道了问题的根本原因，解决方法就显而易见了，要么将 <code>hasKatong</code> 这个属性的类型从 <code>Boolean</code> 改成 <code>boolean</code>，要么修改下 velocity 的模板，将属性获取直接改成方法调用：<code>$simpleBean.isHasKatong()</code>。</p>
-
-<h3 id="java-bean-">Java Bean 规范对布尔类型属性的定义</h3>
-
-<p>当然，照理说像 velocity 这样的著名开源组件，不应该在这种问题上犯错误，然后我看了一下 Java Bean 的规范：</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DbKXKmwa/medish.jpg" alt="image" /></p>
-
-<p>其实这段话已经说的很清楚了，只有原生类型的 <code>boolean</code> 的 Accessor 方法才能够用 <strong>is</strong> 前缀，其他的都用 get，其实在 JDK 的 Introspector 的实现中，也是这样处理的。</p>
-
-<p>那么，这么看来，Velocity 1.5 的处理是正确的，那么 1.7 增加对 <code>Boolean</code> 的支持是为什么呢？</p>
-
-<p>其实，Java Bean 的规范在 <code>is</code> 这种 Accessor 的规定上，是有点不怎么符合开发人员的直觉的，很多人都会在这个问题上纠结：<strong><code>Boolean</code> 类型的属性的 Accessor 是不是应该用 is 开头？</strong>，我觉得大部分人的直觉对这个答案的回答应该都是<em>是</em>，所以 Velocity 这样处理只不过是顺着大多数人的直觉的意思罢了，无可厚非。</p>
 ]]></content>
   </entry>
   
