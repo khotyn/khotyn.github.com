@@ -4,7 +4,7 @@
   <title><![CDATA[小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2014-01-19T22:39:48+08:00</updated>
+  <updated>2014-01-22T10:51:24+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,113 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[关闭 Tomcat 的 TLD 扫描的功能]]></title>
+    <link href="http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan/"/>
+    <updated>2014-01-21T19:12:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan</id>
+    <content type="html"><![CDATA[<h3 id="section">背景</h3>
+
+<p>Tomcat 作为 Servlet 规范的实现者，它在应用启动的时候会扫描 Jar 包里面的 .tld 文件，加载里面定义的标签库，但是，我们在开发的时候很多都不是采用 JSP 作为 Web 页面的模板的，很多都是使用  Velocity 之类的模板引擎，自然而然，为了加快应用的启动速度，我们可以把 Tomcat 里面的这个功能给关掉。</p>
+
+<h3 id="section-1">方法</h3>
+
+<p>看 Tomcat 的配置文档，关于 Context 的设置这一块，看到了 <code>processTlds</code> 这个属性可以设置，看下这个属性的说明：</p>
+
+<blockquote>
+  <p>Whether the context should process TLDs on startup. The default is true. The false setting is intended for special cases that know in advance TLDs are not part of the webapp.</p>
+</blockquote>
+
+<p>只要在 Context 中把这个属性设置成 false，那么我们就可以关闭 Tomcat 的 TLD 扫描功能了，为了让所有的应用都可以关闭这个功能，我们可以将 Tomcat 目录下的 conf/context.xml 修改成如下这样：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">&lt;?xml version='1.0' encoding='utf-8'?&gt;
+</span><span class="line">&lt;Context processTlds="false"&gt;
+</span><span class="line">    &lt;WatchedResource&gt;WEB-INF/web.xml&lt;/WatchedResource&gt;
+</span><span class="line">&lt;/Context&gt;
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h4 id="section-2">坑</h4>
+
+<p>但是，在 Tomcat 6 中测试的时候，发现这个功能没有生效，无奈只能 Debug Tomcat 的源码，发现 StandardContext 的 init 方法下有如下代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">if (processTlds) {
+</span><span class="line">    this.addLifecycleListener(new TldConfig());
+</span><span class="line">}
+</span><span class="line">
+</span><span class="line">super.init();
+</span><span class="line">
+</span><span class="line">// Notify our interested LifecycleListeners
+</span><span class="line">lifecycle.fireLifecycleEvent(INIT_EVENT, null);</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这里需要说明的一点是，我们的默认的 context 配置是在 <code>lifecycle.fireLifecycleEvent(INIT_EVENT, null);</code> 这行代码中被处理的，而在这行代码之前，Tomcat 就已经使用了 <code>processTlds</code>，我们的配置完全没有生效。</p>
+
+<h4 id="workaround">Workaround</h4>
+
+<p>那么，这么解决呢？在 context 中，我们还可以配置一个 JarScanner，这个 JarScanner 会被用来扫描 Jar 包中的 tld 文件，我们可以在默认的 context.xml 中配置一个空的 JarScanner，像下面这样：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">&lt;?xml version='1.0' encoding='utf-8'?&gt;
+</span><span class="line">&lt;Context processTlds="false"&gt;
+</span><span class="line">    &lt;JarScanner className="com.alipay.sofa.runtime.test.patch.tomcat.NullJarScanner"/&gt;
+</span><span class="line">&lt;/Context&gt;</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>NullJarScanner 的代码如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">package com.alipay.sofa.runtime.test.patch.tomcat;
+</span><span class="line">
+</span><span class="line">import org.apache.tomcat.JarScanner;
+</span><span class="line">import org.apache.tomcat.JarScannerCallback;
+</span><span class="line">
+</span><span class="line">import javax.servlet.ServletContext;
+</span><span class="line">import java.util.Set;
+</span><span class="line">
+</span><span class="line">/**
+</span><span class="line"> * @author khotyn 14-1-21 下午4:37
+</span><span class="line"> */
+</span><span class="line">public class NullJarScanner implements JarScanner {
+</span><span class="line">    @Override
+</span><span class="line">    public void scan(ServletContext context, ClassLoader classloader, JarScannerCallback callback, Set&lt;String&gt; jarsToSkip) {
+</span><span class="line">        // Do nothing at all.
+</span><span class="line">    }
+</span><span class="line">}
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><strong>需要注意的是，Tomcat 7 不会出现上述的问题，你只要在配置中把 processTlds 设置成 false 即可。</strong></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Java 8 之 default method]]></title>
@@ -1765,44 +1872,6 @@ n
 <p>最后加上 + 号的原因是因为能够做到完全匹配，因为任何一个字符只要其本身不是 ‘a’，并且后面不是 ‘bc’，那么就是能够匹配 “(?!abc).” 的，因此，只要一个字符串里面不包含 abc，那么它就能够完全匹配 ((?abc).)+</p>
 
 <p><strong>PS：这片文章其实是前几年写的，之前的博客被关闭了，数据丢了，幸好当时在 Iteye 上还有一份，于是就迁移过来。这几年我经常用这个方式来分析线上服务器的日志，可以说，有了零宽断言，省去了非常多的麻烦~，定位问题的速度也快了不少，零宽断言的确是一个非常犀利的东西。</strong></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[cURL 使用简介]]></title>
-    <link href="http://khotyn.github.com/blog/2013/07/18/curl/"/>
-    <updated>2013-07-18T22:05:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/07/18/curl</id>
-    <content type="html"><![CDATA[<p><a href="http://curl.haxx.se/">cURL</a> 这个神器相信很多人都已经用过，简单地说，cURL 就是一个和服务器端通信的工具，至于用什么协议，cURL 支持各种各样的协议，包括 HTTP，FTP，SMTP 等等协议，可以说是应有尽有。</p>
-
-<p>cURL 的可用的参数非常非常多，你能想到的基本上都有，不过一般使用的就那么几个参数吧，这里就介绍下我常常用到的两个：</p>
-
-<h3 id="post-">使用 Post 提交数据</h3>
-
-<p>有些服务器端限制了你只能用 POST 的方式提交数据，这个时候如果你就不能通过在 URL 上加上参数的方式来提交数据了，cURL 提供了一个 <code>-d</code> 参数来让你可以用 POST 的方式把数据提交上去，例如：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">curl http://ka.178.com/receive/index -d "activity_id=3403"</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这个请求只用了一个参数，多个参数可以 <code>&amp;</code> 符号作链接。</p>
-
-<h3 id="cookie-">附带 Cookie 到请求上</h3>
-
-<p>使用 cURL 的另一个经常需要做的事情就是需要拿到用户的登录信息，这些登录信息往往放在 cookie 里面，这样你就需要把 cookie 信息附加在请求上提交到服务器，让服务器认为你是处于登录的状态，cURL 提供了一个 <code>--cookie</code> 的参数让你可以附上 cookie：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">curl http://ka.178.com/receive/index -cookie "__utma=2582276614.13325.133516.3;"</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>如果嫌 <code>--cookie</code> 太长，可以用 <code>-b</code>，<code>-b</code> 是 <code>--cookie</code> 的简写。</p>
-
-<h3 id="section">显示出请求的头信息</h3>
-
-<p>对于有一些请求，比如那些返回 302 状态码的请求，cURL 默认情况下是不会输出任何内容的，这种请求下，我们就不知道它是返回了 200 而响应体里面没有任何内容还是因为是 302 而没有任何内容呢，这个时候我们就可以通过 <code>-D</code>（<code>--dump-header</code>）参数来显示请求的响应头，不过 <code>-D</code> 参数后面要加上一个文件，如果我们想直接输出到终端，那么就可以这么干：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">curl -D /dev/stdout http://xxxxx.com/xxxx.html</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>直接将内容输出到设备 stdout 下就可以（感谢 Unix，一切皆文件！）。</p>
 ]]></content>
   </entry>
   

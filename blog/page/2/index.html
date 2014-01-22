@@ -109,6 +109,162 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/09/25/java-bean-boolean/">Java Bean 的布尔类型属性获取问题</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-25T18:38:00+08:00" pubdate data-updated="true">Sep 25<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/09/25/java-bean-boolean/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h3 id="velocity--java-bean-">Velocity 对 Java Bean 中布尔类型的属性的获取问题</h3>
+
+<p>今天朋友遇到一个问题，是 Velocity 下面一个 <code>Boolean</code> 类型的变量在模板上没有办法输出，我大致简化一下这个问题，现在我们有一个简单的 Java Bean：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleBean</span> <span class="o">{</span>
+</span><span class="line">    <span class="kd">private</span> <span class="n">Boolean</span> <span class="n">hasKatong</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="kd">public</span> <span class="n">Boolean</span> <span class="nf">isHasKatong</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">hasKatong</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setHasKatong</span><span class="o">(</span><span class="n">Boolean</span> <span class="n">hasKatong</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">this</span><span class="o">.</span><span class="na">hasKatong</span> <span class="o">=</span> <span class="n">hasKatong</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后有一个简单的模板：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">$simpleBean</span><span class="o">.</span><span class="na">hasKatong</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>模板合并的代码如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span><span class="line">    <span class="n">Properties</span> <span class="n">p</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Properties</span><span class="o">();</span>
+</span><span class="line">    <span class="n">p</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;resource.loader&quot;</span><span class="o">,</span> <span class="s">&quot;class&quot;</span><span class="o">);</span>
+</span><span class="line">    <span class="n">p</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;class.resource.loader.class&quot;</span><span class="o">,</span>
+</span><span class="line">        <span class="s">&quot;org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader&quot;</span><span class="o">);</span>
+</span><span class="line">    <span class="n">Velocity</span><span class="o">.</span><span class="na">init</span><span class="o">(</span><span class="n">p</span><span class="o">);</span>
+</span><span class="line">    <span class="n">VelocityContext</span> <span class="n">context</span> <span class="o">=</span> <span class="k">new</span> <span class="n">VelocityContext</span><span class="o">();</span>
+</span><span class="line">    <span class="n">context</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;simpleBean&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">SimpleBean</span><span class="o">());</span>
+</span><span class="line">    <span class="n">Template</span> <span class="n">template</span> <span class="o">=</span> <span class="n">Velocity</span><span class="o">.</span><span class="na">getTemplate</span><span class="o">(</span><span class="s">&quot;mytemplate.vm&quot;</span><span class="o">);</span>
+</span><span class="line">    <span class="n">StringWriter</span> <span class="n">sw</span> <span class="o">=</span> <span class="k">new</span> <span class="n">StringWriter</span><span class="o">();</span>
+</span><span class="line">    <span class="n">template</span><span class="o">.</span><span class="na">merge</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">sw</span><span class="o">);</span>
+</span><span class="line">    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">sw</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>大家猜测一下这段代码的输出会是什么？可能大多数人都会认为是 <code>false</code>，但是在 Velocity 1.5 下，这段代码不会输出任何东西，反而会有一个 Warning：</p>
+
+<blockquote>
+  <p>INFO: Null reference [template ‘mytemplate.vm’, line 1, column 1] : $simpleBean.hasKatong cannot be resolved.</p>
+</blockquote>
+
+<p>而在 Velocity 1.7 下，输出就是如大家所预测的那样，是 <code>false</code>。</p>
+
+<p>具体的分析过程并不复杂，Velocity 1.5 和 1.7 在寻找 isXXXX 这样的方法的时候处理稍微有一点不一样，具体在 <code>BooleanPropertyExecutor</code> 这个类上，在找到方法，对方法的返回值的判断上有一点不一样，1.5 是这样的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="k">if</span> <span class="o">(</span><span class="n">isAlive</span><span class="o">())</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">getMethod</span><span class="o">().</span><span class="na">getReturnType</span><span class="o">()</span> <span class="o">!=</span> <span class="n">Boolean</span><span class="o">.</span><span class="na">TYPE</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">setMethod</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>而 1.7 的是这样的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="k">if</span> <span class="o">(</span><span class="n">isAlive</span><span class="o">())</span>
+</span><span class="line"><span class="o">{</span>
+</span><span class="line">    <span class="k">if</span><span class="o">(</span> <span class="n">getMethod</span><span class="o">().</span><span class="na">getReturnType</span><span class="o">()</span> <span class="o">!=</span> <span class="n">Boolean</span><span class="o">.</span><span class="na">TYPE</span> <span class="o">&amp;&amp;</span>
+</span><span class="line">        <span class="n">getMethod</span><span class="o">().</span><span class="na">getReturnType</span><span class="o">()</span> <span class="o">!=</span> <span class="n">Boolean</span><span class="o">.</span><span class="na">class</span> <span class="o">)</span>
+</span><span class="line">    <span class="o">{</span>
+</span><span class="line">        <span class="n">setMethod</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>可以看到，1.7 中增加了对返回值是 <code>Boolean</code> 的支持，而 1.5 只支持返回值是 <code>boolean</code> 的方法，那么既然知道了问题的根本原因，解决方法就显而易见了，要么将 <code>hasKatong</code> 这个属性的类型从 <code>Boolean</code> 改成 <code>boolean</code>，要么修改下 velocity 的模板，将属性获取直接改成方法调用：<code>$simpleBean.isHasKatong()</code>。</p>
+
+<h3 id="java-bean-">Java Bean 规范对布尔类型属性的定义</h3>
+
+<p>当然，照理说像 velocity 这样的著名开源组件，不应该在这种问题上犯错误，然后我看了一下 Java Bean 的规范：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/DbKXKmwa/medish.jpg" alt="image" /></p>
+
+<p>其实这段话已经说的很清楚了，只有原生类型的 <code>boolean</code> 的 Accessor 方法才能够用 <strong>is</strong> 前缀，其他的都用 get，其实在 JDK 的 Introspector 的实现中，也是这样处理的。</p>
+
+<p>那么，这么看来，Velocity 1.5 的处理是正确的，那么 1.7 增加对 <code>Boolean</code> 的支持是为什么呢？</p>
+
+<p>其实，Java Bean 的规范在 <code>is</code> 这种 Accessor 的规定上，是有点不怎么符合开发人员的直觉的，很多人都会在这个问题上纠结：<strong><code>Boolean</code> 类型的属性的 Accessor 是不是应该用 is 开头？</strong>，我觉得大部分人的直觉对这个答案的回答应该都是<em>是</em>，所以 Velocity 这样处理只不过是顺着大多数人的直觉的意思罢了，无可厚非。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/09/21/the-great-gatsby/">「了不起的盖茨比」</a></h1>
     
     
@@ -1590,73 +1746,6 @@ n
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/18/curl/">cURL 使用简介</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-18T22:05:00+08:00" pubdate data-updated="true">Jul 18<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/18/curl/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><a href="http://curl.haxx.se/">cURL</a> 这个神器相信很多人都已经用过，简单地说，cURL 就是一个和服务器端通信的工具，至于用什么协议，cURL 支持各种各样的协议，包括 HTTP，FTP，SMTP 等等协议，可以说是应有尽有。</p>
-
-<p>cURL 的可用的参数非常非常多，你能想到的基本上都有，不过一般使用的就那么几个参数吧，这里就介绍下我常常用到的两个：</p>
-
-<h3 id="post-">使用 Post 提交数据</h3>
-
-<p>有些服务器端限制了你只能用 POST 的方式提交数据，这个时候如果你就不能通过在 URL 上加上参数的方式来提交数据了，cURL 提供了一个 <code>-d</code> 参数来让你可以用 POST 的方式把数据提交上去，例如：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">curl http://ka.178.com/receive/index -d "activity_id=3403"</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这个请求只用了一个参数，多个参数可以 <code>&amp;</code> 符号作链接。</p>
-
-<h3 id="cookie-">附带 Cookie 到请求上</h3>
-
-<p>使用 cURL 的另一个经常需要做的事情就是需要拿到用户的登录信息，这些登录信息往往放在 cookie 里面，这样你就需要把 cookie 信息附加在请求上提交到服务器，让服务器认为你是处于登录的状态，cURL 提供了一个 <code>--cookie</code> 的参数让你可以附上 cookie：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">curl http://ka.178.com/receive/index -cookie "__utma=2582276614.13325.133516.3;"</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>如果嫌 <code>--cookie</code> 太长，可以用 <code>-b</code>，<code>-b</code> 是 <code>--cookie</code> 的简写。</p>
-
-<h3 id="section">显示出请求的头信息</h3>
-
-<p>对于有一些请求，比如那些返回 302 状态码的请求，cURL 默认情况下是不会输出任何内容的，这种请求下，我们就不知道它是返回了 200 而响应体里面没有任何内容还是因为是 302 而没有任何内容呢，这个时候我们就可以通过 <code>-D</code>（<code>--dump-header</code>）参数来显示请求的响应头，不过 <code>-D</code> 参数后面要加上一个文件，如果我们想直接输出到终端，那么就可以这么干：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">curl -D /dev/stdout http://xxxxx.com/xxxx.html</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>直接将内容输出到设备 stdout 下就可以（感谢 Unix，一切皆文件！）。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/3/">&larr; Older</a></li>
@@ -1674,6 +1763,10 @@ n
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/01/21/turnoff-tomcat-tld-scan/">关闭 Tomcat 的 TLD 扫描的功能</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/19/java-8-default-method/">Java 8 之 default method</a>
       </li>
     
@@ -1687,10 +1780,6 @@ n
     
       <li class="post">
         <a href="/blog/2013/11/06/abreact-pleasant/">发泄快感</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/02/jvmtop-impl/">jvmtop 介绍和实现分析</a>
       </li>
     
   </ul>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Programming | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/programming/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2014-01-19T22:39:48+08:00</updated>
+  <updated>2014-01-22T10:51:24+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,88 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[关闭 Tomcat 的 TLD 扫描的功能]]></title>
+    <link href="http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan/"/>
+    <updated>2014-01-21T19:12:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan</id>
+    <content type="html"><![CDATA[<h3 id="section">背景</h3>
+
+<p>Tomcat 作为 Servlet 规范的实现者，它在应用启动的时候会扫描 Jar 包里面的 .tld 文件，加载里面定义的标签库，但是，我们在开发的时候很多都不是采用 JSP 作为 Web 页面的模板的，很多都是使用  Velocity 之类的模板引擎，自然而然，为了加快应用的启动速度，我们可以把 Tomcat 里面的这个功能给关掉。</p>
+
+<h3 id="section-1">方法</h3>
+
+<p>看 Tomcat 的配置文档，关于 Context 的设置这一块，看到了 <code>processTlds</code> 这个属性可以设置，看下这个属性的说明：</p>
+
+<blockquote>
+  <p>Whether the context should process TLDs on startup. The default is true. The false setting is intended for special cases that know in advance TLDs are not part of the webapp.</p>
+</blockquote>
+
+<p>只要在 Context 中把这个属性设置成 false，那么我们就可以关闭 Tomcat 的 TLD 扫描功能了，为了让所有的应用都可以关闭这个功能，我们可以将 Tomcat 目录下的 conf/context.xml 修改成如下这样：</p>
+
+<p>```
+<?xml version='1.0' encoding='utf-8'?>
+<context processtlds="false">
+    <watchedresource>WEB-INF/web.xml</watchedresource>
+</context></p>
+
+<p>```</p>
+
+<h4 id="section-2">坑</h4>
+
+<p>但是，在 Tomcat 6 中测试的时候，发现这个功能没有生效，无奈只能 Debug Tomcat 的源码，发现 StandardContext 的 init 方法下有如下代码：</p>
+
+<p>```
+if (processTlds) {
+    this.addLifecycleListener(new TldConfig());
+}</p>
+
+<p>super.init();</p>
+
+<p>// Notify our interested LifecycleListeners
+lifecycle.fireLifecycleEvent(INIT_EVENT, null);
+```</p>
+
+<p>这里需要说明的一点是，我们的默认的 context 配置是在 <code>lifecycle.fireLifecycleEvent(INIT_EVENT, null);</code> 这行代码中被处理的，而在这行代码之前，Tomcat 就已经使用了 <code>processTlds</code>，我们的配置完全没有生效。</p>
+
+<h4 id="workaround">Workaround</h4>
+
+<p>那么，这么解决呢？在 context 中，我们还可以配置一个 JarScanner，这个 JarScanner 会被用来扫描 Jar 包中的 tld 文件，我们可以在默认的 context.xml 中配置一个空的 JarScanner，像下面这样：</p>
+
+<p><code>
+&lt;?xml version='1.0' encoding='utf-8'?&gt;
+&lt;Context processTlds="false"&gt;
+    &lt;JarScanner className="com.alipay.sofa.runtime.test.patch.tomcat.NullJarScanner"/&gt;
+&lt;/Context&gt;
+</code></p>
+
+<p>NullJarScanner 的代码如下：</p>
+
+<p>```
+package com.alipay.sofa.runtime.test.patch.tomcat;</p>
+
+<p>import org.apache.tomcat.JarScanner;
+import org.apache.tomcat.JarScannerCallback;</p>
+
+<p>import javax.servlet.ServletContext;
+import java.util.Set;</p>
+
+<p>/**
+ * @author khotyn 14-1-21 下午4:37
+ */
+public class NullJarScanner implements JarScanner {
+    @Override
+    public void scan(ServletContext context, ClassLoader classloader, JarScannerCallback callback, Set<string> jarsToSkip) {
+        // Do nothing at all.
+    }
+}</string></p>
+
+<p>```</p>
+
+<p><strong>需要注意的是，Tomcat 7 不会出现上述的问题，你只要在配置中把 processTlds 设置成 false 即可。</strong></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Java 8 之 default method]]></title>
@@ -247,44 +329,6 @@ jvmtop.sh &lt;pid&gt;
 <p>想要去培养这种对“程序美”的感受能力，一个很好的方式就是去阅读优秀的开源代码，比如 Tomcat，Dubbo 等等，有时候，当你看到一段不错的代码，一个简洁的有用的架构设计的时候，你会感到来自内心深处的愉悦，这就是“美”的一个侧面。我相信，培养这样的感受能力，是非常有益于身心健康的，并且我也相信那些透露出“美”的代码在某种程度上也是更加优秀的代码（内王而外圣）。</p>
 
 <p>这个世界已经够丑陋了，如果我们已经解决了温饱问题，又有了这么多的自由时间，不如做点“漂亮”点的东西出来，写一些更有用，更“美”的代码出来~</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Git flow 分支管理模型简介]]></title>
-    <link href="http://khotyn.github.com/blog/2013/10/01/git-flow/"/>
-    <updated>2013-10-01T10:43:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/10/01/git-flow</id>
-    <content type="html"><![CDATA[<p>有一次和 <a href="https://twitter.com/imsoz">@imsoz</a> 在聊天的时候，他给我介绍了一个叫做 Git flow 的分支管理模型，我听了很有兴趣，于是昨天花了一点时间去了解了一下。</p>
-
-<h4 id="git-flow-">Git flow 分支模型</h4>
-
-<p>Git flow 是一个分支模型，它提供了一个经过实践检验的分支管理的模型。整个分支模型的工作图大概是下面这样样子的：</p>
-
-<p><img src="http://nvie.com/img/2009/12/Screen-shot-2009-12-24-at-11.32.03.png" alt="image" /></p>
-
-<p>它包含有两个长期分支和三个支持的分支：</p>
-
-<ul>
-  <li>master 分支：使用过 git 的同学应该都这个分支很熟悉，这个分支代表了可以用于生产环境的代码。</li>
-  <li>develop 分支：用于开发的分支，或者叫做“集成分支”，这里的代码可以用来做 nightly build。</li>
-</ul>
-
-<p>上面两个是长期的分支，这两个分支在开发的过程中会一直存在下去。除了这两个长期分支，还有三个用于支持的分支：</p>
-
-<ul>
-  <li>feature 分支：一般上从 develop 分支拉出来，最后要 merge 回 develop 分支，或者废弃掉。feature 分支是用来开发一个在下一次的产品 release 中可能被加上去的特性的，一个 feature 分支在特性开发完毕后就结束了，所以 feature 分支只是短暂地存在。</li>
-  <li>release 分支：release 分支用来支持准备一个将要被 release 的产品版本，在这个分支上，我们可能会修改版本号，做一些 release 相关的事情，或者做一些 bug 的 hotfix，release 分支从 develop 分支拉出来，当你认为你的下一次的 release 所需要的特性都已经开发完毕的时候，你就可以从 develop 分支拉出 release 分支来，最后 release 分支需要 merge 回 develop 分支和 master 分支。</li>
-  <li>hotfix 分支：顾名思义，hotfix 分支就是当生产环境的代码出现了重大的 bug 的时候需要的分支，这个时候你可以从 master 分支中拉出一个 hotfix 分支，在修复完 bug 后，记得要把 hotfix 的分支合并回到 develop 和 master 分支上。</li>
-</ul>
-
-<p>上面就是 Git flow 的整个分支模型，相对来说还是比较简单的，更加具体的说明可以看这篇关于 Git flow 分支模型最原始的 blog：<a href="http://nvie.com/posts/a-successful-git-branching-model/">http://nvie.com/posts/a-successful-git-branching-model/</a></p>
-
-<h4 id="git-flow--1">Git flow 扩展</h4>
-
-<p>但是有一个问题就是上面的这些分支的创建，合并，删除等等操作，都是需要好几步的，比较费时间，费精力，Git flow 还提供了一个 git 的扩展，让我们可以非常方便地在项目中使用上述的分支模型，具体的使用方式作者都已经写在了 github 上，大家可以自己去看：<a href="https://github.com/nvie/gitflow">https://github.com/nvie/gitflow</a>。在 Mac 下可以用 <code>brew install git-flow</code> 来安装。</p>
-
-<p>之前我也了解过 git 的一些使用，并且已经在一些项目中尝试去使用 git，但是在分支管理这一块一直比较头疼，而 Git flow 恰好给我提供了一个现成的经过实践的分支模型，刚好公司后面有一个项目可能也会用到 git，到时候我会尝试下在项目组中推广使用 Git flow，让实践去检验一把。</p>
 ]]></content>
   </entry>
   
