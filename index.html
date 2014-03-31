@@ -109,6 +109,62 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2014/03/31/unittest/">一些关于单元测试的思考</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-31T09:06:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2014</time>
+        
+         | <a href="/blog/2014/03/31/unittest/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近在开发公司的集成测试框架，有一些关于单元测试的体会，写一个博客记录一下想法。</p>
+
+<h4 id="section">为什么要写单元测试？</h4>
+
+<p>这个问题，已经有无数的关于技术的书、文章去阐述了，不断地强调单元测试的重要性。比如单元测试可以让你在软件开发的早期阶段发现 Bug，而不必到集成测试的时候才发现等等。不过，对于我来说，在切实地戳到我的痛点之前，我一直都没有去重视这些关于单元测试的忠告（虽然在心中记着，但是实际上并不是很在意）。</p>
+
+<p>在写公司的集成测试框架的时候，有那么好几次，在调整了现有的功能，或者修复了某个 Bug 之后，<strong>因为懒惰，也因为跑一次完整的单元测试所需要的耗时较长</strong>，我侥幸地认为这些修改应该没有问题，直接打包交付。结果是，墨菲定律出现了，果然，没有经过测试的修改引发了新的 Bug，我不得不重新修改代码，然后厚着脸皮让用户重新试一次。</p>
+
+<p>人总是不靠谱的，我们懒惰，我们存在侥幸心理，坏事儿总是在我们最不希望发生的时候发生。写单元测试不能防止我们懒惰，防止我们存在侥幸心理。但是一次成本低廉的单元测试会让我们觉得：“反正运行一次但单元测试不会耗费很多时间，不如跑一次吧”，它在一定程度上降低我们犯错的几率。</p>
+
+<p>单元测试对于重构的意义也非常重大。很多有意思的程序员都有洁癖，会想着去修改某一段「恶心」的代码。我有过这样几次经历，在把一段「恶心」的代码修改地赏心悦目后，最后上线后发现引入了一个 Bug，心里暗骂一句 WTF，然后一脸黑线地把 Bug 修改了，想想如果当时有单元测试，那么会给我多大的勇气，让我可以肆无忌惮地去重构代码，这是多么爽的一件事情。</p>
+
+<h4 id="section-1">好的单元测试应该是怎样的？</h4>
+
+<p>一个好的单元测试，我觉得最重要的一点就是运行成本得低，也就是说一个单元测试越快越好。运行一次单元测试的成本越低，你才会越愿意去运行单元测试。如果运行一次单元测试得 10 分钟 20 分钟，那么我想很多人的侥幸心理又会出来了。</p>
+
+<h4 id="section-2">我是怎样写单元测试的？</h4>
+
+<p>我一般是这样写单元测试的，先想清楚模块的边界，有哪几种可能的输入，这些输入对应的可能输出是什么，然后以最快的速度堆积代码把功能先实现出来，接着写单元测试，把测试用例全部跑过。接下来马上着手重构之前写的代码，不断重构，不断地跑单元测试，知道重构后的代码让自己满意为止。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2014/01/21/turnoff-tomcat-tld-scan/">关闭 Tomcat 的 TLD 扫描的功能</a></h1>
     
     
@@ -837,73 +893,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/10/01/git-flow/">Git Flow 分支管理模型简介</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-10-01T10:43:00+08:00" pubdate data-updated="true">Oct 1<span>st</span>, 2013</time>
-        
-         | <a href="/blog/2013/10/01/git-flow/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>有一次和 <a href="https://twitter.com/imsoz">@imsoz</a> 在聊天的时候，他给我介绍了一个叫做 Git flow 的分支管理模型，我听了很有兴趣，于是昨天花了一点时间去了解了一下。</p>
-
-<h4 id="git-flow-">Git flow 分支模型</h4>
-
-<p>Git flow 是一个分支模型，它提供了一个经过实践检验的分支管理的模型。整个分支模型的工作图大概是下面这样样子的：</p>
-
-<p><img src="http://nvie.com/img/2009/12/Screen-shot-2009-12-24-at-11.32.03.png" alt="image" /></p>
-
-<p>它包含有两个长期分支和三个支持的分支：</p>
-
-<ul>
-  <li>master 分支：使用过 git 的同学应该都这个分支很熟悉，这个分支代表了可以用于生产环境的代码。</li>
-  <li>develop 分支：用于开发的分支，或者叫做“集成分支”，这里的代码可以用来做 nightly build。</li>
-</ul>
-
-<p>上面两个是长期的分支，这两个分支在开发的过程中会一直存在下去。除了这两个长期分支，还有三个用于支持的分支：</p>
-
-<ul>
-  <li>feature 分支：一般上从 develop 分支拉出来，最后要 merge 回 develop 分支，或者废弃掉。feature 分支是用来开发一个在下一次的产品 release 中可能被加上去的特性的，一个 feature 分支在特性开发完毕后就结束了，所以 feature 分支只是短暂地存在。</li>
-  <li>release 分支：release 分支用来支持准备一个将要被 release 的产品版本，在这个分支上，我们可能会修改版本号，做一些 release 相关的事情，或者做一些 bug 的 hotfix，release 分支从 develop 分支拉出来，当你认为你的下一次的 release 所需要的特性都已经开发完毕的时候，你就可以从 develop 分支拉出 release 分支来，最后 release 分支需要 merge 回 develop 分支和 master 分支。</li>
-  <li>hotfix 分支：顾名思义，hotfix 分支就是当生产环境的代码出现了重大的 bug 的时候需要的分支，这个时候你可以从 master 分支中拉出一个 hotfix 分支，在修复完 bug 后，记得要把 hotfix 的分支合并回到 develop 和 master 分支上。</li>
-</ul>
-
-<p>上面就是 Git flow 的整个分支模型，相对来说还是比较简单的，更加具体的说明可以看这篇关于 Git flow 分支模型最原始的 blog：<a href="http://nvie.com/posts/a-successful-git-branching-model/">http://nvie.com/posts/a-successful-git-branching-model/</a></p>
-
-<h4 id="git-flow--1">Git flow 扩展</h4>
-
-<p>但是有一个问题就是上面的这些分支的创建，合并，删除等等操作，都是需要好几步的，比较费时间，费精力，Git flow 还提供了一个 git 的扩展，让我们可以非常方便地在项目中使用上述的分支模型，具体的使用方式作者都已经写在了 github 上，大家可以自己去看：<a href="https://github.com/nvie/gitflow">https://github.com/nvie/gitflow</a>。在 Mac 下可以用 <code>brew install git-flow</code> 来安装。</p>
-
-<p>之前我也了解过 git 的一些使用，并且已经在一些项目中尝试去使用 git，但是在分支管理这一块一直比较头疼，而 Git flow 恰好给我提供了一个现成的经过实践的分支模型，刚好公司后面有一个项目可能也会用到 git，到时候我会尝试下在项目组中推广使用 Git flow，让实践去检验一把。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -919,6 +908,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/03/31/unittest/">一些关于单元测试的思考</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/21/turnoff-tomcat-tld-scan/">关闭 Tomcat 的 TLD 扫描的功能</a>
       </li>
     
@@ -932,10 +925,6 @@
     
       <li class="post">
         <a href="/blog/2013/12/07/google-guava-eventbus/">Google Guava 之 EventBus</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/06/abreact-pleasant/">发泄快感</a>
       </li>
     
   </ul>

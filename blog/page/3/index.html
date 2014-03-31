@@ -109,6 +109,93 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/07/24/zero-width-assert/">使用零宽断言来匹配不包含连续字符串的行</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-24T16:34:00+08:00" pubdate data-updated="true">Jul 24<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/07/24/zero-width-assert/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近在工作中遇到一个问题，有 N 个字符串，需要用正则表达式去过滤掉不包含某一个特定连续字符串(比如abc)的字符串。</p>
+
+<p>在网上搜罗了一大把，找到了在 Perl 5 的正则表达式中有零宽断言这个东西，非常强大，先来了解下零宽断言倒是是什么？</p>
+
+<p>简单的说，零宽断言是查找在某些内容之前或者之后的东西，这样解释起来可能比较抽象，我们来具体看下几种零宽断言：</p>
+
+<ul>
+  <li>(?=exp)：这个零宽断言用来断言自身出现的位置之后能够匹配到表达式 exp，考虑下面这一个正则表达式 q(?=u)，这个正则表达式表示匹配后面的字符是 u 的 q</li>
+  <li>(?!exp)：这个零宽断言用来断言自身出现的位置之后不能够匹配到表达式 exp，看下面这一个正则表达式 q(?!u)，这个正则表达式表示匹配后面的字符不是 u 的 q</li>
+  <li>(?&lt;=exp)：这个零宽断言用来断言自身出现的位置之前能够匹配到表达式 exp</li>
+  <li>(?&lt;!exp)：这个零宽断言用来断言自身出现的位置之前不能够匹配到表达式 exp</li>
+</ul>
+
+<p>在理解零宽断言的时候需要注意的一点是它是一种断言，也就是说零宽断言只会告诉你匹不匹配，但是不会“消费”掉字符串内的内容，我用下面的这一个例子来解释这个情况：</p>
+
+<p>我们有一个正则表达式 <code>k(?=h)otyn</code>，用它去匹配 khotyn，乍看一下这个匹配是会成功的，但是由于零宽断言只做断言，而不会”<strong>消费</strong>“掉匹配到的字符串，所以事实上，这个正则表达式匹配是一个后面是 h 的 k，并且这个 k 的后面是 otyn，这样这个正则表达式无论什么字符串都会匹配失败(正确的应该是 <code>k(?=h)hotyn</code>，不过这样加不加零宽断言并没有意义)。</p>
+
+<p>在理解零宽断言以后，我们来看一下如何来匹配出不包含“abc”的字符串，下面是我写出的结果：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">((?!abc).)+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>首先我们看这个正则表达式里面的 <code>(?!abc).</code> 部分，这个部分断言一个空字符后面不能够匹配到字符串abc，并且这个空字符串后面是一个任意字符。</p>
+
+<p>我们来看下下面这一段代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">Pattern</span> <span class="n">pattern</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Perl5Compiler</span><span class="o">().</span><span class="na">compile</span><span class="o">(</span><span class="s">&quot;((?!abc).)+&quot;</span><span class="o">);</span>
+</span><span class="line"><span class="n">Perl5Matcher</span> <span class="n">matcher</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Perl5Matcher</span><span class="o">();</span>
+</span><span class="line"><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">matcher</span><span class="o">.</span><span class="na">matches</span><span class="o">(</span><span class="s">&quot;abc&quot;</span><span class="o">,</span> <span class="n">pattern</span><span class="o">));</span>
+</span><span class="line"><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">matcher</span><span class="o">.</span><span class="na">matches</span><span class="o">(</span><span class="s">&quot;abdas dfas&quot;</span><span class="o">,</span> <span class="n">pattern</span><span class="o">));</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码的执行结果是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kc">false</span>
+</span><span class="line"><span class="kc">true</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>第一个匹配失败是因为在字符 ‘a’ 前面的空字符后面匹配到了字符串 “abc”，因此断言失败，从而匹配失败。</p>
+
+<p>第二个匹配成功是因为没有任何一个空字符后面有出现 “abc” ，因为匹配成功。</p>
+
+<p>最后加上 + 号的原因是因为能够做到完全匹配，因为任何一个字符只要其本身不是 ‘a’，并且后面不是 ‘bc’，那么就是能够匹配 “(?!abc).” 的，因此，只要一个字符串里面不包含 abc，那么它就能够完全匹配 ((?abc).)+</p>
+
+<p><strong>PS：这片文章其实是前几年写的，之前的博客被关闭了，数据丢了，幸好当时在 Iteye 上还有一份，于是就迁移过来。这几年我经常用这个方式来分析线上服务器的日志，可以说，有了零宽断言，省去了非常多的麻烦~，定位问题的速度也快了不少，零宽断言的确是一个非常犀利的东西。</strong></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/07/18/curl/">cURL 使用简介</a></h1>
     
     
@@ -1474,58 +1561,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/03/31/mass/">杂事儿</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-03-31T22:31:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2013</time>
-        
-         | <a href="/blog/2013/03/31/mass/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h3 id="section">一、坚持</h3>
-
-<p>最近颇为得意的几件事儿，便是年后坚持做了几件事儿，每天背一点英语单词，每天写日记。</p>
-
-<p>背单词我是通过「拓词」这个应用来背的，但是这段时间坚持下来，没有特别好的效果，这个背单词的方法不是正确的方法，背了以后你只能照着「拓词」给出的答案来选，而很难直接给出单词的意思，更不用说对单词的用法进行应用了。另外，「拓词」本身的服务质量也不稳定，计时不准确，App 闪退等问题也比较严重，准备找一种更好的方式来拓展我的词汇量。</p>
-
-<p>写日记我是通过「Day One」这款 App 来记的，我买了 Mac 版和 iOS 版，三个多月使用下来非常棒，「Day One」支持 Markdown，整个应用做的也十分精美，让人看了就有写日记的冲动，特别有意思的时候它有时候会弹出一些话来让你写日记，比如，下面这句：</p>
-
-<blockquote>
-  <p>Keep a diary, and someday it’ll keep you.</p>
-</blockquote>
-
-<p>其实日记是你最私密的东西，在里面，你可以写任何的在其他社交网络上不敢写的东西，可以把你最真实的感情写在里面，让你直面最真实的自己，而当你失落的时候，这些日记就是过去的你，会在背后支持着你。</p>
-
-<p>一直以来，无论是上学的时候，还是工作的时候，总会有不断的计划冒出来，无论当时下多么大的决心，总是到一定阶段的时候放弃了。但是，最近发现，有些决心确实比另外一些更加坚定，持续地更久。其实，我一直以来内心都藏有一种恐惧，害怕自己会变成一个平庸的人，每天上班下班，完成着交给的工作，无所作为，而正是这种恐惧，成为的内心最强大的东西。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/4/">&larr; Older</a></li>
@@ -1543,6 +1578,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/03/31/unittest/">一些关于单元测试的思考</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/21/turnoff-tomcat-tld-scan/">关闭 Tomcat 的 TLD 扫描的功能</a>
       </li>
     
@@ -1556,10 +1595,6 @@
     
       <li class="post">
         <a href="/blog/2013/12/07/google-guava-eventbus/">Google Guava 之 EventBus</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/06/abreact-pleasant/">发泄快感</a>
       </li>
     
   </ul>
