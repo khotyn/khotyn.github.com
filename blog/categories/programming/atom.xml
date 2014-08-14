@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Programming | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/programming/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2014-03-31T09:15:32+08:00</updated>
+  <updated>2014-08-14T23:53:38+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,111 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[利用 JUnit 的 Rule 对 Log4j 的输出进行测试]]></title>
+    <link href="http://khotyn.github.com/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/"/>
+    <updated>2014-08-14T22:07:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2014/08/14/use-junit-rule-to-assert-log4j-output</id>
+    <content type="html"><![CDATA[<p>最近在写框架的测试代码的时候，有需求要对 Log4j 的输出进行测试（<strong>依赖 Log4j 的输出来进行测试，这一点本身可能得深思一下</strong>），之前也有对 stdout 和 stderr 进行测试，用了一个叫做 <code>system-rule</code> 的包：</p>
+
+<p>```xml</p>
+<dependency>
+    <groupid>com.github.stefanbirkner</groupid>
+    <artifactid>system-rules</artifactid>
+    <version>1.5.0</version>
+</dependency>
+<p>```</p>
+
+<p>利用这个包中类，只需要在测试用例中加上一个 JUnit Rule，就可以获取到 stdout 和 stderr 中的内容，然后对其进行测试。现在我也想对 Log4j 的输出采用类似的方式进行测试，于是扩展了 JUnit 的 Rule，就有了以下这一段代码：</p>
+
+<p>```java
+/**
+ * 此 Rule 用于对 Log4j 进行测试
+ *
+ * @author khotyn 8/14/14 9:18 PM
+ */
+public class Log4jRule extends ExternalResource {
+    private String       logName;
+    private List<string> loggerMessages = new ArrayList<string>();</string></string></p>
+
+<pre><code>public Log4jRule(String loggerName) {
+    this.logName = loggerName;
+}
+
+public Log4jRule(Class className) {
+    this.logName = className.getName();
+}
+
+public List&lt;String&gt; getLoggerMessages() {
+    return loggerMessages;
+}
+
+public String getLogMessageAsString() {
+    String result = "";
+
+    for (String loggerMessage : loggerMessages) {
+        result += loggerMessage;
+        result += "\n";
+    }
+
+    return result;
+}
+
+@Override
+protected void before() throws Throwable {
+    Logger logger = LogManager.getLogger(logName);
+    logger.addAppender(new AppenderSkeleton() {
+        @Override
+        protected void append(LoggingEvent event) {
+            loggerMessages.add(event.getMessage().toString());
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        @Override
+        public boolean requiresLayout() {
+            return false;
+        }
+    });
+} } ```
+</code></pre>
+
+<p>整段代码非常简单，继承了 JUnit 的 <code>ExternalResource</code> 类，然后在 <code>before</code> 方法中，给对应的 Logger 加上了一个 Appender，在 Appender 中，将日志内容收集到一个 List 中，然后拿到这个 List 就可以拿到日志的输出了。</p>
+
+<p>使用的时候非常简单：</p>
+
+<p>```java
+public class SampleTest {
+    @Rule
+    public Log4jRule log4jRule = new Log4jRule(SampleTest.class);</p>
+
+<pre><code>@Test
+public void test() {
+  	// .........
+    Assert.assertTrue(log4jRule.getLogMessageAsString().contains(
+        "Hello, world"));
+} } ```
+</code></pre>
+
+<p>通过 </p>
+
+<p><code>java
+log4jRule.getLogMessageAsString()
+</code></p>
+
+<p>可以拿到一个 String 格式的日志输出，或者通过：</p>
+
+<p><code>java
+log4jRule.getLoggerMessages()
+</code></p>
+
+<p>来获得一个日志输出的内容的 List，List 中的没一行就是日志中的一行</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[一些关于单元测试的思考]]></title>
@@ -249,81 +354,6 @@ eventBus.post(new Event("Hello world"));
 <h3 id="section-2">结论</h3>
 
 <p>EventBus 作为一个 In-JVM 的观察者模式的实现，非常使用，使用起来非常简单，可以减少不少的工作，建议在项目中可以多多使用。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[jvmtop 介绍和实现分析]]></title>
-    <link href="http://khotyn.github.com/blog/2013/11/02/jvmtop-impl/"/>
-    <updated>2013-11-02T15:36:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/11/02/jvmtop-impl</id>
-    <content type="html"><![CDATA[<h3 id="section">简介</h3>
-
-<p>jvmtop 是一个分析工具，顾名思义，它是一个针对 jvm 的 工具，展示的方式和 unix 的 top 命令相似。</p>
-
-<p>jvmtop 的项目地址是：<a href="https://code.google.com/p/jvmtop/">jvmtop</a>，安装 jvmtop 除了项目地址上的方式以外，还可以通过 jenv 安装：<code>jenv install jvmtop</code>。</p>
-
-<p>jvmtop 提供了两个视图，一个是概览视图，可以展示出当前机器的所有的 JVM 的情况，命令是 </p>
-
-<p><code>
-jvmtop.sh
-</code></p>
-
-<p>显示出的信息类似下面这样：</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg" alt="image" /></p>
-
-<p>其中，各个字段的意义分别如下：</p>
-
-<ul>
-  <li>PID：进程 ID</li>
-  <li>MAIN-CLASS：main 类的名字</li>
-  <li>HPCUR：当前被使用的 heap 的大小</li>
-  <li>HPMAX：最大可用的 heap 的大小</li>
-  <li>NHCUR：当前被使用的非 heap 大小（比如：perm gen）</li>
-  <li>NHMAX：最大可用的非 heap 大小</li>
-  <li>CPU：CPU 的使用情况</li>
-  <li>GC：消耗在 GC 上的时间比例</li>
-  <li>VM：JVM 的提供者，大版本号，小版本号，图中的意思是 Apple 提供的 JDK 6U51 版本。</li>
-  <li>USERNAME：当前的用户名</li>
-  <li>#T：线程数量</li>
-  <li>DL：是否有现成发生死锁</li>
-</ul>
-
-<p>还有一个视图是详情视图，展示一个 JVM 的详细情况，使用的命令如下：</p>
-
-<p><code>
-jvmtop.sh &lt;pid&gt;
-</code></p>
-
-<p>显示的信息类似下面这样：</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png" alt="image" /></p>
-
-<p>其中，各个字段的意义如下：</p>
-
-<ul>
-  <li>TID：线程 ID</li>
-  <li>NAME：线程名</li>
-  <li>STATE：线程状态</li>
-  <li>CPU：线程当前的 CPU 占用情况</li>
-  <li>TOTALCPU：从线程被创建开始总体的 CPU 占用情况</li>
-  <li>BLOCKBY：阻塞这个线程的线程 ID</li>
-</ul>
-
-<p>更加详细的用法大家可以用下面的用 <code>jvmtop.sh -h</code> 来查看。</p>
-
-<h3 id="section-1">实现</h3>
-
-<p>jvmtop 的实现相对来说还是比较简单的，整个 jvmtop 才 14 个类。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png" alt="image" /></p>
-
-<p>其中 JvmTop.java 是入口类。</p>
-
-<p>jvmtop 在启动后，会首先用 <code>sun.jvmstat.monitor.*</code> 下面的类以及 <code>com.sun.tools.attach.VirtualMachine</code> 获取到当前机器的所有的 JVM，然后通过 attachment api 将 <code>management-agent.jar</code> 这个 agent 加载到目标 JVM 上，这样，通过 JMX，就可以拿到当前的 JVM 的各种信息了，具体各个信息需要用什么样的 MBean 去拿，大家可以看对应的源代码。</p>
-
-<p>其实，如果需要一个 JVM 的静态的信息，比如，PID，MAIN-CLASS，JVM-ARGS 等等静态信息，直接用 <code>sun.jvmstat.monitor.*</code> 下的 API 就可以，只有需要动态信息的时候，我们才需要通过 attachment api 把 JMX 的功能打开，通过各种 MBean 去获取这些信息。如果后续需要实现类似的功能，也可以通过这样的思路去做。</p>
 ]]></content>
   </entry>
   
