@@ -109,6 +109,251 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/07/30/sed-part-two/">「Sed & Awk」阅读笔记之 Sed 高级命令</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-30T21:41:00+08:00" pubdate data-updated="true">Jul 30<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/07/30/sed-part-two/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>上一篇文章中，我介绍了一下 <a href="../../../../2013/07/28/sed-and-awk-part-one/">sed 的基础</a>，包括执行方式、地址选择器以及基本命令，在这一篇文章中，我们继续来了解一下 sed 的高级命令，之所以称它们为高级命令，是因为这些命令会改变 sed 的执行流，废话不说，我们来看看这些命令吧：</p>
+
+<h3 id="section">高级命令</h3>
+
+<h4 id="n-next">N (Next)</h4>
+
+<p>这里要介绍的第一个命令是 <code>N</code>，它和我们前面介绍过的 <code>n</code> 命令很像，也是要读取下一行的内容，不同的是，<code>N</code> 读取下一行的内容并且将这些内容附加到 pattern space 当前的内容后面。这样，当你需要连着处理多行内容的时候，<code>N</code> 命令就会特别有用，比如，我们有下面一段文本：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">one two three four
+</span><span class="line">one two three 
+</span><span class="line">four three two
+</span><span class="line">three four</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>如果我们要把 <code>two three four</code> 替换成 <code>2 3 4</code>，注意例子中的 <code>two three four</code> 可能在不同的行中，那么我们就可以用 <code>N</code> 命令来处理：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">N
+</span><span class="line">s/\n/ /
+</span><span class="line">s/two three four/2 3 4/</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>输出的内容为：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">one 2 3 4 one two three
+</span><span class="line">four three 2 3 4</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个结果不是我们想要的，不过的确是符合了上面的 sed 脚本的执行结果：</p>
+
+<ol>
+  <li>首先，sed 脚本读取了文本的第一行，这个时候 pattern space 中的内容为 <code>one two three four</code></li>
+  <li>然后 sed 脚本执行 N 命令，将下一行读取并附加到当前的 pattern space 内容的后面，这个时候，pattern space 中的内容就变为 <code>one two three four\none two three</code></li>
+  <li>下一个命令，将换行符 <code>\n</code> 替换成一个空格，pattern space 中的内容为 <code>one two three four one two three</code></li>
+  <li>然后下一个命令，将 pattern space 中的 <code>two three four</code> 替换成 <code>2 3 4</code>，这个时候 pattern space 中的内容为 <code>one 2 3 4 one two three</code></li>
+  <li>到达脚本的结尾，输出 pattern space 中的内容，也就是我们输出内容的第一行。</li>
+  <li>然后 sed 脚本读取文本的下一行，注意因为之前第二行已经被 <code>N</code> 命令读取了，所以 sed 脚本开始读取第三行，依旧按照前面的命令执行，最后就输出了输出内容中的第二行。</li>
+</ol>
+
+<p>虽然这个结果不是我们想要的，不过算是了解了 N 的作用了。</p>
+
+<h4 id="d-delete">D (Delete)</h4>
+
+<p>同样，前面我们介绍过 <code>d</code> 命令，它用来删除 pattern space 中的内容，并且读取下一行到 pattern space 中，sed 脚本也随之从头开始执行。<code>D</code> 命令和 <code>d</code> 命令稍微有点不同，<code>D</code> 命令会删除 pattern space 中的第一行的内容，它不会从文本中读取新的行进来，当然 sed 脚本还是会从头开始执行，如果我们有这么一个文本：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">blank
+</span><span class="line">blank
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">blank
+</span><span class="line">
+</span><span class="line">blank
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">blank
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">blank</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个文本中的有些段落之间有多个空行，我们希望把多余的空行去掉，也就是如果段落之间有多个空行，就删掉只剩下一个，我们的 sed 脚本可以这么写：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">/^$/{
+</span><span class="line">	N
+</span><span class="line">	/^\n$/D
+</span><span class="line">}
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个脚本先匹配出空行，然后读取空行的下一行，如果两行都是空行的话，就把 pattern space 中的第一个空行删除掉，然后继续读取下一行到 pattern space 中，结果就是把多余的空行都删除掉，只剩下一个空行了。</p>
+
+<h4 id="p-print">P (Print)</h4>
+
+<p><code>P</code> 命令和 <code>p</code> 命令也稍微不同，<code>P</code> 命令不像 <code>p</code> 命令那样会把 pattern space 中的所有内容打印出来，它只会将 pattern space 的第一行打印出来，这里就不做过多的介绍了。</p>
+
+<h4 id="h-hold-h-hold-g-get-g-get-x-exchange">h (hold), H (Hold), g (get), G (Get), x (exchange)</h4>
+
+<p>这里面有五个命令，之所以一起介绍是因为，这五个命令都是操作 hold space 的，之前我们已经知道了 pattern space 了，hold space 可以认为就是一个内容的临时存放点，你可以将 pattern space 中的内容放到 hold space 中，等到需要使用的时候再将 hold space 中的内容拿回到 pattern space 中，我们来看一下这五个命令的作用吧：</p>
+
+<ul>
+  <li>h：将 pattern space 中的内容拷贝到 hold space 中，hold space 中原来的内容会被覆盖。</li>
+  <li>H：将 pattern space 中的内容添加到 hold space 当前内容的后面。</li>
+  <li>g：将 hold space 中的内容拷贝到 pattern space 中，pattern space 中原来的内容将会被覆盖。</li>
+  <li>G：将 hold space 中的内容添加到 pattern space 中目前的内容后面。</li>
+  <li>x：交换 pattern space 和 hold space 中的内容。</li>
+</ul>
+
+<p>下面我们来看一个简单的例子：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">1
+</span><span class="line">
+2
+</span><span class="line">
+11
+</span><span class="line">
+22
+</span><span class="line">
+111
+</span><span class="line">
+222</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>现在我们要将上面的 1 和 2 的位置调换，就是先出现 2 再出现 1，我们的脚本可以这么写：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">/1/{
+</span><span class="line">	h
+</span><span class="line">	d
+</span><span class="line">}
+</span><span class="line">/2/{
+</span><span class="line">	G
+</span><span class="line">}</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段脚本先匹配 1 所在的行，然后放到 hold space 中，将 pattern space 中的内容清除掉，然后匹配到 2 所在的行，将 hold space 中的内容添加到 pattern space 后面，这样，pattern space 中就是先有 2，再有 1 了。</p>
+
+<p>最后，我们得到的结果就是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">2
+</span><span class="line">1
+</span><span class="line">22
+</span><span class="line">11
+</span><span class="line">222
+</span><span class="line">111</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h4 id="b">b</h4>
+
+<p><code>b</code> 命令是一个跳转命令，它是无条件的，它的语法是这样的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">[address]b [label]</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>[label] 是要跳转到的标签，你可以在 sed 脚本中用 <code>:</code> 开头来表示一个标签，比如下面的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">:start
+</span><span class="line">s/start/end/g
+</span><span class="line">b start</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>如果 <code>b</code> 后面不带参数，那么就表示直接跳到脚本的末尾了。</p>
+
+<h4 id="t">t</h4>
+
+<p>除了 <code>b</code> 这样一个跳转命令以外，sed 还有一个 <code>t</code> 的条件跳转命令，如果在当前行有一个替换被成功执行了，那么 <code>t</code> 就会跳转到特定的标签上，它的语法 <code>b</code> 是类似的。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">[address]t [label]</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>看下面这段代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">:begin
+</span><span class="line">s/start/end/
+</span><span class="line">t begin</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这条 <code>t</code> 命令只有在当前行的 start 成功被替换成 end 的时候才会跳转到 :begin 标签那里。</p>
+
+<h3 id="section-1">总结</h3>
+
+<p>sed 的高级命令相对于基本命令来说不怎么常用，但是在处理特定的问题的时候，这些命令还是很有用的。不过，不管怎么说，sed 都不是一门完备的语言，所以其适用的问题域也是比较有限的，sed 最大的优势在于逐行处理文本上，用适当的工具处理适当的问题，才能发挥出工具最大的威力。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/07/28/sed-and-awk-part-one/">「Sed & Awk」阅读笔记之 Sed 基础</a></h1>
     
     
@@ -1710,100 +1955,6 @@ n
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/05/12/gongga-hiking-part-two/">贡嘎全线徒步穿越 &#8211; Part Two</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-05-12T21:24:00+08:00" pubdate data-updated="true">May 12<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/05/12/gongga-hiking-part-two/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>贡嘎全线穿越第一篇见：<a href="http://blog.khotyn.com/blog/2013/05/07/gongga-hiking-part-one/">http://blog.khotyn.com/blog/2013/05/07/gongga-hiking-part-one/</a></p>
-
-<h3 id="day-four">Day Four</h3>
-
-<p>昨晚睡得非常舒服，一扫了昨日的疲惫，可是天公不作美，山上的云看起来很厚，有点担心今天能否看到贡嘎主峰。一行人吃过了早餐（那个饼子在烤过以后非常好吃，不过忘记了叫什么名字）便搭车前往子梅垭口了，车子到了海拔 4400 米的地方便上不去了，上面全是雪，今天我和其他的几个打算在子梅垭口露营的人背的都是重装，到子梅垭口 200 米的海拔走起来还是有点累的，到达子梅垭口的时候能见度已经非常地差了，人稍微站远一点就看不到了，在子梅垭口待了一会儿，我们又遇到了昨天的那两个重装的哥们了，那两个哥们昨天就已经上来了，没有看到贡嘎主峰，然后下山了，今天又上来了，还是没有看到，只能说运气真不好。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5hnMdS/medish.jpg" alt="image" /></p>
-
-<p>因为今天的风比较大，所以我们只能选择了在老子梅垭口扎营，老子梅垭口离子梅垭口大概有几百米的路程，那个有一个小木屋，挡风很好，我们把帐篷搭载了小木屋的里面，木屋里面还有一些木头，领队小胖把木头砸碎，准备生个火出来给大家暖和暖和，这时候，来了一个藏族人，看到我们整准备取火，便说那些木头是他的，不能烧，我们很无奈，只能表示不烧了，接着他又表示：“这些木头不是我的，也不是书记的，这些木头是贡嘎寺的，任何人向你们要钱，你们千万都不能给。我理解你们现在挺冷的，烧一点也是可以的，大家要相互理解嘛，但是不能烧太多。”，我们听了以后很无奈，只能连声称是。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5jdI0N/medish.jpg" alt="image" /></p>
-
-<p>火烧起来以后驱走了不少的寒气，手脚都暖和了许多，外面已经开始下雪，能见度还是很低，老驴米兰给我们讲了他去过的一些地方：格列，木里，七藏沟，年保玉则，稻城，亚丁，雨崩等地方，还给我们看了很多照片，真美，不过四川这边的山水大多数秋天的时候最美，要全部都走一边得花好几年呢。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5n04ZN/medish.jpg" alt="image" /></p>
-
-<h3 id="day-five">Day Five</h3>
-
-<p>昨晚睡得非常难受，头都快爆炸了，在海拔 4600 的地方露营果然是自找麻烦。早上起来，外面的天气没有丝毫地好转，昨晚下了一晚上的雪，路上的脚印已经消失地无影无踪了，不知道下山的路还能不能找到了。简单地吃过早餐，领队小胖开始出去找路，其实只要找到公路就好，顺着公路下山就可以，过了大约 20 分钟，小胖成功找到了公路的位置，我们顺着他的脚印走下去，每走一步雪都没到了膝盖。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5pRNsJ/medish.jpg" alt="image" /></p>
-
-<p>到了公路后几个人发疯似地往下狂走，深怕这么大的雪下不去到底该怎么办，到了海拔 4100 米左右的地方，视野还是开阔起来，另我们惊奇的是，虽然没有看到贡嘎主峰，但是这雪后的雪山景色也是非常美丽的，让人感觉到真是不虚此行。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5rkaaF/medish.jpg" alt="image" /></p>
-
-<p>再往下走就到了上子梅村，这个村子比我想象中地要小很多，只有三户人家，不过坐落在世外桃源里面，也算是不错了。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5sy9rW/medish.jpg" alt="image" /></p>
-
-<p>可能是早上下山的路走地太急，费了不少地体力，下午从上子梅村走到下子梅村的时候有点累，快到下子梅的时候路过一个小学：“驴爱次梅小学”，我们的前面说到的陈老师就在这里面教书。见到陈老师比我想象中的要年轻，聊过以后知道他是 90 年的，今年只有 23 岁，去年刚刚大学毕业，本想只是跑到这边来看一看的，没想到竟然走不成了。这边官方没有小学，想要上小学就只能走很多的路到镇里面去，这个时候住宿是最好的选择，但是很多藏民一年的收入并不能负担起孩子的住宿费用，所以就只能让孩子辍学了。问起他在这里工作生活地一些困难，他说一个是冬天食物不足，这个小山村走出去得一天的时间，小孩子们的课又不能不少，他冬天食物最匮乏的时候曾经抓老鼠吃；另一个就是书记和村长对他的工作不支持，刚开始书记和村长还以为他是来搞投资的，因为在他们的观念里面，一个人不可能无缘无故地就跑到这么个偏僻的地方教书。书记和村长的孩子们都在外面读书，他们不怎么关心其他本村的孩子的教育情况。其实也有很多人对这里的教育进行资助，但是很多善款都被书记和村长贪掉了。这么偏僻的地方其实最缺的就是老师，一个老师一走，学校也就关了。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5xGkrX/medish.jpg" alt="image" /></p>
-
-<p>晚上，我们邀请了陈老师来和我们一起吃饭，看他吃饭的样子应该是经常受饥饿的，有那种对食物的渴望在。因为第二天就要出去了，所以我们给自己剩了一天的路粮，其他的食物就给陈老师了，希望尽一点自己的绵薄之力。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5yLZi4/medish.jpg" alt="image" /></p>
-
-<h3 id="day-six">Day Six</h3>
-
-<p>昨晚也睡得很好，不用露营真是太好了，今天早上天气很不错，可是我只能在心里暗骂好天气为什么不早一天到来呢，为了看到贡嘎主峰，我一定要再来一次贡嘎全线穿越。</p>
-
-<p>今天已经是徒步的最后一天了，行程相对比较轻松，我们乘拖拉机到了巴望海（这边的人叫湖为海子，做拖拉机屁股快被颠成两半儿了），本来巴望海也是一个拥有很美景色的地方，但是那些美景只会在秋天才能出现。走过了巴望海，我们徒步走到了界碑石，然后坐车到了草科镇。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5Ddhlj/medish.jpg" alt="image" /></p>
-
-<p>到草科以后总算是有信号了，赶紧给家里打了电话，住的地方有温泉，吃过晚饭以后泡了一个温泉非常舒服，之后，作为徒步的最后一天，大家一起吃了夜宵，聊得很 High。</p>
-
-<h3 id="day-seven">Day Seven</h3>
-
-<p>今天一大早起来，从草科坐车到成都，路途比想象中要顺利，只花了三个小时。中午去九眼桥吃了滋味烤鱼，很不一样的滋味，很好吃，这半的烤鱼烤地很嫩，不像杭州的烤鱼，皮都是焦的。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CR5F31iM/medish.jpg" alt="image" /></p>
-
-<p>下午到四川大学逛了一下，里面有一些学生正准备搭车去四川，很有想法。</p>
-
-<p>晚上坐飞机飞回了杭州，飞机晚点，到达杭州已是半夜两点钟。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/4/">&larr; Older</a></li>
@@ -1821,6 +1972,10 @@ n
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/08/16/why-i-hate-xiaomi/">为什么我讨厌小米</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/08/16/guice-collection-inject/">Guice 集合注入</a>
       </li>
     
@@ -1834,10 +1989,6 @@ n
     
       <li class="post">
         <a href="/blog/2014/01/21/turnoff-tomcat-tld-scan/">关闭 Tomcat 的 TLD 扫描的功能</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/01/19/java-8-default-method/">Java 8 之 default method</a>
       </li>
     
   </ul>
