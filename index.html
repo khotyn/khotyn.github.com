@@ -109,6 +109,139 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2014/08/16/guice-collection-inject/">Guice 集合注入</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-08-16T18:47:00+08:00" pubdate data-updated="true">Aug 16<span>th</span>, 2014</time>
+        
+         | <a href="/blog/2014/08/16/guice-collection-inject/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Guice 的初学者在使用 Guice 往一个类中注入一个集合注入的时候，肯定有感觉到非常地不自然（这里的不自然我觉得一定程度上是不符合 Guice 给人的初印象），由于最近在项目中也在使用 Guice，所以在这里对 Guice 的集合注入做一个记录。</p>
+
+<h4 id="guice--guice-multibindings">一、使用 Guice 的扩展 guice-multibindings</h4>
+
+<p>Guice 的文档上关于 Guice 注入的最简单的例子应该就是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">bind</span><span class="o">(</span><span class="n">Interface</span><span class="o">.</span><span class="na">java</span><span class="o">).</span><span class="na">to</span><span class="o">(</span><span class="n">Implementation</span><span class="o">.</span><span class="na">java</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们希望在使用 Guice 做集合注入的时候肯定也是希望使用类似的 API 做注入，不过可惜的是，Guice 的核心里面并没有提供类似的 API 让我们可以使用来注入集合。</p>
+
+<p>所幸的是，Guice 提供了一个扩展的包 <code>guice-multibindings</code> 使用和 Guice 最原始的 API 类似的方式来做注入。</p>
+
+<p>需要使用这个扩展的包，使用 Maven 的话，可以在项目中加入如下的依赖：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="o">&lt;</span><span class="n">dependency</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="n">groupId</span><span class="o">&gt;</span><span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">inject</span><span class="o">.</span><span class="na">extensions</span><span class="o">&lt;/</span><span class="n">groupId</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="n">artifactId</span><span class="o">&gt;</span><span class="n">guice</span><span class="o">-</span><span class="n">multibindings</span><span class="o">&lt;/</span><span class="n">artifactId</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;</span><span class="mf">3.0</span><span class="o">&lt;/</span><span class="n">version</span><span class="o">&gt;</span>
+</span><span class="line"><span class="o">&lt;/</span><span class="n">dependency</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><code>guice-multibindings</code> 主要使用了两种方式来注入，一种是注入一个 Set：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">Multibinder</span><span class="o">&lt;</span><span class="n">CheckHandler</span><span class="o">&gt;</span> <span class="n">checkAdapter</span> <span class="o">=</span> <span class="n">Multibinder</span><span class="o">.</span><span class="na">newSetBinder</span><span class="o">(</span><span class="n">binder</span><span class="o">(),</span> <span class="n">CheckHandler</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class="line"><span class="n">checkAdapter</span><span class="o">.</span><span class="na">addBinding</span><span class="o">().</span><span class="na">to</span><span class="o">(</span><span class="n">InstalledCheckHandler</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>首先创建一个 <code>checkAdapter</code>，然后往这个 Multibinder 中，我们可以添加任意多的 <code>CheckHandler</code> 的实现。</p>
+
+<p>另一种方式是注入一个 Map：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">MapBinder</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">CheckHandler</span><span class="o">&gt;</span> <span class="n">mapBinder</span> <span class="o">=</span> <span class="n">MapBinder</span><span class="o">.</span><span class="na">newMapBinder</span><span class="o">(</span><span class="n">binder</span><span class="o">(),</span> <span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">CheckHandler</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class="line"><span class="n">mapBinder</span><span class="o">.</span><span class="na">addBinding</span><span class="o">(</span><span class="s">&quot;Hello&quot;</span><span class="o">).</span><span class="na">to</span><span class="o">(</span><span class="n">InstalledCheckHandler</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Map 的注入方式和 Set 的注入方式非常类似。不过奇怪的一点是，Guice 并没有提供注入 List 的方法，<strong>这是值得思考的一点</strong>。</p>
+
+<h4 id="provides-">二、使用 <code>@Provides</code> 来注入</h4>
+
+<p>看了第一种方法，我们可以看到，上面的这种方法并不能注入一个 List，不过，我们还是有办法来注入一个 List 的，就是使用一个 <code>@Provides</code> 注解，比如在我们的 Guice Module 的类里面加入一下的代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Provides</span>
+</span><span class="line"><span class="n">List</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;</span> <span class="nf">provideBindingAdapter</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">    <span class="n">List</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;</span> <span class="n">bindingAdapters</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;();</span>
+</span><span class="line">    <span class="n">List</span><span class="o">&lt;</span><span class="n">OsgiServiceHolder</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;&gt;</span> <span class="n">bindingAdapterHolders</span> <span class="o">=</span> <span class="n">OsgiFrameworkUtils</span>
+</span><span class="line">        <span class="o">.</span><span class="na">getServices</span><span class="o">(</span><span class="n">bundleContext</span><span class="o">,</span> <span class="n">BindingAdapter</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">for</span> <span class="o">(</span><span class="n">OsgiServiceHolder</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;</span> <span class="n">bindingAdapterHolder</span> <span class="o">:</span> <span class="n">bindingAdapterHolders</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="kd">final</span> <span class="n">BindingAdapter</span> <span class="n">bindingAdapter</span> <span class="o">=</span> <span class="n">bindingAdapterHolder</span><span class="o">.</span><span class="na">getService</span><span class="o">();</span>
+</span><span class="line">
+</span><span class="line">        <span class="k">if</span> <span class="o">(</span><span class="n">bindingAdapter</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">            <span class="n">bindingAdapters</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">bindingAdapter</span><span class="o">);</span>
+</span><span class="line">        <span class="o">}</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">bindingAdapters</span><span class="o">;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这样，我们就可以从其他的地方拿到对应的类的实例，然后放到一个 List 中，通过 Guice 注入给其他的类了。</p>
+
+<p>上面的这两种方式其实各有优劣。一般情况下，我觉得选择第一种就可以了，毕竟，第一种方法的类的实例是由 Guice 来生成的。选择第二种方式的场景我觉得可能有：</p>
+
+<ul>
+  <li>类的实例是从其他的地方来的，比如上面的例子中，是从 OSGi 来的。</li>
+  <li>简单类型的类，比如一个 String 的 List。</li>
+</ul>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a></h1>
     
     
@@ -986,67 +1119,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/10/16/beautiful-code/">代码之美</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-10-16T00:55:00+08:00" pubdate data-updated="true">Oct 16<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/10/16/beautiful-code/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>今天的工作基本上就是在重构实习生写的 JS 代码，改的昏天暗地，他们基本把整个工程的 JS 代码都放到了一个文件中，代码中一会儿以空格缩进，一会儿以 tab 缩进，到处都是不必要的变量，我的代码洁癖又犯了，忍不住直接进行了重构，对 JS 进行模块化的拆分，每一个模块都有相对独立的功能，改了之后舒畅了很多，就像拿掉了卡在喉咙中鱼刺。</p>
-
-<p>工作这几年以来，我也遇到过几个和我一样，有着或者或少代码洁癖的人，看到 IDE 中出现的警告信息就会感到不舒服（从 Eclipse 转到 Intellij IDEA 以后，洁癖的程度越来越严重了，Intellij IDEA 会对你的代码风格做更彻底的检查），看到以 tab 来做缩进简直就像看到异教徒一样，看到代码中已经被注释掉的废弃代码那肯定得马上删掉。</p>
-
-<p>可惜的是，工作遇到的更多的人，在这方面要随意的多，他们更多追求的是把工作完成，让功能能够跑起来，其实一定程度上来说，他们是对的，他们是更加实用主义的程序员，实用主义能够帮助我们更快地达到自己的目标，而不会被和目标无关的东西所牵绊。但是，我觉得，一个程序员在追求程序的实用主义的时候，也应该去追求程序本身的美感。</p>
-
-<p>或许有人会问，什么是程序的美感，关于这一点，我们可以从很多的侧面去描述：</p>
-
-<ul>
-  <li>更人性化的用户体验</li>
-  <li>更简洁的架构</li>
-  <li>程序内一致的代码风格</li>
-  <li>更易读的代码</li>
-</ul>
-
-<p>但是，“美”本身是用语言是无法完整描述的，你可以说娜塔丽•波特曼很美，你也可以说加西莫多很多，但是他们之间的差距是如此之大，除了他们都是人之外你都找不到他们的共同点。所以“美”就是“美”，只有你身在其中的时候你才能够感受到。</p>
-
-<p>或许对于很多人而言，“代码美”根本就是个扯淡的东西。其实写代码的过程和做木工的过程是很像的，说白了，都是设计出一样东西，然后拿来用而已。看看下面的无印良品木制家居，不得不承认，它比我们平时从市面上看到的普通的木制家居要舒服地多。同样一段代码也可以比另一段代码看起来更加“舒服”，更加“美”，只是每一个人对这种“美”的感受能力不同而已，有些能够感受到，有些不能感受到（在这一点上，不得不承认，我对“代码美”的感受能力是比较差的）。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DePKb6au/13WWB6.png" alt="image" /></p>
-
-<p>想要去培养这种对“程序美”的感受能力，一个很好的方式就是去阅读优秀的开源代码，比如 Tomcat，Dubbo 等等，有时候，当你看到一段不错的代码，一个简洁的有用的架构设计的时候，你会感到来自内心深处的愉悦，这就是“美”的一个侧面。我相信，培养这样的感受能力，是非常有益于身心健康的，并且我也相信那些透露出“美”的代码在某种程度上也是更加优秀的代码（内王而外圣）。</p>
-
-<p>这个世界已经够丑陋了，如果我们已经解决了温饱问题，又有了这么多的自由时间，不如做点“漂亮”点的东西出来，写一些更有用，更“美”的代码出来~</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -1062,6 +1134,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/08/16/guice-collection-inject/">Guice 集合注入</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a>
       </li>
     
@@ -1075,10 +1151,6 @@
     
       <li class="post">
         <a href="/blog/2014/01/19/java-8-default-method/">Java 8 之 default method</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/01/01/sell-mac-book-pro/">转让自用 13 寸 MacBook Pro</a>
       </li>
     
   </ul>

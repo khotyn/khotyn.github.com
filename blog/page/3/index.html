@@ -109,6 +109,331 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/07/28/sed-and-awk-part-one/">「Sed & Awk」阅读笔记之 Sed 基础</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-28T16:39:00+08:00" pubdate data-updated="true">Jul 28<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/07/28/sed-and-awk-part-one/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>之前写的一篇文章有提到采用 sed 来<a href="../../../../blog/2013/07/24/match-line-not-contain-a-string/">匹配不包含连续字符串的行</a>，平时在做日志分析的时候也经常要用到 sed，但是仅仅用了 sed 的字符串替换的功能，没有系统地去学习过 sed 用法，这次找到一本叫<a href="http://book.douban.com/subject/1741933/">「sed &amp; awk」</a>的书，便花时间对 sed 做了系统的学习。</p>
+
+<h3 id="sed-">sed 的执行方式</h3>
+
+<p>要了解 sed，必须了解 sed 的执行方式，sed 是一个行处理器，脱胎于 <a href="http://www.gnu.org/software/ed/manual/ed_manual.html">ed</a>（ed 是一个行编辑器，awk 和 grep 也是基于 ed 的），简单地说，sed 的执行方式是这样的：<strong>sed 会从输入的文本中读取一行，放到 pattern space 中，然后用 sed 脚本去处理，处理完后继续读取下一行，继续处理。</strong></p>
+
+<p>假设我们有下面一段文本需要处理：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">John Daggett, 341 King Road, Plymouth MA
+</span><span class="line">Alice Ford, 22 East Broadway, Richmond VA
+</span><span class="line">Orville Thomas, 11345 Oak Bridge Road, Tulsa OK
+</span><span class="line">Terry Kalkas, 402 Lans Road, Beaver Falls PA
+</span><span class="line">Eric Adams, 20 Post Road, Sudbury MA
+</span><span class="line">Hubert Sims, 328A Brook Road, Roanoke VA
+</span><span class="line">Amy Wilde, 334 Bayshore Pkwy, Mountain View CA
+</span><span class="line">Sal Carpenter, 73 6th Street, Boston MA</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们要把文本中的 CA 替换成 California，OK 替换成 Oklahoma，于是我们写了下面一段 sed 脚本：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">s/CA/California/
+</span><span class="line">s/OK/Oklahoma/</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>那么 sed 的执行方式是这样的：</p>
+
+<ol>
+  <li>先读取第一行 <code>John Daggett, 341 King Road, Plymouth MA</code> 到 pattern space</li>
+  <li>然后执行脚本的第一行命令，将其中的 CA 替换成 California。</li>
+  <li>然后执行脚本的第二行命令，将其中的 OK 替换成 Oklahoma。</li>
+  <li>文本的第一行处理完毕，继续读取文本的下一行。</li>
+  <li>继续第 2 步和第 3 步。</li>
+</ol>
+
+<p>当然，这只是大部分情况下 sed 的执行方式，sed 的基本命令都是按照这种方式来执行的，一些高级命令可以改变 sed 的执行流。不过在了解这些 sed 命令之前，我们先了解下 sed 的地址选择器，它是很多命令的组成部分。</p>
+
+<h3 id="sed--1">sed 的地址选择器</h3>
+
+<p>默认的情况，sed 脚本会对文本的每一行做处理，但是有时候我们只希望我们的命令作用于特定的几行，这个时候，我们就可以用 sed 的地址选择器，sed 的地址选择器可以是一个正则表达式（sed 的正则表达式总是放在两个 <code>/</code> 中间），行号，或者地址符号（<em>这个是什么东西？我也不清楚</em>），具体的使用方式如下：</p>
+
+<ul>
+  <li>如果没有指定地址选择器，那么命令默认会应用在每一行上。</li>
+  <li>如果只有一个地址选择器，那么命令会作用在每一个符合这个地址选择器的行上。</li>
+  <li>如果是两个用 <code>,</code> 分割的地址，那么命令会先作用到第一个符合第一个地址选择器的行上，然后继续作用于后续的行，直到（包括）第一个符合第二个地址选择器的行为止。</li>
+  <li>地址选择器后面可以跟上一个 <code>!</code>，表示反向选择。</li>
+</ul>
+
+<p>另外在一个地址选择器中，你可以用一对 <code>{}</code> 将多个命令包含在其中，下面我们来看一个例子：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">/^\.TS/,/^\.TE/{
+</span><span class="line">     /^$/d
+</span><span class="line">     s/^\.ps 10/.ps 8/
+</span><span class="line">     s/^\.vs 12/.vs 10/
+</span><span class="line">}
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个 sed 脚本的第一行就是一个地址选择器，由 <code>,</code> 分开的两个地址选择器组成，都是正则表达式形式的，表示后面 <code>{}</code> 中的命令会从第一个以 <code>.TS</code> 开头的行一直作用到第一个以 <code>.TE</code> 开头的行为止。</p>
+
+<h3 id="sed--2">sed 的基本命令</h3>
+
+<p>了解完 sed 的地址选择器后，我们就可以继续了解 sed 的基本命令了。</p>
+
+<h4 id="substitution">替换（substitution）</h4>
+
+<p>sed 的文本替换命令是我最常用的命令，它的语法是这样的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">[address]s/pattern/replacement/flags</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>它由这几个部分组成：</p>
+
+<ul>
+  <li>最前面是一个地址选择器，是可选的。</li>
+  <li>然后后面是一个命令 <code>s</code>，表示是替换命令。</li>
+  <li>后面紧跟一个正则表达式，表示要被替换的文本。</li>
+  <li>再后面是希望替换成的文本。</li>
+  <li>最后是标记位。</li>
+</ul>
+
+<p>其中标记位可以是：</p>
+
+<ul>
+  <li>n：一个从 1 到 512 的数字，表示只替换第 n 个符合 pattern 子串。</li>
+  <li>g：默认情况下，替换命令只会替换一行中第一个符合 pattern 的子串，加上 <code>g</code> 以后会将行中所有符合 pattern 的子串都进行替换。</li>
+  <li>p：将 pattern space 中的内容打印出来。</li>
+  <li>w <em>file</em> ：将 pattern space 中的内容写到文件中。</li>
+</ul>
+
+<p>举一个例子，假设我们要将第一个例子中的最后一行的 MA 换成 Massachusetts，就可以这样写：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">$s/MA/Massachusetts/</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>其中的 <code>$</code> 是一个地址选择器，表示最后一行。</p>
+
+<p>替换命令的替换文本基本上就是一个字符串，但是还是有一些特殊字符：<code>\</code>，<code>&amp;</code> 和 <code>\n</code>，其中：</p>
+
+<ul>
+  <li><code>\</code>：转义，转义特殊字符。</li>
+  <li><code>&amp;</code>：代表要被替换的文本，也就是符合 pattern 的子串。</li>
+  <li><code>\n</code>：当前面的正则表达式中有捕获部分的时候（即，正则表达式的 <code>()</code> 语法），可以在替换文本中用这种反向引用的方式进行引用。</li>
+</ul>
+
+<p>这些特殊字符在当你需要将匹配的文本中的某些部分放到替换文本中的时候会特别有用。</p>
+
+<h4 id="delete">删除（delete）</h4>
+
+<p>删除命令很简单，它的语法是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">[address]d</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>前面可以带一个地址选择器，后面是一个 d，表示删除命令，举一个简单的例子，假设我们要筛选出不包含 <code>abc</code> 的行，可以这样写：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">/abc/d</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>把包含 abc 的行全部都删除掉，这样就筛选出了不包含 <code>abc</code> 的行。</p>
+
+<h4 id="appendinsertchange">追加，插入和变化（append，insert，change）</h4>
+
+<p>这三个命令的作用分别是：insert 将提供的文本插入到 pattern space 的当前行前面，append 将提供的文本追加到 pattern space 的当前行后面，change 命令替换 pattern space 中的内容，之所以将这三个命令放到一起说，是因为这三个命令需要将提供的文本放在命令的第二行，它们的语法分别是这样的：</p>
+
+<p>append</p>
+
+<pre><code>[line-address]a\
+text
+</code></pre>
+
+<p>insert</p>
+
+<pre><code>[line-address]i\
+
+text
+</code></pre>
+
+<p>changae</p>
+
+<pre><code>[address]c\
+
+text
+</code></pre>
+
+<p>来一个例子，我们有下面一段文本：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">I want to see @f1(what will happen) if we put the
+</span><span class="line">font change commands @f1(on a set of lines).
+</span><span class="line">If I understand things (correctly), the @f1(third) line causes problems. (No?).
+</span><span class="line">Is this really the case, or is it (maybe) just something else?
+</span><span class="line">Let's test having two on a line @f1(here) and @f1(there) as
+</span><span class="line">well as one that begins on one line and ends @f1(somewhere
+</span><span class="line">on another line).
+</span><span class="line">What if @f1(it is here) on the line?
+</span><span class="line">Another @f1(one).</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>假设为了阅读的美观，我们希望段落之间能够空出一行来，段落结束的标记我们暂且简单地假设以 <code>.</code> 结尾，我们要做的就是在每一个以 <code>.</code> 结尾的行后面再插入一行，除了最后一行之外，那么我们的 sed 脚本就可以这么写：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">$!{
+</span><span class="line">	/\.$/a\
+</span><span class="line">	\
+</span><span class="line">
+</span><span class="line">}</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>来说明一下这段脚本，第一行是一个地址选择器，表示选择除最后一行以外的行，因为我们不希望在最后一个段落后面也加上一个空行，然后里面的命令是对所有的以 <code>.</code> 结尾的行运用 a 命令去追加一个空行。</p>
+
+<h4 id="list">列出（list）</h4>
+
+<p>列出命令和打印命令其实很像，不同的是列出命令会将不可见字符给列出来，比如 windows 下的换行符，假设我们有下面一段文本（<code>^M</code> 可以用 Ctrl+V，然后 Ctrl+M 来输入）：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">^M^M
+</span><span class="line">^M
+</span><span class="line">^M^M^M</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面一段文本用 <code>sed -n 'l'</code> 输出的内容是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">\r\r$
+</span><span class="line">\r$
+</span><span class="line">\r\r\r$</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>而用 <code>sed -n 'p'</code> 输出的内容是三个空空的行。</p>
+
+<p>列出命令将不可见字符打印出来了，而打印命令则没有。</p>
+
+<h4 id="transform">转换（transform）</h4>
+
+<p>转换命令和替换命令听起来是一样，但是它们还是不同的，转换命令就像是多个 <code>tr</code> 命令用管道连在一起作用一样，它的语法是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">[address]y/abc/xyz/</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>转换命令的一个使用的场景就是大小写的转换：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面这个命令会将文本中所有的小写字母转换成大写字母。</p>
+
+<h4 id="print">打印（print）</h4>
+
+<p>打印命令其实就是一个简单的 <code>p</code>，将 pattern space 中的内容打印出来，比如：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">$!p</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>表示将除最后一行以外的内容全部打印出来。需要注意的是，默认情况下 sed 会将 pattern space 中的内容都打印出来，要关闭这个功能，可以加上一个 <code>-n</code> 参数，就像我在介绍列出命令的时候做的那样。</p>
+
+<h4 id="section">打印行号</h4>
+
+<p>打印行号也就是一个简单的 <code>=</code> 号，大家可以去试一下，这里不再多讲了。</p>
+
+<h4 id="next">下一个（next）</h4>
+
+<p>next 命令是一个 <code>n</code>，它的作用是将 pattern space 中的内容立即输出，然后将下一行读入到 pattern space 中，然后继续执行接下来的命令，比如：</p>
+
+<pre><code>/H1/{
+
+n
+
+/^$/d
+
+}
+</code></pre>
+
+<p>就是先匹配到含有 H1 的行，然后将这一行打印出来，接着读取下一行到 pattern space，如果是空的话，就删除掉。</p>
+
+<h4 id="readwrite">读取和写入文件（read，write）</h4>
+
+<p>sed 的读取文件的功能可以将文件中的内容追加到 pattern space 后面，前面那个在段落后面添加空行的例子我们可以这么做：首先创建一个只包含一个空行的文件叫做 temp，接着我们就可以用下面的命令来达到我们的目的了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">$!{
+</span><span class="line">    /\.$/r temp
+</span><span class="line">}</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>sed 的写入文件的功能和读取文件的功能类似，语法是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">[address]w file</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>表示将 pattern space 中的内容写入到文件。</p>
+
+<h4 id="quit">退出（quit）</h4>
+
+<p>sed 的退出命令是让 sed 停止读取新的行，也停止输出，基本上就是让 sed 退出了，它的命令的语法是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">[line-address]q</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>它只能作用在单行的地址选择器上。</p>
+
+<h3 id="section-1">总结</h3>
+
+<p>sed 的基本命令相对来说还是比较简单的，最主要的还是要用好地址选择器，在下一篇中，我会介绍一些 sed 的高级命令。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/07/24/match-line-not-contain-a-string/">再论如何匹配不包含连续字符串的行</a></h1>
     
     
@@ -1479,62 +1804,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/05/09/clojure-element-in-seq/">Clojure 如何判断一个序列中是否存在某个元素</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-05-09T21:17:00+08:00" pubdate data-updated="true">May 9<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/05/09/clojure-element-in-seq/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近一直在看 Clojure，经常碰到的一个问题是怎么判断一个序列中是否存在某个元素。对于这个问题的第一反应就是用<code>contains?</code>来判断，但是<code>contains?</code>的第二个参数是<code>key</code>而不是元素的值，对于 vector 或者 array 这样的数据结构不能做判断：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">user</span><span class="o">=</span>&gt; <span class="o">(</span>contains? <span class="err">&#39;</span><span class="o">(</span>101 102 103 104<span class="o">)</span> 101<span class="o">)</span>
-</span><span class="line"><span class="nb">false</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>另一个方法就是采用 set 配合 some 来做判断：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">user</span><span class="o">=</span>&gt; <span class="o">(</span>some <span class="c">#{101} &#39;(101 102 103 104))</span>
-</span><span class="line">101
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>some</code> 的函数原型是 <code>(some prev coll)</code>，它会对 coll 中的元素依次应用 prev 进行测试，返回第一个为真的元素，而用一个 set 进行测试，返回就是第一个包含在这个 set 中的元素，因此上面的那段表达式就返回了 101。</p>
-
-<p>这样，只要上面这个表达式返回的不是<code>nil</code>，就表示元素在序列中了。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/4/">&larr; Older</a></li>
@@ -1552,6 +1821,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/08/16/guice-collection-inject/">Guice 集合注入</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a>
       </li>
     
@@ -1565,10 +1838,6 @@
     
       <li class="post">
         <a href="/blog/2014/01/19/java-8-default-method/">Java 8 之 default method</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/01/01/sell-mac-book-pro/">转让自用 13 寸 MacBook Pro</a>
       </li>
     
   </ul>

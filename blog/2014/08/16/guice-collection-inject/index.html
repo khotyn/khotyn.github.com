@@ -1,0 +1,388 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Guice 集合注入 - 小径分岔的花园</title>
+  <meta name="author" content="khotyn">
+
+  
+  <meta name="description" content="">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://khotyn.github.com/blog/2014/08/16/guice-collection-inject">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/syntax/syntax.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <style type="text/css">
+    body {
+      padding-bottom: 40px;
+    }
+    h1 {
+      margin-bottom: 15px;
+    }
+    img {
+      max-width: 100%;
+    }
+    .sharing, .meta, .pager {
+      margin: 20px 0px 20px 0px;
+    }
+    .page-footer p {
+      text-align: center;
+    }
+  </style>
+  <script src="/javascripts/libs/jquery.js"></script>
+  <script src="/javascripts/libs/modernizr-2.0.js"></script>
+  <script src="/javascripts/libs/bootstrap.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="小径分岔的花园" type="application/atom+xml">
+  
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44033767-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <nav role="navigation"><div class="navbar navbar-inverse">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a>
+
+      <a class="brand" href="/">小径分岔的花园</a>
+
+      <div class="nav-collapse">
+        <ul class="nav">
+  <li><a href="/blog/archives">归档</a></li>
+  <li><a href="/about">关于</a></li>
+</ul>
+
+
+        <ul class="nav pull-right" data-subscription="rss">
+          <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+          
+        </ul>
+
+        
+          <form class="pull-right navbar-search" action="http://google.com/search" method="get">
+            <fieldset role="search">
+              <input type="hidden" name="q" value="site:blog.khotyn.com" />
+              <input class="search-query" type="text" name="q" results="0" placeholder="Search"/>
+            </fieldset>
+          </form>
+        
+      </div>
+    </div>
+  </div>
+</div>
+</nav>
+  <div class="container">
+    <div class="row-fluid">
+      
+<article class="hentry span9" role="article">
+
+  
+  <header class="page-header">
+    
+      <h1 class="entry-title">Guice 集合注入</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-08-16T18:47:00+08:00" pubdate data-updated="true">Aug 16<span>th</span>, 2014</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Guice 的初学者在使用 Guice 往一个类中注入一个集合注入的时候，肯定有感觉到非常地不自然（这里的不自然我觉得一定程度上是不符合 Guice 给人的初印象），由于最近在项目中也在使用 Guice，所以在这里对 Guice 的集合注入做一个记录。</p>
+
+<h4 id="guice--guice-multibindings">一、使用 Guice 的扩展 guice-multibindings</h4>
+
+<p>Guice 的文档上关于 Guice 注入的最简单的例子应该就是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">bind</span><span class="o">(</span><span class="n">Interface</span><span class="o">.</span><span class="na">java</span><span class="o">).</span><span class="na">to</span><span class="o">(</span><span class="n">Implementation</span><span class="o">.</span><span class="na">java</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们希望在使用 Guice 做集合注入的时候肯定也是希望使用类似的 API 做注入，不过可惜的是，Guice 的核心里面并没有提供类似的 API 让我们可以使用来注入集合。</p>
+
+<p>所幸的是，Guice 提供了一个扩展的包 <code>guice-multibindings</code> 使用和 Guice 最原始的 API 类似的方式来做注入。</p>
+
+<p>需要使用这个扩展的包，使用 Maven 的话，可以在项目中加入如下的依赖：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="o">&lt;</span><span class="n">dependency</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="n">groupId</span><span class="o">&gt;</span><span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">inject</span><span class="o">.</span><span class="na">extensions</span><span class="o">&lt;/</span><span class="n">groupId</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="n">artifactId</span><span class="o">&gt;</span><span class="n">guice</span><span class="o">-</span><span class="n">multibindings</span><span class="o">&lt;/</span><span class="n">artifactId</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;</span><span class="mf">3.0</span><span class="o">&lt;/</span><span class="n">version</span><span class="o">&gt;</span>
+</span><span class="line"><span class="o">&lt;/</span><span class="n">dependency</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><code>guice-multibindings</code> 主要使用了两种方式来注入，一种是注入一个 Set：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">Multibinder</span><span class="o">&lt;</span><span class="n">CheckHandler</span><span class="o">&gt;</span> <span class="n">checkAdapter</span> <span class="o">=</span> <span class="n">Multibinder</span><span class="o">.</span><span class="na">newSetBinder</span><span class="o">(</span><span class="n">binder</span><span class="o">(),</span> <span class="n">CheckHandler</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class="line"><span class="n">checkAdapter</span><span class="o">.</span><span class="na">addBinding</span><span class="o">().</span><span class="na">to</span><span class="o">(</span><span class="n">InstalledCheckHandler</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>首先创建一个 <code>checkAdapter</code>，然后往这个 Multibinder 中，我们可以添加任意多的 <code>CheckHandler</code> 的实现。</p>
+
+<p>另一种方式是注入一个 Map：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">MapBinder</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">CheckHandler</span><span class="o">&gt;</span> <span class="n">mapBinder</span> <span class="o">=</span> <span class="n">MapBinder</span><span class="o">.</span><span class="na">newMapBinder</span><span class="o">(</span><span class="n">binder</span><span class="o">(),</span> <span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">CheckHandler</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class="line"><span class="n">mapBinder</span><span class="o">.</span><span class="na">addBinding</span><span class="o">(</span><span class="s">&quot;Hello&quot;</span><span class="o">).</span><span class="na">to</span><span class="o">(</span><span class="n">InstalledCheckHandler</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Map 的注入方式和 Set 的注入方式非常类似。不过奇怪的一点是，Guice 并没有提供注入 List 的方法，<strong>这是值得思考的一点</strong>。</p>
+
+<h4 id="provides-">二、使用 <code>@Provides</code> 来注入</h4>
+
+<p>看了第一种方法，我们可以看到，上面的这种方法并不能注入一个 List，不过，我们还是有办法来注入一个 List 的，就是使用一个 <code>@Provides</code> 注解，比如在我们的 Guice Module 的类里面加入一下的代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Provides</span>
+</span><span class="line"><span class="n">List</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;</span> <span class="nf">provideBindingAdapter</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">    <span class="n">List</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;</span> <span class="n">bindingAdapters</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;();</span>
+</span><span class="line">    <span class="n">List</span><span class="o">&lt;</span><span class="n">OsgiServiceHolder</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;&gt;</span> <span class="n">bindingAdapterHolders</span> <span class="o">=</span> <span class="n">OsgiFrameworkUtils</span>
+</span><span class="line">        <span class="o">.</span><span class="na">getServices</span><span class="o">(</span><span class="n">bundleContext</span><span class="o">,</span> <span class="n">BindingAdapter</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">for</span> <span class="o">(</span><span class="n">OsgiServiceHolder</span><span class="o">&lt;</span><span class="n">BindingAdapter</span><span class="o">&gt;</span> <span class="n">bindingAdapterHolder</span> <span class="o">:</span> <span class="n">bindingAdapterHolders</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="kd">final</span> <span class="n">BindingAdapter</span> <span class="n">bindingAdapter</span> <span class="o">=</span> <span class="n">bindingAdapterHolder</span><span class="o">.</span><span class="na">getService</span><span class="o">();</span>
+</span><span class="line">
+</span><span class="line">        <span class="k">if</span> <span class="o">(</span><span class="n">bindingAdapter</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">            <span class="n">bindingAdapters</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">bindingAdapter</span><span class="o">);</span>
+</span><span class="line">        <span class="o">}</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">bindingAdapters</span><span class="o">;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这样，我们就可以从其他的地方拿到对应的类的实例，然后放到一个 List 中，通过 Guice 注入给其他的类了。</p>
+
+<p>上面的这两种方式其实各有优劣。一般情况下，我觉得选择第一种就可以了，毕竟，第一种方法的类的实例是由 Guice 来生成的。选择第二种方式的场景我觉得可能有：</p>
+
+<ul>
+  <li>类的实例是从其他的地方来的，比如上面的例子中，是从 OSGi 来的。</li>
+  <li>简单类型的类，比如一个 String 的 List。</li>
+</ul>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">khotyn</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-08-16T18:47:00+08:00" pubdate data-updated="true">Aug 16<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/programming/'>Programming</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    
+    <section>
+      <h1>Comments</h1>
+      <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+    </section>
+    
+    <ul class="pager">
+      
+      <li class="previous"><a class="basic-alignment left"
+        href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/" title="Previous Post:
+        利用 JUnit 的 Rule 对 Log4j 的输出进行测试">&laquo; 利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+    </ul>
+  </footer>
+</article>
+
+<aside class="sidebar-nav span3">
+  
+    <section class="well">
+  <ul id="recent_posts" class="nav nav-list">
+    <li class="nav-header">Recent Posts</li>
+    
+      <li class="post">
+        <a href="/blog/2014/08/16/guice-collection-inject/">Guice 集合注入</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/03/31/unittest/">一些关于单元测试的思考</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/01/21/turnoff-tomcat-tld-scan/">关闭 Tomcat 的 TLD 扫描的功能</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/01/19/java-8-default-method/">Java 8 之 default method</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section class="well">
+  <ul id="gh_repos" class="nav">
+    <li class="nav-header">GitHub Repos</li>
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/khotyn">@khotyn</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        github.showRepos({
+            user: 'khotyn',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/asides/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo" class="page-footer"><hr>
+<p>
+  Copyright &copy; 2014 - khotyn -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'khotynblog';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://khotyn.github.com/blog/2014/08/16/guice-collection-inject/';
+        var disqus_url = 'http://khotyn.github.com/blog/2014/08/16/guice-collection-inject/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

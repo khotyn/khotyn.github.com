@@ -109,6 +109,62 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/05/09/clojure-element-in-seq/">Clojure 如何判断一个序列中是否存在某个元素</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-09T21:17:00+08:00" pubdate data-updated="true">May 9<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/05/09/clojure-element-in-seq/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近一直在看 Clojure，经常碰到的一个问题是怎么判断一个序列中是否存在某个元素。对于这个问题的第一反应就是用<code>contains?</code>来判断，但是<code>contains?</code>的第二个参数是<code>key</code>而不是元素的值，对于 vector 或者 array 这样的数据结构不能做判断：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">user</span><span class="o">=</span>&gt; <span class="o">(</span>contains? <span class="err">&#39;</span><span class="o">(</span>101 102 103 104<span class="o">)</span> 101<span class="o">)</span>
+</span><span class="line"><span class="nb">false</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>另一个方法就是采用 set 配合 some 来做判断：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nv">user</span><span class="o">=</span>&gt; <span class="o">(</span>some <span class="c">#{101} &#39;(101 102 103 104))</span>
+</span><span class="line">101
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><code>some</code> 的函数原型是 <code>(some prev coll)</code>，它会对 coll 中的元素依次应用 prev 进行测试，返回第一个为真的元素，而用一个 set 进行测试，返回就是第一个包含在这个 set 中的元素，因此上面的那段表达式就返回了 101。</p>
+
+<p>这样，只要上面这个表达式返回的不是<code>nil</code>，就表示元素在序列中了。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/05/07/gongga-hiking-part-one/">贡嘎全线徒步穿越 &#8211; Part One</a></h1>
     
     
@@ -603,6 +659,10 @@ to f and colls.  Thus function f should return a collection.</p>
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/08/16/guice-collection-inject/">Guice 集合注入</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a>
       </li>
     
@@ -616,10 +676,6 @@ to f and colls.  Thus function f should return a collection.</p>
     
       <li class="post">
         <a href="/blog/2014/01/19/java-8-default-method/">Java 8 之 default method</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/01/01/sell-mac-book-pro/">转让自用 13 寸 MacBook Pro</a>
       </li>
     
   </ul>
