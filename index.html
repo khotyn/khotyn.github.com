@@ -109,6 +109,86 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2014/10/19/intellij-idea-feature/">Intellij IDEA 的一些使用技巧</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-19T21:41:00+08:00" pubdate data-updated="true">Oct 19<span>th</span>, 2014</time>
+        
+         | <a href="/blog/2014/10/19/intellij-idea-feature/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>所有的这些功能都是在 Intellij IDEA 14 中测试的，其他的版本不一定适用</strong></p>
+
+<h3 id="section">打开类的直接定位到某一行</h3>
+
+<p>在 Mac 下，IDEA 默认的打开类的快捷键是 <code>Command+O</code>，不过这个快捷键也有一些技巧。</p>
+
+<p>第一个是可以在打开类的时候直接跳到某一行，比如下面这样：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/E8WysuL3/Pv6jh.png" alt="" /></p>
+
+<p>打开 String 这个类的同时直接跳转到 String 的第 40 行。</p>
+
+<h3 id="section-1">到某个类的某个方法</h3>
+
+<p>IDEA 的 Open Symbol 功能可以直接定位到某一个类的某一个方法，默认的快捷键是 <code>Option+Command+O</code>，如下：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/E8WzK5IJ/ZbxmV.png" alt="" /></p>
+
+<h3 id="sublime-">像 Sublime 那样多行编辑</h3>
+
+<p>以前要做多行编辑，总是现在 Sublime 里面先做好，然后再拷贝回到 IDEA 里面，现在知道了 IDEA 本身就自带这个功能，快捷键是 <code>Option+Shift+鼠标</code>，直接来看一个 gif 动画看来这个功能吧：</p>
+
+<p><img src="/images/select_multi_line.gif" alt="" /></p>
+
+<h3 id="smart-code-completion">Smart Code Completion</h3>
+
+<p>除了普通的代码补全的功能之外，IDEA 还提供了智能的不全功能，我们看下对比：</p>
+
+<p>下面是基本的补全功能：</p>
+
+<p><img src="/images/basic_completion.gif" alt="" /></p>
+
+<p>这个是智能的补全功能：</p>
+
+<p><img src="/images/smart_completion.gif" alt="" /></p>
+
+<p>可以看到智能补全可以直接推断类型，把不符合类型的提示直接全部过滤，让我们可以更加高效地编写代码。</p>
+
+<h3 id="section-2">草稿</h3>
+
+<p>工作的时候我们经常会创建一些临时文件，在 IDEA 14 中，加入了一个非常有用的创建草稿的功能，Mac 下的快捷键是 <code>Command+Shift+N</code>，你可以在一个工程里面随意创建任意数量的草稿。</p>
+
+<p>上面的这些是前几天参加 QCon 的时候听 IDEA 的一个 Session 知道的一些技巧。个人认为这个 Session 比很多其他的 Session 都更加有料</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2014/08/16/why-i-hate-xiaomi/">为什么我讨厌小米</a></h1>
     
     
@@ -1011,108 +1091,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/11/02/jvmtop-impl/">Jvmtop 介绍和实现分析</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-11-02T15:36:00+08:00" pubdate data-updated="true">Nov 2<span>nd</span>, 2013</time>
-        
-         | <a href="/blog/2013/11/02/jvmtop-impl/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h3 id="section">简介</h3>
-
-<p>jvmtop 是一个分析工具，顾名思义，它是一个针对 jvm 的 工具，展示的方式和 unix 的 top 命令相似。</p>
-
-<p>jvmtop 的项目地址是：<a href="https://code.google.com/p/jvmtop/">jvmtop</a>，安装 jvmtop 除了项目地址上的方式以外，还可以通过 jenv 安装：<code>jenv install jvmtop</code>。</p>
-
-<p>jvmtop 提供了两个视图，一个是概览视图，可以展示出当前机器的所有的 JVM 的情况，命令是 </p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">jvmtop.sh</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>显示出的信息类似下面这样：</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg" alt="image" /></p>
-
-<p>其中，各个字段的意义分别如下：</p>
-
-<ul>
-  <li>PID：进程 ID</li>
-  <li>MAIN-CLASS：main 类的名字</li>
-  <li>HPCUR：当前被使用的 heap 的大小</li>
-  <li>HPMAX：最大可用的 heap 的大小</li>
-  <li>NHCUR：当前被使用的非 heap 大小（比如：perm gen）</li>
-  <li>NHMAX：最大可用的非 heap 大小</li>
-  <li>CPU：CPU 的使用情况</li>
-  <li>GC：消耗在 GC 上的时间比例</li>
-  <li>VM：JVM 的提供者，大版本号，小版本号，图中的意思是 Apple 提供的 JDK 6U51 版本。</li>
-  <li>USERNAME：当前的用户名</li>
-  <li>#T：线程数量</li>
-  <li>DL：是否有现成发生死锁</li>
-</ul>
-
-<p>还有一个视图是详情视图，展示一个 JVM 的详细情况，使用的命令如下：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">jvmtop.sh &lt;pid&gt;</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>显示的信息类似下面这样：</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png" alt="image" /></p>
-
-<p>其中，各个字段的意义如下：</p>
-
-<ul>
-  <li>TID：线程 ID</li>
-  <li>NAME：线程名</li>
-  <li>STATE：线程状态</li>
-  <li>CPU：线程当前的 CPU 占用情况</li>
-  <li>TOTALCPU：从线程被创建开始总体的 CPU 占用情况</li>
-  <li>BLOCKBY：阻塞这个线程的线程 ID</li>
-</ul>
-
-<p>更加详细的用法大家可以用下面的用 <code>jvmtop.sh -h</code> 来查看。</p>
-
-<h3 id="section-1">实现</h3>
-
-<p>jvmtop 的实现相对来说还是比较简单的，整个 jvmtop 才 14 个类。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png" alt="image" /></p>
-
-<p>其中 JvmTop.java 是入口类。</p>
-
-<p>jvmtop 在启动后，会首先用 <code>sun.jvmstat.monitor.*</code> 下面的类以及 <code>com.sun.tools.attach.VirtualMachine</code> 获取到当前机器的所有的 JVM，然后通过 attachment api 将 <code>management-agent.jar</code> 这个 agent 加载到目标 JVM 上，这样，通过 JMX，就可以拿到当前的 JVM 的各种信息了，具体各个信息需要用什么样的 MBean 去拿，大家可以看对应的源代码。</p>
-
-<p>其实，如果需要一个 JVM 的静态的信息，比如，PID，MAIN-CLASS，JVM-ARGS 等等静态信息，直接用 <code>sun.jvmstat.monitor.*</code> 下的 API 就可以，只有需要动态信息的时候，我们才需要通过 attachment api 把 JMX 的功能打开，通过各种 MBean 去获取这些信息。如果后续需要实现类似的功能，也可以通过这样的思路去做。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -1128,6 +1106,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/10/19/intellij-idea-feature/">Intellij IDEA 的一些使用技巧</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/08/16/why-i-hate-xiaomi/">为什么我讨厌小米</a>
       </li>
     
@@ -1141,10 +1123,6 @@
     
       <li class="post">
         <a href="/blog/2014/03/31/unittest/">一些关于单元测试的思考</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/01/21/turnoff-tomcat-tld-scan/">关闭 Tomcat 的 TLD 扫描的功能</a>
       </li>
     
   </ul>

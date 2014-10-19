@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>转让自用 13 寸 MacBook Pro - 小径分岔的花园</title>
+  <title>Intellij IDEA 的一些使用技巧 - 小径分岔的花园</title>
   <meta name="author" content="khotyn">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://khotyn.github.com/blog/2014/01/01/sell-mac-book-pro">
+  <link rel="canonical" href="http://khotyn.github.com/blog/2014/10/19/intellij-idea-feature">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -107,7 +107,7 @@
   
   <header class="page-header">
     
-      <h1 class="entry-title">转让自用 13 寸 MacBook Pro</h1>
+      <h1 class="entry-title">Intellij IDEA 的一些使用技巧</h1>
     
     
       <p class="meta">
@@ -123,7 +123,7 @@
   
 
 
-<time datetime="2014-01-01T11:02:00+08:00" pubdate data-updated="true">Jan 1<span>st</span>, 2014</time>
+<time datetime="2014-10-19T21:41:00+08:00" pubdate data-updated="true">Oct 19<span>th</span>, 2014</time>
         
          | <a href="#disqus_thread">Comments</a>
         
@@ -132,23 +132,49 @@
   </header>
 
 
-<div class="entry-content"><p><strong>已经出售，谢谢</strong></p>
+<div class="entry-content"><p><strong>所有的这些功能都是在 Intellij IDEA 14 中测试的，其他的版本不一定适用</strong></p>
 
-<p>转让自用的 13 寸 MacBook Pro，2009 年年中的款，型号 MB990，入手时间 2010 年初，使用时间三年不到，除了电池的续航能力有所下降，其他没有出现任何问题，内存我自己升级到了 8 G，平时的开发也都是用这台开发（你知道开个 Eclipse 或者 Intellij IDEA 是很耗资源的），也比较顺畅，<strong>价格方面是 2500</strong>，当然可刀~，暂时只接受杭州的当面交易。</p>
+<h3 id="section">打开类的直接定位到某一行</h3>
 
-<p>有意向的可以直接在这篇博客下面回复，或者给我发邮件联系我，hting1#gmail.com</p>
+<p>在 Mac 下，IDEA 默认的打开类的快捷键是 <code>Command+O</code>，不过这个快捷键也有一些技巧。</p>
 
-<p>关于这个型号的 MBP 的其他参数，可以直接看下面这张图：</p>
+<p>第一个是可以在打开类的时候直接跳到某一行，比如下面这样：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/DqBJdz79/medish.jpg" alt="image" /></p>
+<p><img src="http://pic.yupoo.com/khotyn/E8WysuL3/Pv6jh.png" alt="" /></p>
 
-<p>上几张本本的照片：</p>
+<p>打开 String 这个类的同时直接跳转到 String 的第 40 行。</p>
 
-<p>合上后，有些许划痕</p>
+<h3 id="section-1">到某个类的某个方法</h3>
 
-<p><img src="http://pic.yupoo.com/khotyn/DqBPAi4B/medish.jpg" alt="image" /></p>
+<p>IDEA 的 Open Symbol 功能可以直接定位到某一个类的某一个方法，默认的快捷键是 <code>Option+Command+O</code>，如下：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/DqBQFoio/medish.jpg" alt="image" /></p>
+<p><img src="http://pic.yupoo.com/khotyn/E8WzK5IJ/ZbxmV.png" alt="" /></p>
+
+<h3 id="sublime-">像 Sublime 那样多行编辑</h3>
+
+<p>以前要做多行编辑，总是现在 Sublime 里面先做好，然后再拷贝回到 IDEA 里面，现在知道了 IDEA 本身就自带这个功能，快捷键是 <code>Option+Shift+鼠标</code>，直接来看一个 gif 动画看来这个功能吧：</p>
+
+<p><img src="/images/select_multi_line.gif" alt="" /></p>
+
+<h3 id="smart-code-completion">Smart Code Completion</h3>
+
+<p>除了普通的代码补全的功能之外，IDEA 还提供了智能的不全功能，我们看下对比：</p>
+
+<p>下面是基本的补全功能：</p>
+
+<p><img src="/images/basic_completion.gif" alt="" /></p>
+
+<p>这个是智能的补全功能：</p>
+
+<p><img src="/images/smart_completion.gif" alt="" /></p>
+
+<p>可以看到智能补全可以直接推断类型，把不符合类型的提示直接全部过滤，让我们可以更加高效地编写代码。</p>
+
+<h3 id="section-2">草稿</h3>
+
+<p>工作的时候我们经常会创建一些临时文件，在 IDEA 14 中，加入了一个非常有用的创建草稿的功能，Mac 下的快捷键是 <code>Command+Shift+N</code>，你可以在一个工程里面随意创建任意数量的草稿。</p>
+
+<p>上面的这些是前几天参加 QCon 的时候听 IDEA 的一个 Session 知道的一些技巧。个人认为这个 Session 比很多其他的 Session 都更加有料</p>
 </div>
 
 
@@ -171,12 +197,12 @@
   
 
 
-<time datetime="2014-01-01T11:02:00+08:00" pubdate data-updated="true">Jan 1<span>st</span>, 2014</time>
+<time datetime="2014-10-19T21:41:00+08:00" pubdate data-updated="true">Oct 19<span>th</span>, 2014</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/life/'>Life</a>
+    <a class='category' href='/blog/categories/programming/'>Programming</a>
   
 </span>
 
@@ -200,14 +226,10 @@
     <ul class="pager">
       
       <li class="previous"><a class="basic-alignment left"
-        href="/blog/2013/12/07/google-guava-eventbus/" title="Previous Post:
-        Google Guava 之 EventBus">&laquo; Google Guava 之 EventBus</a></li>
+        href="/blog/2014/08/16/why-i-hate-xiaomi/" title="Previous Post:
+        为什么我讨厌小米">&laquo; 为什么我讨厌小米</a></li>
       
       <li><a href="/blog/archives">Blog Archives</a></li>
-      
-      <li class="next"><a class="basic-alignment right" href="/blog/2014/01/19/java-8-default-method/"
-        title="Next Post: Java 8 之 default method">Java 8 之 default method
-        &raquo;</a></li>
       
     </ul>
   </footer>
@@ -288,8 +310,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://khotyn.github.com/blog/2014/01/01/sell-mac-book-pro/';
-        var disqus_url = 'http://khotyn.github.com/blog/2014/01/01/sell-mac-book-pro/';
+        var disqus_identifier = 'http://khotyn.github.com/blog/2014/10/19/intellij-idea-feature/';
+        var disqus_url = 'http://khotyn.github.com/blog/2014/10/19/intellij-idea-feature/';
         var disqus_script = 'embed.js';
       
     (function () {
