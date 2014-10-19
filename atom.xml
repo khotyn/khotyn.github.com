@@ -4,7 +4,7 @@
   <title><![CDATA[小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2014-10-19T22:29:16+08:00</updated>
+  <updated>2014-10-19T22:32:29+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -34,7 +34,7 @@
 
 <p>IDEA 的 Open Symbol 功能可以直接定位到某一个类的某一个方法，默认的快捷键是 <code>Option+Command+O</code>，如下：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/E8WzK5IJ/ZbxmV.png" alt="" /></p>
+<p><img src="http://pic.yupoo.com/khotyn/E8WRrUjB/I2Vom.png" alt="" /></p>
 
 <h3 id="sublime-">像 Sublime 那样多行编辑</h3>
 
