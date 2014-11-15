@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Programming | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/programming/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2014-11-15T09:58:19+08:00</updated>
+  <updated>2014-11-15T10:13:25+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -60,6 +60,8 @@ $ cat -v Main
 
 <p>当你发现了 <code>^M</code> 导致的问题的时候，最直截了当的方式就是将 <code>^M</code> 从文件中去掉。</p>
 
+<h4 id="section">一、临时解决的几个方法</h4>
+
 <p>如果的机器上安装有 dos2unix，那么恭喜你，直接运行</p>
 
 <p><code>
@@ -80,11 +82,17 @@ sed --in-place='' 's/^M//g' /path/to/file
 
 <p>当然，用 <code>tr</code> 之类的命令也可以，不过我一般用 <code>sed</code> 的原因是 <code>sed</code> 加上 <code>--in-place</code> 参数可以做到直接替换原文件，而不用产生临时的文件（危险而高效的操作）。</p>
 
+<h4 id="section-1">二、预防此问题</h4>
+
 <p>不过，前面说的只是当出现问题的时候如何解决，那么如何预防这个问题呢？</p>
 
 <p>第一个方法当然是直接放大招，换个 Mac 啥的，或者把你的机器上的 Windows 格了，装个 Ubuntu 也好啊。真心觉得 Windows 对于程序员来说真的没有啥好处（我好想听说连微软都开源 .Net 了，并且会提供多平台的支持）。</p>
 
 <p>第二个方法嘛，当在 Windows 下使用各种编辑器的时候，尽量将换行符设置成 Unix 的换行符。不要偷懒用 Windows 的换行符，出现了问题就是好几个小时的排查时间。（目前没有发现有什么场景下有必须用到 Windows 下的换行符的，如果有同学知道有这样的场景的话，不吝赐教）。</p>
+
+<h4 id="section-2">三、防止被别人坑</h4>
+
+<p>虽然我个人觉得不应该用 Windows，不过还是有同学的确是喜欢用，或者因为不可抗拒的因素而暂时在使用，为了防止出现这个问题，可以在版本管理软件上做控制，比如 <strong>Git</strong> 就可以设置换行符，当你提交文件的时候，可以将你的所有文本的换行符替换成你设定的换行符，详细可以看 <a href="https://help.github.com/articles/dealing-with-line-endings/">https://help.github.com/articles/dealing-with-line-endings/</a></p>
 ]]></content>
   </entry>
   
