@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>关闭 Tomcat 的 TLD 扫描的功能 - 小径分岔的花园</title>
+  <title>该死的 ^M - 小径分岔的花园</title>
   <meta name="author" content="khotyn">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan">
+  <link rel="canonical" href="http://khotyn.github.com/blog/2014/11/15/damn-the-carriage-return-character">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -107,7 +107,7 @@
   
   <header class="page-header">
     
-      <h1 class="entry-title">关闭 Tomcat 的 TLD 扫描的功能</h1>
+      <h1 class="entry-title">该死的 ^M</h1>
     
     
       <p class="meta">
@@ -123,7 +123,7 @@
   
 
 
-<time datetime="2014-01-21T19:12:00+08:00" pubdate data-updated="true">Jan 21<span>st</span>, 2014</time>
+<time datetime="2014-11-15T08:33:00+08:00" pubdate data-updated="true">Nov 15<span>th</span>, 2014</time>
         
          | <a href="#disqus_thread">Comments</a>
         
@@ -132,33 +132,29 @@
   </header>
 
 
-<div class="entry-content"><h3 id="section">背景</h3>
+<div class="entry-content"><p><code>^M</code>，神奇的字符！相信很多人写 Shell 脚本的时候都被这个字符坑过，我自己也至少被坑过两次。最近周围的好几个小伙伴又被 <code>^M</code> 坑，花了好几个小时检查脚本的错误，结果发现是 <code>^M</code> 导致的。所以写了这篇文章讲一下什么是 <code>^M</code>，当 <code>^M</code> 出现的时候一般会伴随着什么样的现象，出现了我们可以用什么手段去解决。</p>
 
-<p>Tomcat 作为 Servlet 规范的实现者，它在应用启动的时候会扫描 Jar 包里面的 .tld 文件，加载里面定义的标签库，但是，我们在开发的时候很多都不是采用 JSP 作为 Web 页面的模板的，很多都是使用  Velocity 之类的模板引擎，自然而然，为了加快应用的启动速度，我们可以把 Tomcat 里面的这个功能给关掉。</p>
+<h3 id="m-"><code>^M</code> 是何方神圣</h3>
 
-<h3 id="section-1">方法</h3>
+<p>这个得先从 Windows 和 Unix 下的换行符开始说起，在我的 Intellij IDEA 的右下方的状态栏上，有一块是展示当前文件的换行符的：</p>
 
-<p>看 Tomcat 的配置文档，关于 Context 的设置这一块，看到了 <code>processTlds</code> 这个属性可以设置，看下这个属性的说明：</p>
+<p><img src="http://pic.yupoo.com/khotyn/EcY8fTut/ksIoo.png" alt="Windows 和 Unix 下的文件换行符" /></p>
+
+<p>可以看到在 Windows 下，换行符是 <code>\r\n</code>，在 Unix 下换行符是 <code>\n</code>。如果我们用把一个文件的换行符换成 Windows 的换行符，那么当我们用 <code>cat -v</code> 来看的时候，就可以看到：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/EcYbafeN/medish.jpg" alt="cat -v 查看文件是否含有 ^M" /> </p>
+
+<p>实际上 <code>^M</code> 就是 Windows 下的换行符中的 <code>\r</code> 部分。因为 Unix 下的换行符是 <code>\n</code>，所以当一个用 Windows 下的换行符的文件放在 Unix 下的时候，单行的最后一个字符就变成了 <code>\r</code>，<code>\r</code> 在 ASCII 码中是 <code>0xD</code>，而 <code>0xD</code> 在 VIM 和 <code>cat -v</code> 则刚好被显示为 <code>^M</code>。</p>
 
 <blockquote>
-  <p>Whether the context should process TLDs on startup. The default is true. The false setting is intended for special cases that know in advance TLDs are not part of the webapp.</p>
+  <p>刚才之所以用 <code>cat -v</code> 而不用普通的 <code>cat</code> 是因为 <code>^M</code> 是不可见的字符，如果仅仅用 <code>cat</code>，是看不到这个字符的。<code>cat</code> 的 <code>-v</code> 参数的作用就是显示不可打印的字符。</p>
 </blockquote>
 
-<p>只要在 Context 中把这个属性设置成 false，那么我们就可以关闭 Tomcat 的 TLD 扫描功能了，为了让所有的应用都可以关闭这个功能，我们可以将 Tomcat 目录下的 conf/context.xml 修改成如下这样：</p>
+<h3 id="m--1"><code>^M</code> 会导致什么样的问题？</h3>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">&lt;?xml version='1.0' encoding='utf-8'?&gt;
-</span><span class="line">&lt;Context processTlds="false"&gt;
-</span><span class="line">    &lt;WatchedResource&gt;WEB-INF/web.xml&lt;/WatchedResource&gt;
-</span><span class="line">&lt;/Context&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>我们已经知道了 <code>^M</code> 实际上就是 <code>\r</code>，而 <code>\r</code> 是回车符（Carriage Return），<strong>回车符的作用是将设备的位置重置到当前行的开头</strong>。</p>
 
-<h4 id="section-2">坑</h4>
-
-<p>但是，在 Tomcat 6 中测试的时候，发现这个功能没有生效，无奈只能 Debug Tomcat 的源码，发现 StandardContext 的 init 方法下有如下代码：</p>
+<p>知道了 <code>\r</code> 的作用时候，我们来看一个现象：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -167,70 +163,45 @@
 <span class="line-number">5</span>
 <span class="line-number">6</span>
 <span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">if (processTlds) {
-</span><span class="line">    this.addLifecycleListener(new TldConfig());
-</span><span class="line">}
+</pre></td><td class="code"><pre><code class=""><span class="line">### 有一个普通文件，存放了一个路径，当前行的最后以 ^M 结尾
+</span><span class="line">$ cat -v Main
+</span><span class="line">/home/admin/khotyn.huangt/test/^M
 </span><span class="line">
-</span><span class="line">super.init();
-</span><span class="line">
-</span><span class="line">// Notify our interested LifecycleListeners
-</span><span class="line">lifecycle.fireLifecycleEvent(INIT_EVENT, null);</span></code></pre></td></tr></table></div></figure></notextile></div>
+</span><span class="line">### Echo 一下，神奇了！
+</span><span class="line">$ echo "`cat Main`/where am i"
+</span><span class="line">/where am i/khotyn.huangt/test/</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>这里需要说明的一点是，我们的默认的 context 配置是在 <code>lifecycle.fireLifecycleEvent(INIT_EVENT, null);</code> 这行代码中被处理的，而在这行代码之前，Tomcat 就已经使用了 <code>processTlds</code>，我们的配置完全没有生效。</p>
+<p>看到后面那个 echo 命令，它将 Main 文件中的内容提取出来，再在后面加上 <code>/where am i</code> 这个字符串，结果我们看到，<code>/where am i</code> 在打印的结果中跑到最前面去了，这正是 <code>\r</code> 这个字符的作用，因为 <code>cat Main</code> 的执行的结果的最后一个字符是 <code>\r</code>，所以一遇到这个字符，设备指针就直接回到了当前行的开头，所以 <code>\r</code> 后面的 <code>/where am i</code> 就直接显示在了最前面。</p>
 
-<h4 id="workaround">Workaround</h4>
+<p><strong>所以，当你看到什么奇怪的路径，这个路径中莫名其妙地少了一些字符，出现了一些莫名其妙的字符串的，很可能就是 <code>^M</code> 导致的。</strong></p>
 
-<p>那么，这么解决呢？在 context 中，我们还可以配置一个 JarScanner，这个 JarScanner 会被用来扫描 Jar 包中的 tld 文件，我们可以在默认的 context.xml 中配置一个空的 JarScanner，像下面这样：</p>
+<h3 id="m--2">如何逃离 <code>^M</code> 的魔掌</h3>
+
+<p>当你发现了 <code>^M</code> 导致的问题的时候，最直截了当的方式就是将 <code>^M</code> 从文件中去掉。</p>
+
+<p>如果的机器上安装有 dos2unix，那么恭喜你，直接运行</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">&lt;?xml version='1.0' encoding='utf-8'?&gt;
-</span><span class="line">&lt;Context processTlds="false"&gt;
-</span><span class="line">    &lt;JarScanner className="com.alipay.sofa.runtime.test.patch.tomcat.NullJarScanner"/&gt;
-</span><span class="line">&lt;/Context&gt;</span></code></pre></td></tr></table></div></figure></notextile></div>
+</pre></td><td class="code"><pre><code class=""><span class="line">dos2unix /path/to/file</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>NullJarScanner 的代码如下：</p>
+<p>就可以将一个文件的换行符从 Windows 的转换成 Unix 的。</p>
+
+<p>但是，如果机器上没有装 dos2unix，而你又没法装上去（在一家公司工作总是会有各种各样的让你感觉很丧气的权限控制），那么你可以用 sed 来替换：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">package com.alipay.sofa.runtime.test.patch.tomcat;
-</span><span class="line">
-</span><span class="line">import org.apache.tomcat.JarScanner;
-</span><span class="line">import org.apache.tomcat.JarScannerCallback;
-</span><span class="line">
-</span><span class="line">import javax.servlet.ServletContext;
-</span><span class="line">import java.util.Set;
-</span><span class="line">
-</span><span class="line">/**
-</span><span class="line"> * @author khotyn 14-1-21 下午4:37
-</span><span class="line"> */
-</span><span class="line">public class NullJarScanner implements JarScanner {
-</span><span class="line">    @Override
-</span><span class="line">    public void scan(ServletContext context, ClassLoader classloader, JarScannerCallback callback, Set&lt;String&gt; jarsToSkip) {
-</span><span class="line">        // Do nothing at all.
-</span><span class="line">    }
-</span><span class="line">}
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+</pre></td><td class="code"><pre><code class=""><span class="line">sed --in-place='' 's/^M//g' /path/to/file</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p><strong>需要注意的是，Tomcat 7 不会出现上述的问题，你只要在配置中把 processTlds 设置成 false 即可。</strong></p>
+<blockquote>
+  <p>注意：上面的 <code>^M</code> 只是显示的效果，输入的时候需要用组合键输入，先 <code>Ctrl + V</code>，然后马上 <code>Ctrl + M</code> 就可以在终端中输入 <code>^M</code> 了。</p>
+</blockquote>
+
+<p>当然，用 <code>tr</code> 之类的命令也可以，不过我一般用 <code>sed</code> 的原因是 <code>sed</code> 加上 <code>--in-place</code> 参数可以做到直接替换原文件，而不用产生临时的文件（危险而高效的操作）。</p>
+
+<p>不过，前面说的只是当出现问题的时候如何解决，那么如何预防这个问题呢？</p>
+
+<p>第一个方法当然是直接放大招，换个 Mac 啥的，或者把你的机器上的 Windows 格了，装个 Ubuntu 也好啊。真心觉得 Windows 对于程序员来说真的没有啥好处（我好想听说连微软都开源 .Net 了，并且会提供多平台的支持）。</p>
+
+<p>第二个方法嘛，当在 Windows 下使用各种编辑器的时候，尽量将换行符设置成 Unix 的换行符。不要偷懒用 Windows 的换行符，出现了问题就是好几个小时的排查时间。（目前没有发现有什么场景下有必须用到 Windows 下的换行符的，如果有同学知道有这样的场景的话，不吝赐教）。</p>
 </div>
 
 
@@ -253,12 +224,12 @@
   
 
 
-<time datetime="2014-01-21T19:12:00+08:00" pubdate data-updated="true">Jan 21<span>st</span>, 2014</time>
+<time datetime="2014-11-15T08:33:00+08:00" pubdate data-updated="true">Nov 15<span>th</span>, 2014</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/java/'>Java</a>, <a class='category' href='/blog/categories/programming/'>Programming</a>, <a class='category' href='/blog/categories/tomcat/'>Tomcat</a>
+    <a class='category' href='/blog/categories/programming/'>Programming</a>
   
 </span>
 
@@ -282,14 +253,10 @@
     <ul class="pager">
       
       <li class="previous"><a class="basic-alignment left"
-        href="/blog/2014/01/19/java-8-default-method/" title="Previous Post:
-        Java 8 之 default method">&laquo; Java 8 之 default method</a></li>
+        href="/blog/2014/10/19/intellij-idea-feature/" title="Previous Post:
+        Intellij IDEA 的一些使用技巧">&laquo; Intellij IDEA 的一些使用技巧</a></li>
       
       <li><a href="/blog/archives">Blog Archives</a></li>
-      
-      <li class="next"><a class="basic-alignment right" href="/blog/2014/03/31/unittest/"
-        title="Next Post: 一些关于单元测试的思考">一些关于单元测试的思考
-        &raquo;</a></li>
       
     </ul>
   </footer>
@@ -370,8 +337,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan/';
-        var disqus_url = 'http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan/';
+        var disqus_identifier = 'http://khotyn.github.com/blog/2014/11/15/damn-the-carriage-return-character/';
+        var disqus_url = 'http://khotyn.github.com/blog/2014/11/15/damn-the-carriage-return-character/';
         var disqus_script = 'embed.js';
       
     (function () {

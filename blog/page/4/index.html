@@ -109,6 +109,105 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/07/10/bash-job-control/">Bash Job Control</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-10T19:43:00+08:00" pubdate data-updated="true">Jul 10<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/07/10/bash-job-control/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>这两天在给 <a href="https://github.com/khotyn/hotcode">HotCode</a> 写<a href="https://github.com/khotyn/hotcode/blob/master/test.sh">测试脚本</a>，其中用到了 Bash 的任务控制功能，说白了就是把一个任务放到后台，拉到前台之类的操作，这里做一下总结。</p>
+
+<h3 id="section">开启任务控制</h3>
+
+<p>首先，如果要在 Bash 脚本中使用 Bash 的任务控制功能，必须先执行下面这个命令：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">set</span> -m
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个命令的意思其实就是开启 Bash 的任务控制功能，见 Bash Manual 的 <a href="https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html">The Set Buildin</a>。</p>
+
+<h3 id="section-1">把任务放到后台执行</h3>
+
+<p>要把任务放到后台非常容易，只要在命令后面加入一个 <code>&amp;</code> 即可，像这样：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line">bash test.sh &amp;
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>命令的输出类似于这样：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="o">[</span>1<span class="o">]</span> 51668
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>其中前面的 <code>[1]</code> 代表的是这个任务的任务编号，而 <code>51668</code> 则是这个任务的进程 ID。</p>
+
+<h3 id="section-2">查看在后台执行的任务的执行情况</h3>
+
+<p><code>jobs</code> 命令可以查看在后台执行的任务的情况</p>
+
+<p>它的输出类似于下面这样：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="o">[</span>1<span class="o">]</span>  + running    bash test.sh
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>前面的 <code>[1]</code> 就是任务编号，后面的 <code>running</code> 表示任务当前运行的状态。</p>
+
+<p><code>jobs</code> 命令后面可以加一些参数，比如下面这些：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">jobs</span> -r <span class="c">###只输出正在运行的任务</span>
+</span><span class="line"><span class="nb">jobs</span> -s <span class="c">###只输出已经执行完的任务</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>具体看 <a href="https://www.gnu.org/software/bash/manual/html_node/Job-Control-Builtins.html#Job-Control-Builtins">Job Control Buildins</a>。</p>
+
+<h3 id="section-3">把任务调度到前台</h3>
+
+<p>要把任务调度到前台只要用 <code>fg</code> 命令就可以，后面加上一个任务编号表示要把哪个后台任务调度到前台：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="nb">fg</span> %1
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面这个命令就是把任务编号为 1 的任务调度到前台。</p>
+
+<p>Bash 的任务调度还是比较简单的，不过的确是非常地有用。</p>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/06/21/4clojure/">成就达成：4clojure 题目全破！</a></h1>
     
     
@@ -808,6 +907,10 @@ to f and colls.  Thus function f should return a collection.</p>
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/11/15/damn-the-carriage-return-character/">该死的 ^M</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/10/19/intellij-idea-feature/">Intellij IDEA 的一些使用技巧</a>
       </li>
     
@@ -821,10 +924,6 @@ to f and colls.  Thus function f should return a collection.</p>
     
       <li class="post">
         <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/03/31/unittest/">一些关于单元测试的思考</a>
       </li>
     
   </ul>

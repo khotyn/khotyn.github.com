@@ -109,6 +109,54 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/11/06/abreact-pleasant/">发泄快感</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-06T19:16:00+08:00" pubdate data-updated="true">Nov 6<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/11/06/abreact-pleasant/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>前一段时间特别喜欢上知乎，觉得还是一个挺有意思的网站，同类的国外网站有 Quora，不过我英语不太好，所以平时还是喜欢逛逛知乎，但是最近逛知乎的时候发现一个问题，里面的有一些的问题的高票答案其实不是在回答问题，而是在发泄自己的情感，而这些答案往往还能够得到高票（历史上的煽动家大概也是这样的，让自己的话迎合大众的情感，以此得到他们的支持），比如下面这个：</p>
+
+<p><img src="http://pic.yupoo.com/khotyn/Di8YyMye/medish.jpg" alt="image" /></p>
+
+<p>正常的答案应该是列出邹孟睿的经历，但是得票第一的回答其实是在表达自己对「来往」这个产品的不满，或者是觉得「来往」并没有什么未来，当然，他自己似乎也有点不好意思，所以用了「匿名」来回答。</p>
+
+<p>知乎上的这种答案不止这里一个，还有很多讨巧的答案，作为一个问答网站，其用户对于问题的回答应该尽量保持中立，这样的答案毫无疑问是无异于网站的形象，所以现在知乎对我的吸引力也越来越少了。</p>
+
+<p>既然提到了快感，顺便说一句：“阅读新闻也是一种快感”，这是浪费时间的快感，不看新闻，你也不会错过任何重要的消息，所以，不如把手机上的新闻客户端给删掉，它不能给你带来任何东西。</p>
+
+<p>哦，对了，有一个新闻客户端，素以评论见长，它提供了另一种形式的快感发泄，是的，我说的就是「网易新闻」。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/11/02/jvmtop-impl/">Jvmtop 介绍和实现分析</a></h1>
     
     
@@ -727,436 +775,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/09/14/spring-tx-propagation/">Spring 事务的传播特性</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-09-14T18:06:00+08:00" pubdate data-updated="true">Sep 14<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/09/14/spring-tx-propagation/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近工作中涉及到了一个分布式事务的产品，这个产品是在 Spring 的事务上做的，我对其中涉及到的 Spring 的事务的传播特性不是很了解，所以今天花了一个下午的时间认真了解了一下，写了一堆的测试代码。</p>
-
-<p>进入正题，Spring 的事务的传播特性分为以下的七种：</p>
-
-<ul>
-  <li>PROPAGATION_REQUIRED</li>
-  <li>PROPAGATION_SUPPORTS</li>
-  <li>PROPAGATION_MANDATORY</li>
-  <li>PROPAGATION_REQUIRES_NEW</li>
-  <li>PROPAGATION_NOT_SUPPORTED</li>
-  <li>PROPAGATION_NEVER</li>
-  <li>PROPAGATION_NESTED</li>
-</ul>
-
-<p>下面一种种来解释：</p>
-
-<h4 id="propagationrequired">PROPAGATION_REQUIRED</h4>
-
-<p>默认的事务传播特性，通常情况下我们用这个事务传播特性就可以了。如果当前事务上下文中没有事务，那么就会新创建一个事务。如果当前的事务上下文中已经有一个事务了，那么新开启的事务会开启一个新的逻辑事务范围，但是会和原有的事务共用一个物理事务，我们暂且不关心逻辑事务和物理事务的区别，先看看这样会导致怎样的代码行为：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Override</span>
-</span><span class="line"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">txRollbackInnerTxRollbackPropagationRequires</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">transactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="nd">@Override</span>
-</span><span class="line">        <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">transactionStatus</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span> <span class="s">&quot;Huang&quot;</span><span class="o">,</span>
-</span><span class="line">                <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">            <span class="n">transactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">                <span class="nd">@Override</span>
-</span><span class="line">                <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">status</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">                    <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span>
-</span><span class="line">                        <span class="s">&quot;Huang&quot;</span><span class="o">,</span> <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">                    <span class="c1">// 内部事务设置了 setRollbackOnly，</span>
-</span><span class="line">                    <span class="n">status</span><span class="o">.</span><span class="na">setRollbackOnly</span><span class="o">();</span>
-</span><span class="line">                <span class="o">}</span>
-</span><span class="line">            <span class="o">});</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">});</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这段代码在一个嵌套的事务内部（内外层的事务都是 PROPAGATION_REQUIRED 的）设置了回滚，那么对于外部的事务来说，它会收到一个 <code>UnexpectedRollbackException</code>，因为内部的事务和外部的事务是共用一个物理事务的，所以显然内部的事务必然会导致外部事务的回滚，但是因为这个回滚并不是外部事务自己设置的，所以外层事务回滚的时候会需要抛出一个 <code>UnexpectedRollbackException</code>，让事务的调用方知道这个回滚并不是外部事务自己想要回滚，是始料未及的。</p>
-
-<p>但是，如果内层的事务不是通过设置 <code>setRollbackOnly()</code> 来回滚，而是抛出了 <code>RuntimeException</code> 来回滚，那么外层的事务接收到了内层抛出的 <code>RuntimeException</code> 也会跟着回滚，这个是可以预料到的行为，所以不会有 <code>UnexpectedRollbackException</code> 。</p>
-
-<h4 id="propagationsupports">PROPAGATION_SUPPORTS</h4>
-
-<p>PROPAGATION_SUPPORTS 的特性是如果事务上下文中已经存在一个事务，那么新的事务（传播特性为 PROPAGATION_SUPPORTS）就会和原来的事务共用一个物理事务，其行为和 PROPAGATION_REQUIRED 一样。但是，如果当前事务上下文中没有事务，那么 PROPAGATION_SUPPORTS 就按无事务的方式执行代码：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Override</span>
-</span><span class="line"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">txRollbackInnerTxRollbackPropagationSupports</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">supportsTransactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="nd">@Override</span>
-</span><span class="line">        <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">status</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span> <span class="s">&quot;Huang&quot;</span><span class="o">,</span>
-</span><span class="line">                <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">            <span class="k">throw</span> <span class="k">new</span> <span class="nf">CustomRuntimeException</span><span class="o">();</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">});</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>看上面这段代码，虽然我们在事务（PROPAGATION_SUPPORTS 的）中抛出了一个 <code>RuntimeException</code>，但是因为其事务上下文中没有事务存在，所以这段代码实际上是以无事务的方式执行的，因此代码中的 <code>jdbcTemplate.update()</code> 操作也不会被回滚。</p>
-
-<h4 id="propagationmandatory">PROPAGATION_MANDATORY</h4>
-
-<p>PROPAGATION_MANDATORY 要求事务上下文中必须存在事务，如果事务上下文中存在事务，那么其行为和 <code>PROPAGATION_REQUIRED</code> 一样。如果当前事务上下文中没有事务，那么就会抛出 <code>IllegalTransactionStateException</code>，比如下面这段代码就会这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Override</span>
-</span><span class="line"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">txRollbackInnerTxRollbackPropagationMandatory</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">mandatoryTransactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="nd">@Override</span>
-</span><span class="line">        <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">transactionStatus</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span> <span class="s">&quot;Huang&quot;</span><span class="o">,</span>
-</span><span class="line">                <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">});</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h4 id="propagationrequiresnew">PROPAGATION_REQUIRES_NEW</h4>
-
-<p>PROPAGATION_REQUIRES_NEW 无论当前事务上下文中有没有事务，都会开启一个新的事务，并且和原来的事务完全是隔离的，外层事务的回滚不会影响到内层的事务，内层事务的回滚也不会影响到外层的事务（<strong>这个说法得稍微打点折扣：因为如果内层抛出 <code>RuntimeException</code> 的话，那么外层还是会收到这个异常并且触发回滚</strong>），我们分析下几段代码：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Override</span>
-</span><span class="line"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">txRollbackInnerTxRollbackPropagationRequiresNew</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">transactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="nd">@Override</span>
-</span><span class="line">        <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">transactionStatus</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">
-</span><span class="line">            <span class="n">requiresNewTransactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">                <span class="nd">@Override</span>
-</span><span class="line">                <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">status</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">                    <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span>
-</span><span class="line">                        <span class="s">&quot;Huang&quot;</span><span class="o">,</span> <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">                <span class="o">}</span>
-</span><span class="line">            <span class="o">});</span>
-</span><span class="line">
-</span><span class="line">            <span class="c1">// 外部事务发生回滚，内部事务应该不受影响还是能够提交</span>
-</span><span class="line">            <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">();</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">});</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这段代码外层的事务回滚了，但是不会影响到内层的事务的提交，内层事务不受外层的事务的影响。再看：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Override</span>
-</span><span class="line"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">txRollbackInnerTxRollbackPropagationRequiresNew2</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">transactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="nd">@Override</span>
-</span><span class="line">        <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">transactionStatus</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span> <span class="s">&quot;Huang&quot;</span><span class="o">,</span>
-</span><span class="line">                <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">            <span class="c1">// Nested transaction committed.</span>
-</span><span class="line">            <span class="n">requiresNewTransactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">                <span class="nd">@Override</span>
-</span><span class="line">                <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">status</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">                    <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span>
-</span><span class="line">                        <span class="s">&quot;Huang&quot;</span><span class="o">,</span> <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">                    <span class="c1">// 内部事务发生回滚，但是外部事务不应该发生回滚</span>
-</span><span class="line">                    <span class="n">status</span><span class="o">.</span><span class="na">setRollbackOnly</span><span class="o">();</span>
-</span><span class="line">                <span class="o">}</span>
-</span><span class="line">            <span class="o">});</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">});</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这段代码在内层事务上设置了 <code>setRollbackOnly</code>，内层事务肯定会回滚，但是由于内层事务和外层事务是隔离的，所以外层事务不会被回滚。再看：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Override</span>
-</span><span class="line"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">txRollbackInnerTxRollbackPropagationRequiresNew3</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">transactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="nd">@Override</span>
-</span><span class="line">        <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">transactionStatus</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span> <span class="s">&quot;Huang&quot;</span><span class="o">,</span>
-</span><span class="line">                <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">
-</span><span class="line">            <span class="n">requiresNewTransactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">                <span class="nd">@Override</span>
-</span><span class="line">                <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">status</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">                    <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span>
-</span><span class="line">                        <span class="s">&quot;Huang&quot;</span><span class="o">,</span> <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">                    <span class="c1">// 内部事务抛出 RuntimeException，外部事务接收到异常，依旧会发生回滚</span>
-</span><span class="line">                    <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">();</span>
-</span><span class="line">                <span class="o">}</span>
-</span><span class="line">            <span class="o">});</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">});</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这段代码在内层事务抛出了一个 <code>RuntimeException</code>，虽然内层事务和外层事务在事务上是隔离，但是 <code>RuntimeException</code> 显然还会抛到外层去，所以外层事务也会发生回滚。</p>
-
-<h4 id="propagationnotsupported">PROPAGATION_NOT_SUPPORTED</h4>
-
-<p>PROPAGATION_NOT_SUPPORTED 不管当前事务上下文中有没有事务，代码都会在按照无事务的方式执行，看下面这段代码：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Override</span>
-</span><span class="line"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">txRollbackInnerTxRollbackPropagationNotSupport</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">transactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="nd">@Override</span>
-</span><span class="line">        <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">transactionStatus</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span> <span class="s">&quot;Huang&quot;</span><span class="o">,</span>
-</span><span class="line">                <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">            <span class="n">notSupportedTransactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">                <span class="nd">@Override</span>
-</span><span class="line">                <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">status</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">                    <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span>
-</span><span class="line">                        <span class="s">&quot;Huang&quot;</span><span class="o">,</span> <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">                <span class="o">}</span>
-</span><span class="line">            <span class="o">});</span>
-</span><span class="line">            <span class="c1">// 外部事务回滚，不会把内部的也连着回滚 </span>
-</span><span class="line">            <span class="n">transactionStatus</span><span class="o">.</span><span class="na">setRollbackOnly</span><span class="o">();</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">});</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>上面这段代码中虽然外部事务发生了回滚，但是由于内部的事务是 PROPAGATION_NOT_SUPPORTED，根本不在外层的事务范围内，所以内层事务不会发生回滚。</p>
-
-<h4 id="propagationnever">PROPAGATION_NEVER</h4>
-
-<p>PROPAGATION_NEVER 如果当前事务上下文中存在事务，就会抛出 <code>IllegalTransactionStateException</code> 异常，自己也会按照非事务的方式执行</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Override</span>
-</span><span class="line"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">txRollbackInnerTxRollbackPropagationNever2</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">transactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="nd">@Override</span>
-</span><span class="line">        <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">transactionStatus</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span> <span class="s">&quot;Huang&quot;</span><span class="o">,</span>
-</span><span class="line">                <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">            <span class="n">neverTransactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">                <span class="nd">@Override</span>
-</span><span class="line">                <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">status</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">                    <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span>
-</span><span class="line">                        <span class="s">&quot;Huang&quot;</span><span class="o">,</span> <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">                <span class="o">}</span>
-</span><span class="line">            <span class="o">});</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">});</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>比如上面这段代码，在一个 PROPAGATION_REQUIRES 里面嵌入了一个 PROPAGATION_NEVER，内层就会抛出一个 <code>IllegalTransactionStateException</code>，导致外层事务被回滚。</p>
-
-<h4 id="propagationnested">PROPAGATION_NESTED</h4>
-
-<p>PROPAGATION_NESTED 只能应用于像 DataSource 这样的事务，可以通过在一个事务内部开启一个 PROPAGATION_NESTED 而达到一个事务内部有多个保存点的效果，一个内嵌的事务发生回滚，只会回滚到它自己的保存点，外层事务还会继续，比如下面这段代码：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@Override</span>
-</span><span class="line"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">txRollbackInnerTxRollbackPropagationNested</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">    <span class="n">nestedTransactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="nd">@Override</span>
-</span><span class="line">        <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">transactionStatus</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span> <span class="s">&quot;Huang&quot;</span><span class="o">,</span>
-</span><span class="line">                <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">
-</span><span class="line">            <span class="n">nestedTransactionTemplate</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="k">new</span> <span class="n">TransactionCallbackWithoutResult</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">                <span class="nd">@Override</span>
-</span><span class="line">                <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doInTransactionWithoutResult</span><span class="o">(</span><span class="n">TransactionStatus</span> <span class="n">status</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">                    <span class="n">jdbcTemplate</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="s">&quot;insert into user (name, password) values (?, ?)&quot;</span><span class="o">,</span>
-</span><span class="line">                        <span class="s">&quot;Huang&quot;</span><span class="o">,</span> <span class="s">&quot;1111112&quot;</span><span class="o">);</span>
-</span><span class="line">                    <span class="c1">// 内部事务设置了 rollbackOnly，外部事务应该不受影响，可以继续提交</span>
-</span><span class="line">                    <span class="n">status</span><span class="o">.</span><span class="na">setRollbackOnly</span><span class="o">();</span>
-</span><span class="line">                <span class="o">}</span>
-</span><span class="line">            <span class="o">});</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">    <span class="o">});</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>内层的事务发生了回滚，只会回滚其内部的操作，不会影响到外层的事务。</p>
-
-<h3 id="section">总结</h3>
-
-<p>Spring 的事务传播特性种类繁多，大多数都来自于 EJB 的事务，大家可以自己写一些小的程序来测试 Spring 各个事务特性的行为，加深印象，我自己也写了一个工程，通过单元测试去测试各个事务传播特性的行为，大家有兴趣的话，可以下过来跑一下：<a href="https://github.com/khotyn/spring-tx-test">https://github.com/khotyn/spring-tx-test</a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/3/">&larr; Older</a></li>
@@ -1174,6 +792,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2014/11/15/damn-the-carriage-return-character/">该死的 ^M</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/10/19/intellij-idea-feature/">Intellij IDEA 的一些使用技巧</a>
       </li>
     
@@ -1187,10 +809,6 @@
     
       <li class="post">
         <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/03/31/unittest/">一些关于单元测试的思考</a>
       </li>
     
   </ul>
