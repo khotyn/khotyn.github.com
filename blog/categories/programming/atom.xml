@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Programming | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/programming/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2014-11-15T10:13:25+08:00</updated>
+  <updated>2016-09-29T09:12:08+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,42 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Intellij IDEA 插件开发 --- 一次 JVM Crash 问题的解决]]></title>
+    <link href="http://khotyn.github.com/blog/2016/09/29/intellij-idea-plugin-jvm-crash/"/>
+    <updated>2016-09-29T09:07:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2016/09/29/intellij-idea-plugin-jvm-crash</id>
+    <content type="html"><![CDATA[<p>虽然今天遇到的不是一个有什么技术含量的问题，但是国内做这块的人太少了，觉得还是需要多分享分享，至少可以帮助新人走一些弯路，^_^</p>
+
+<p>前几天手贱升级了 macOS Sierra，本来看到 Intellij IDEA 在 macOS Sierra 下面只有一个触摸板异常灵活的问题，觉得自己触摸板用地比较少就直接升级了，哪知道升级以后，在开发我们自己的 Intellij IDEA 插件的时候，启动的 IDEA 一会儿就出现了 Crash 的问题（Crash 的是通过 Intellij IDEA 启动起来的用来测试插件的 Intellij IDEA）。具体的 Crash 截图如下：</p>
+
+<p><img src="http://upload-images.jianshu.io/upload_images/134563-0a04b1b5cc9bb723.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="intellij_idea_crash.png" /></p>
+
+<p>本来想是不是要直接回到 OS X Yosemite，但是不甘心啊，觉得既然都已经升级了，那遇到问题就解决吧，幸好在 Jetbrains 官方的问题跟踪平台上看到了有了提了类似的问题：<a href="https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FJRE-3">https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FJRE-3</a></p>
+
+<p>看这个帖子的意思是这个问题是 OpenJDK 的 Bug，于是顺藤摸瓜找到了 Jetbrains 在自己维护的 JDK 上对这个问题 Fix 的 Commit：</p>
+
+<p><a href="https://github.com/JetBrains/jdk8u_jdk/commit/02f9a5fbb4924ff67c8a04c15e490acfcc750003">https://github.com/JetBrains/jdk8u_jdk/commit/02f9a5fbb4924ff67c8a04c15e490acfcc750003</a></p>
+
+<p>如果把运行插件 SDK 的 JDK 换成 Jetbrains 自己的 JDK，应该就可以解决问题。当然，要使用 Jetbrains 自家的 JDK，不用拿着源代码自己 Build，可以直接从这里下载对应的 Build：<a href="https://bintray.com/jetbrains/intellij-jdk">https://bintray.com/jetbrains/intellij-jdk</a></p>
+
+<p>下载过来以后在插件工程的「Project Structure」配置界面进行如下配置即可：</p>
+
+<p><img src="http://upload-images.jianshu.io/upload_images/134563-eb53c97aca4ff78a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="" /></p>
+
+<ol>
+  <li>将下载过来的 JDK 增加到 SDK 里面。</li>
+  <li>找到当前正在用来运行插件的插件 SDK，将其以依赖的 JDK 修改成刚刚增加的 JDK。</li>
+</ol>
+
+<p>至此问题就已经解决，在这里建议大家如果要开发 Intellij IDEA 的插件的话，还是用 Jetbrains 自家的 JDK 比较好，毕竟 Jetbrains 已经在 OpenJDK 的基础上 Fix 了不少的问题，特别是很多和 Swing 相关的问题，使用他们的 JDK 可以帮助我们少走不少弯路。</p>
+
+<hr />
+
+<p>PS：如果有人对开发工具、插件感兴趣，欢迎留言联系我，蚂蚁金服需要最优秀的工程师来做研发工具，提升工程师的效率。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[该死的 ^M]]></title>
@@ -332,33 +368,6 @@ log4jRule.getLoggerMessages()
 </code></p>
 
 <p>来获得一个日志输出的内容的 List，List 中的没一行就是日志中的一行</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[一些关于单元测试的思考]]></title>
-    <link href="http://khotyn.github.com/blog/2014/03/31/unittest/"/>
-    <updated>2014-03-31T09:06:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2014/03/31/unittest</id>
-    <content type="html"><![CDATA[<p>最近在开发公司的集成测试框架，有一些关于单元测试的体会，写一个博客记录一下想法。</p>
-
-<h4 id="section">为什么要写单元测试？</h4>
-
-<p>这个问题，已经有无数的关于技术的书、文章去阐述了，不断地强调单元测试的重要性。比如单元测试可以让你在软件开发的早期阶段发现 Bug，而不必到集成测试的时候才发现等等。不过，对于我来说，在切实地戳到我的痛点之前，我一直都没有去重视这些关于单元测试的忠告（虽然在心中记着，但是实际上并不是很在意）。</p>
-
-<p>在写公司的集成测试框架的时候，有那么好几次，在调整了现有的功能，或者修复了某个 Bug 之后，<strong>因为懒惰，也因为跑一次完整的单元测试所需要的耗时较长</strong>，我侥幸地认为这些修改应该没有问题，直接打包交付。结果是，墨菲定律出现了，果然，没有经过测试的修改引发了新的 Bug，我不得不重新修改代码，然后厚着脸皮让用户重新试一次。</p>
-
-<p>人总是不靠谱的，我们懒惰，我们存在侥幸心理，坏事儿总是在我们最不希望发生的时候发生。写单元测试不能防止我们懒惰，防止我们存在侥幸心理。但是一次成本低廉的单元测试会让我们觉得：“反正运行一次但单元测试不会耗费很多时间，不如跑一次吧”，它在一定程度上降低我们犯错的几率。</p>
-
-<p>单元测试对于重构的意义也非常重大。很多有意思的程序员都有洁癖，会想着去修改某一段「恶心」的代码。我有过这样几次经历，在把一段「恶心」的代码修改地赏心悦目后，最后上线后发现引入了一个 Bug，心里暗骂一句 WTF，然后一脸黑线地把 Bug 修改了，想想如果当时有单元测试，那么会给我多大的勇气，让我可以肆无忌惮地去重构代码，这是多么爽的一件事情。</p>
-
-<h4 id="section-1">好的单元测试应该是怎样的？</h4>
-
-<p>一个好的单元测试，我觉得最重要的一点就是运行成本得低，也就是说一个单元测试越快越好。运行一次单元测试的成本越低，你才会越愿意去运行单元测试。如果运行一次单元测试得 10 分钟 20 分钟，那么我想很多人的侥幸心理又会出来了。</p>
-
-<h4 id="section-2">我是怎样写单元测试的？</h4>
-
-<p>我一般是这样写单元测试的，先想清楚模块的边界，有哪几种可能的输入，这些输入对应的可能输出是什么，然后以最快的速度堆积代码把功能先实现出来，接着写单元测试，把测试用例全部跑过。接下来马上着手重构之前写的代码，不断重构，不断地跑单元测试，知道重构后的代码让自己满意为止。</p>
 ]]></content>
   </entry>
   

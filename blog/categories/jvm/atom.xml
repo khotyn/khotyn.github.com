@@ -4,7 +4,7 @@
   <title><![CDATA[Category: JVM | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/jvm/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2014-11-15T10:13:25+08:00</updated>
+  <updated>2016-09-29T09:12:08+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,101 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[JVM 对 NoClassDefFoundError 的“缓存”]]></title>
+    <link href="http://khotyn.github.com/blog/2015/02/15/jvm-noclassdeffounterror-cache/"/>
+    <updated>2015-02-15T20:44:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2015/02/15/jvm-noclassdeffounterror-cache</id>
+    <content type="html"><![CDATA[<h2 id="section">问题</h2>
+
+<p>今天在排查一个线上的问题，线上的一个应用在初始化一个类的静态字段的时候出现了 <code>NoClassDefFoundError</code>，并且在导致 <code>NoClassDefFoundError</code> 出现的根本原因消失后，后续再次尝试初始化这个类的时候，持续出现了 <code>NoClassDefFoundError</code>。</p>
+
+<p>于是怀疑 JVM 是不是对一个类的 <code>NoClassDefFoundError</code> 做了缓存，在第一次加载这个类出现 <code>NoClassDefFoundError</code> 以后，后续再尝试加载就直接抛出 <code>NoClassDefFoundError</code>。</p>
+
+<h2 id="section-1">实验</h2>
+
+<p>为了证实自己的猜想，尝试设计了一个简单的实验，一个涉及三个类</p>
+
+<p><code>java
+public class Test1 {
+    static Test2 test2 = new Test2();
+}
+</code></p>
+
+<p><code>java
+public class Test2 {
+}
+</code></p>
+
+<p>```java
+public class Test {
+    public static void main(String… args) throws Exception {
+        while(true) {
+            System.out.println(“================================”);
+            try {
+                new Test1(); // 尝试实例化 Test1，触发 NoClassDefFoundError
+            } catch (Throwable e) {
+                e.printStackTrace();</p>
+
+<pre><code>            try {
+                Test.class.getClassLoader().loadClass("Test2"); // 尝试加载 Test2，用于证实当将 
+                                                                // Test2.class 拷贝到 ClassPath 下的时候，
+                                                                // Test2 就可以加载到了。
+            } catch (Throwable ex) {
+                ex.printStackTrace();
+            }
+        }
+        Thread.sleep(3000);
+    }
+} } ```
+</code></pre>
+
+<p>上述类的的作用是：Test2 是一个空的类，Test1 里面有一个 Test2 的静态成员。Test 是程序的主入口，在一个无限循环内部，不断地尝试去实例化 Test1，并且在加载 Test1 出现异常的时候，尝试加载一下 Test2。</p>
+
+<p>实验的步骤是：</p>
+
+<ol>
+  <li>编译以上类，运行 <code>javac Test.java</code></li>
+  <li>将生成出的 Test2.class 重命名成 Test2.class.bak</li>
+  <li>运行 <code>java Test</code>，这个时候程序去加载 Test1 的时候，就会出现 <code>NoClassDefFoundError</code>，并且在尝试加载 Test2 的时候，会出现 <code>ClassNotFoundException</code>。</li>
+  <li>将第二步重命名的 Test2.class.bak 该回成 Test2.class，这个时候程序去加载 Test1 的时候，就会出现 <code>NoClassDefFoundError</code>，在加载 Test2 的时候，不会出现 <code>ClassNotFoundException</code>。</li>
+</ol>
+
+<p>实验的第二步的目的是为了程序在加载 Test1 的时候因为找不到 Test2 出现 <code>NoClassDefFoundError</code>，第四步是为了和第二步做对照，说明在后续程序可以加载到 Test2 的时候，在实例化 Test1 的时候，依旧出现 <code>NoClassDefFoundError</code></p>
+
+<p>在我的机器上，按照上面的方式去操作，结果如下：</p>
+
+<p><img src="/images/cnf.png" alt="NoClassDefFoundError" /></p>
+
+<p>结果正如预期，即使在后面 Test2 在 ClassPath 下的时候，<code>NoClassDefFoundError</code> 依旧出现，所以 JVM 里面肯定有地方对 <code>NoClassDefFoundError</code> 做了缓存。</p>
+
+<h2 id="jvm-">JVM 里面的实现</h2>
+
+<p>带着这个疑问，请教了部门里面的 JVM 专家，这个猜测得到了证实，并且他给出了 JVM 内部具体处理这段逻辑的代码，处理的代码在 JDK 的 <code>instanceKlass.cpp</code> 这个文件里面：</p>
+
+<p><code>java
+bool instanceKlass::link_class_impl(
+     instanceKlassHandle this_oop, bool throw_verifyerror, TRAPS) {
+   // check for error state
+   if (this_oop-&gt;is_in_error_state()) {
+     ResourceMark rm(THREAD);
+     THROW_MSG_(vmSymbols::java_lang_NoClassDefFoundError(),
+                this_oop-&gt;external_name(), false);
+   }
+   // return if already verified
+   if (this_oop-&gt;is_linked()) {
+     return true;
+   }
+</code></p>
+
+<p>并且在 <code>instanceClass.hpp</code> 这个文件中，定义了类的 <code>_init_state</code>，其中，<code>is_in_error_state</code> 这个方法的定义如下：</p>
+
+<p><code>cpp
+bool is_in_error_state() const           { return _init_state == initialization_error; }
+</code></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[从 JVM 中 dump class 的几种方法]]></title>

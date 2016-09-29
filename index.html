@@ -109,6 +109,230 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2016/09/29/intellij-idea-plugin-jvm-crash/">Intellij IDEA 插件开发 &#8212; 一次 JVM Crash 问题的解决</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-09-29T09:07:00+08:00" pubdate data-updated="true">Sep 29<span>th</span>, 2016</time>
+        
+         | <a href="/blog/2016/09/29/intellij-idea-plugin-jvm-crash/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>虽然今天遇到的不是一个有什么技术含量的问题，但是国内做这块的人太少了，觉得还是需要多分享分享，至少可以帮助新人走一些弯路，^_^</p>
+
+<p>前几天手贱升级了 macOS Sierra，本来看到 Intellij IDEA 在 macOS Sierra 下面只有一个触摸板异常灵活的问题，觉得自己触摸板用地比较少就直接升级了，哪知道升级以后，在开发我们自己的 Intellij IDEA 插件的时候，启动的 IDEA 一会儿就出现了 Crash 的问题（Crash 的是通过 Intellij IDEA 启动起来的用来测试插件的 Intellij IDEA）。具体的 Crash 截图如下：</p>
+
+<p><img src="http://upload-images.jianshu.io/upload_images/134563-0a04b1b5cc9bb723.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="intellij_idea_crash.png" /></p>
+
+<p>本来想是不是要直接回到 OS X Yosemite，但是不甘心啊，觉得既然都已经升级了，那遇到问题就解决吧，幸好在 Jetbrains 官方的问题跟踪平台上看到了有了提了类似的问题：<a href="https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FJRE-3">https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FJRE-3</a></p>
+
+<p>看这个帖子的意思是这个问题是 OpenJDK 的 Bug，于是顺藤摸瓜找到了 Jetbrains 在自己维护的 JDK 上对这个问题 Fix 的 Commit：</p>
+
+<p><a href="https://github.com/JetBrains/jdk8u_jdk/commit/02f9a5fbb4924ff67c8a04c15e490acfcc750003">https://github.com/JetBrains/jdk8u_jdk/commit/02f9a5fbb4924ff67c8a04c15e490acfcc750003</a></p>
+
+<p>如果把运行插件 SDK 的 JDK 换成 Jetbrains 自己的 JDK，应该就可以解决问题。当然，要使用 Jetbrains 自家的 JDK，不用拿着源代码自己 Build，可以直接从这里下载对应的 Build：<a href="https://bintray.com/jetbrains/intellij-jdk">https://bintray.com/jetbrains/intellij-jdk</a></p>
+
+<p>下载过来以后在插件工程的「Project Structure」配置界面进行如下配置即可：</p>
+
+<p><img src="http://upload-images.jianshu.io/upload_images/134563-eb53c97aca4ff78a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="" /></p>
+
+<ol>
+  <li>将下载过来的 JDK 增加到 SDK 里面。</li>
+  <li>找到当前正在用来运行插件的插件 SDK，将其以依赖的 JDK 修改成刚刚增加的 JDK。</li>
+</ol>
+
+<p>至此问题就已经解决，在这里建议大家如果要开发 Intellij IDEA 的插件的话，还是用 Jetbrains 自家的 JDK 比较好，毕竟 Jetbrains 已经在 OpenJDK 的基础上 Fix 了不少的问题，特别是很多和 Swing 相关的问题，使用他们的 JDK 可以帮助我们少走不少弯路。</p>
+
+<hr />
+
+<p>PS：如果有人对开发工具、插件感兴趣，欢迎留言联系我，蚂蚁金服需要最优秀的工程师来做研发工具，提升工程师的效率。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
+      <h1 class="entry-title"><a href="/blog/2015/02/15/jvm-noclassdeffounterror-cache/">JVM 对 NoClassDefFoundError 的“缓存”</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-02-15T20:44:00+08:00" pubdate data-updated="true">Feb 15<span>th</span>, 2015</time>
+        
+         | <a href="/blog/2015/02/15/jvm-noclassdeffounterror-cache/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2 id="section">问题</h2>
+
+<p>今天在排查一个线上的问题，线上的一个应用在初始化一个类的静态字段的时候出现了 <code>NoClassDefFoundError</code>，并且在导致 <code>NoClassDefFoundError</code> 出现的根本原因消失后，后续再次尝试初始化这个类的时候，持续出现了 <code>NoClassDefFoundError</code>。</p>
+
+<p>于是怀疑 JVM 是不是对一个类的 <code>NoClassDefFoundError</code> 做了缓存，在第一次加载这个类出现 <code>NoClassDefFoundError</code> 以后，后续再尝试加载就直接抛出 <code>NoClassDefFoundError</code>。</p>
+
+<h2 id="section-1">实验</h2>
+
+<p>为了证实自己的猜想，尝试设计了一个简单的实验，一个涉及三个类</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test1</span> <span class="o">{</span>
+</span><span class="line">    <span class="kd">static</span> <span class="n">Test2</span> <span class="n">test2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Test2</span><span class="o">();</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test2</span> <span class="o">{</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test</span> <span class="o">{</span>
+</span><span class="line">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">...</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">while</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;================================&quot;</span><span class="o">);</span>
+</span><span class="line">            <span class="k">try</span> <span class="o">{</span>
+</span><span class="line">                <span class="k">new</span> <span class="nf">Test1</span><span class="o">();</span> <span class="c1">// 尝试实例化 Test1，触发 NoClassDefFoundError</span>
+</span><span class="line">            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Throwable</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">                <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class="line">
+</span><span class="line">                <span class="k">try</span> <span class="o">{</span>
+</span><span class="line">                    <span class="n">Test</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getClassLoader</span><span class="o">().</span><span class="na">loadClass</span><span class="o">(</span><span class="s">&quot;Test2&quot;</span><span class="o">);</span> <span class="c1">// 尝试加载 Test2，用于证实当将 </span>
+</span><span class="line">                                                                    <span class="c1">// Test2.class 拷贝到 ClassPath 下的时候，</span>
+</span><span class="line">                                                                    <span class="c1">// Test2 就可以加载到了。</span>
+</span><span class="line">                <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Throwable</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">                    <span class="n">ex</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class="line">                <span class="o">}</span>
+</span><span class="line">            <span class="o">}</span>
+</span><span class="line">            <span class="n">Thread</span><span class="o">.</span><span class="na">sleep</span><span class="o">(</span><span class="mi">3000</span><span class="o">);</span>
+</span><span class="line">        <span class="o">}</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上述类的的作用是：Test2 是一个空的类，Test1 里面有一个 Test2 的静态成员。Test 是程序的主入口，在一个无限循环内部，不断地尝试去实例化 Test1，并且在加载 Test1 出现异常的时候，尝试加载一下 Test2。</p>
+
+<p>实验的步骤是：</p>
+
+<ol>
+  <li>编译以上类，运行 <code>javac Test.java</code></li>
+  <li>将生成出的 Test2.class 重命名成 Test2.class.bak</li>
+  <li>运行 <code>java Test</code>，这个时候程序去加载 Test1 的时候，就会出现 <code>NoClassDefFoundError</code>，并且在尝试加载 Test2 的时候，会出现 <code>ClassNotFoundException</code>。</li>
+  <li>将第二步重命名的 Test2.class.bak 该回成 Test2.class，这个时候程序去加载 Test1 的时候，就会出现 <code>NoClassDefFoundError</code>，在加载 Test2 的时候，不会出现 <code>ClassNotFoundException</code>。</li>
+</ol>
+
+<p>实验的第二步的目的是为了程序在加载 Test1 的时候因为找不到 Test2 出现 <code>NoClassDefFoundError</code>，第四步是为了和第二步做对照，说明在后续程序可以加载到 Test2 的时候，在实例化 Test1 的时候，依旧出现 <code>NoClassDefFoundError</code></p>
+
+<p>在我的机器上，按照上面的方式去操作，结果如下：</p>
+
+<p><img src="/images/cnf.png" alt="NoClassDefFoundError" /></p>
+
+<p>结果正如预期，即使在后面 Test2 在 ClassPath 下的时候，<code>NoClassDefFoundError</code> 依旧出现，所以 JVM 里面肯定有地方对 <code>NoClassDefFoundError</code> 做了缓存。</p>
+
+<h2 id="jvm-">JVM 里面的实现</h2>
+
+<p>带着这个疑问，请教了部门里面的 JVM 专家，这个猜测得到了证实，并且他给出了 JVM 内部具体处理这段逻辑的代码，处理的代码在 JDK 的 <code>instanceKlass.cpp</code> 这个文件里面：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">bool</span> <span class="nl">instanceKlass:</span><span class="o">:</span><span class="n">link_class_impl</span><span class="o">(</span>
+</span><span class="line">     <span class="n">instanceKlassHandle</span> <span class="n">this_oop</span><span class="o">,</span> <span class="n">bool</span> <span class="n">throw_verifyerror</span><span class="o">,</span> <span class="n">TRAPS</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">   <span class="c1">// check for error state</span>
+</span><span class="line">   <span class="k">if</span> <span class="o">(</span><span class="n">this_oop</span><span class="o">-&gt;</span><span class="n">is_in_error_state</span><span class="o">())</span> <span class="o">{</span>
+</span><span class="line">     <span class="n">ResourceMark</span> <span class="nf">rm</span><span class="o">(</span><span class="n">THREAD</span><span class="o">);</span>
+</span><span class="line">     <span class="n">THROW_MSG_</span><span class="o">(</span><span class="nl">vmSymbols:</span><span class="o">:</span><span class="n">java_lang_NoClassDefFoundError</span><span class="o">(),</span>
+</span><span class="line">                <span class="n">this_oop</span><span class="o">-&gt;</span><span class="n">external_name</span><span class="o">(),</span> <span class="kc">false</span><span class="o">);</span>
+</span><span class="line">   <span class="o">}</span>
+</span><span class="line">   <span class="c1">// return if already verified</span>
+</span><span class="line">   <span class="k">if</span> <span class="o">(</span><span class="n">this_oop</span><span class="o">-&gt;</span><span class="n">is_linked</span><span class="o">())</span> <span class="o">{</span>
+</span><span class="line">     <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class="line">   <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>并且在 <code>instanceClass.hpp</code> 这个文件中，定义了类的 <code>_init_state</code>，其中，<code>is_in_error_state</code> 这个方法的定义如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="cpp"><span class="line"><span class="kt">bool</span> <span class="n">is_in_error_state</span><span class="p">()</span> <span class="k">const</span>           <span class="p">{</span> <span class="k">return</span> <span class="n">_init_state</span> <span class="o">==</span> <span class="n">initialization_error</span><span class="p">;</span> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2014/11/15/damn-the-carriage-return-character/">该死的 ^M</a></h1>
     
     
@@ -1018,146 +1242,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2014/01/01/sell-mac-book-pro/">转让自用 13 寸 MacBook Pro</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-01-01T11:02:00+08:00" pubdate data-updated="true">Jan 1<span>st</span>, 2014</time>
-        
-         | <a href="/blog/2014/01/01/sell-mac-book-pro/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>已经出售，谢谢</strong></p>
-
-<p>转让自用的 13 寸 MacBook Pro，2009 年年中的款，型号 MB990，入手时间 2010 年初，使用时间三年不到，除了电池的续航能力有所下降，其他没有出现任何问题，内存我自己升级到了 8 G，平时的开发也都是用这台开发（你知道开个 Eclipse 或者 Intellij IDEA 是很耗资源的），也比较顺畅，<strong>价格方面是 2500</strong>，当然可刀~，暂时只接受杭州的当面交易。</p>
-
-<p>有意向的可以直接在这篇博客下面回复，或者给我发邮件联系我，hting1#gmail.com</p>
-
-<p>关于这个型号的 MBP 的其他参数，可以直接看下面这张图：</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DqBJdz79/medish.jpg" alt="image" /></p>
-
-<p>上几张本本的照片：</p>
-
-<p>合上后，有些许划痕</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DqBPAi4B/medish.jpg" alt="image" /></p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DqBQFoio/medish.jpg" alt="image" /></p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/12/07/google-guava-eventbus/">Google Guava 之 EventBus</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-12-07T19:49:00+08:00" pubdate data-updated="true">Dec 7<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/12/07/google-guava-eventbus/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Google 的 Guava 库是一个 Java 程序员必须了解的库，它提供了一些非常强大的功能，比如函数式风格的集合操作，Cache Builder 等等的功能，另外 Google Guava 还提供了一个非常方便的观察者模式的实现：EventBus。这篇文章就来介绍一下 EventBus 的使用。</p>
-
-<h3 id="eventbus-">EventBus 对象</h3>
-
-<p>在举例说明 EventBus 的使用方式之前，我们先来看一下 EventBus 对象，EventBus 对象整个负责了观察者模式监听者的注册，事件的分发，所以，在使用 EventBus 的时候，你就省去了非常多的工作，你只要去使用 EventBus 就可以了，不用再去自己实现一个 Publisher 的类，使用 EventBus 的第一步就是你需要一个 EventBus 的实例：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">EventBus</span> <span class="n">eventBus</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EventBus</span><span class="o">();</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3 id="section">注册监听者</h3>
-
-<p>使用 EventBus 监听事件，只需要在你的处理事件的方法上添加一个 <code>@Subscribe</code> 注解就可以：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">static</span> <span class="kd">class</span> <span class="nc">Subscriber</span> <span class="o">{</span>
-</span><span class="line">    <span class="nd">@Subscribe</span>
-</span><span class="line">    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">subscribe</span><span class="o">(</span><span class="n">Event</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">event</span><span class="o">.</span><span class="na">getWord</span><span class="o">());</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这里的事件对象 <code>Event</code> 可以是任何的对象，可以是 <code>Object</code>，但是也可以是任何你自定义的消息对象。</p>
-
-<p>建立一个类以后，就可以往 EventBus 中注册 Subscriber：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eventBus</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="k">new</span> <span class="n">Subscriber</span><span class="o">());</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3 id="section-1">分发事件</h3>
-
-<p>在注册完事件后，就可以去分发事件了，分发的代码非常简单：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eventBus</span><span class="o">.</span><span class="na">post</span><span class="o">(</span><span class="k">new</span> <span class="n">Event</span><span class="o">(</span><span class="s">&quot;Hello world&quot;</span><span class="o">));</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这样，所有的注册在 EventBus 中的监听者，只要它的监听方法的参数是 <code>Event</code> 或者 <code>Event</code> 的超类，那么都会收到事件。</p>
-
-<h3 id="section-2">结论</h3>
-
-<p>EventBus 作为一个 In-JVM 的观察者模式的实现，非常使用，使用起来非常简单，可以减少不少的工作，建议在项目中可以多多使用。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -1173,6 +1257,14 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2016/09/29/intellij-idea-plugin-jvm-crash/">Intellij IDEA 插件开发 &#8212; 一次 JVM Crash 问题的解决</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/02/15/jvm-noclassdeffounterror-cache/">JVM 对 NoClassDefFoundError 的“缓存”</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/11/15/damn-the-carriage-return-character/">该死的 ^M</a>
       </li>
     
@@ -1182,14 +1274,6 @@
     
       <li class="post">
         <a href="/blog/2014/08/16/why-i-hate-xiaomi/">为什么我讨厌小米</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/16/guice-collection-inject/">Guice 集合注入</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a>
       </li>
     
   </ul>
@@ -1228,7 +1312,7 @@
   </div>
   <footer role="contentinfo" class="page-footer"><hr>
 <p>
-  Copyright &copy; 2014 - khotyn -
+  Copyright &copy; 2016 - khotyn -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

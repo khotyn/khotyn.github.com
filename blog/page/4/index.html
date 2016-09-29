@@ -109,6 +109,509 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/07/12/juc-condition/">Java 并发编程 J.U.C 之 Condition</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-12T07:36:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/07/12/juc-condition/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>此篇文章是作者两年前发布在<a href="http://www.goldendoc.org/2011/06/juc_condition/">黄金档</a>的文章。</strong></p>
+
+<p>在上一篇中，我们了解了下 <a href="http://blog.khotyn.com/blog/2013/07/10/juc-lock-acquire-release/">J.U.C 的锁的获取与释放的过程</a>，这个过程主要通过在 A.Q.S 中维持一个等待队列来实现，其中我们也提到了，在 A.Q.S 中除了一个等待队列之外，还有一个 Condition 队列，在了解 Condition 队列之前，先来看一下 Condition 是怎么回事：</p>
+
+<blockquote>
+  <p>The synchronizer framework provides a ConditionObject class for use by synchronizers that maintain exclusive synchronization and conform to the Lock interface. Any number of condition objects may be attached to a lock object, providing classic monitor-style await, signal, and signalAll operations, including those with timeouts, along with some inspection and monitoring methods.</p>
+</blockquote>
+
+<p>上面的这一段内容摘自 Doug Lea 的 <a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf">AQS 论文</a>，从上面这一段话可以看出，Condition 主要是为了在 J.U.C 框架中提供和 Java 传统的监视器风格的 wait，notify 和 notifyAll 方法类似的功能，那么先来解释一下这三个方法的作用：</p>
+
+<ul>
+  <li>Object.wait() 方法：使当前线程释放 Object 上的监视器并且挂起，直到有另外的线程调用 Object.notify() 方法或者 Object.notifyAll() 方法唤醒当前线程，当被唤醒后，Object.wait() 方法会尝试重新获取监视器，成功获取后继续往下执行。注意 Object.wait() 方法只有在当前线程持有 Object 的监视器的时候才能够调用，不然会抛出异常。</li>
+  <li>Object.notify() 方法：用于唤醒另外一个调用了 Object.wait() 方法的线程，如果有多个都调用了 Object.wait() 方法，那么就会选择一个线程去 notify()，具体选择哪一个和具体的实现有关，当前线程在调用 Object.notify() 方法以后会就释放Object的监视器，和 wait() 方法一样，Object.notify() 方法只有在当前线程持有 Object 的监视器的时候才能够调用，不然就会抛出异常。</li>
+  <li>Object.notifyAll() 方法：唤醒所有调用了 Object.wait() 方法的线程，如果有多个线程调用了 Object.wait() 方法，那么就会引发这些线程之间的竞争，最后谁成功获取到 Object 的监视器和具体的实现有关，当前线程在调用 Object.notifyAll() 方法以后会就释放 Object 的监视器，和 wait() 方法一样，Object.notifyAll() 方法只有在当前线程只有 Object 的监视器的时候才能够调用，不然就会抛出异常。</li>
+</ul>
+
+<p>那么 Condition 是如何实现 wait，notify 和 notifyAll 方法的功能呢？我们接下来看：</p>
+
+<p>在 Condition 中，wait，notify 和 notifyAll 方法分别对应了 await，signal 和 signalAll 方法，当然 Condition 也提供了超时的、不可被中断的 await() 方法，不过我们主要还是看一看 await，notify 和 notifyAll 的实现，先看 await：</p>
+
+<h3 id="await-">await 方法</h3>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">await</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">Thread</span><span class="o">.</span><span class="na">interrupted</span><span class="o">())</span>
+</span><span class="line">        <span class="k">throw</span> <span class="k">new</span> <span class="nf">InterruptedException</span><span class="o">();</span>
+</span><span class="line">    <span class="n">Node</span> <span class="n">node</span> <span class="o">=</span> <span class="n">addConditionWaiter</span><span class="o">();</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">savedState</span> <span class="o">=</span> <span class="n">fullyRelease</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">interruptMode</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+</span><span class="line">    <span class="k">while</span> <span class="o">(!</span><span class="n">isOnSyncQueue</span><span class="o">(</span><span class="n">node</span><span class="o">))</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">LockSupport</span><span class="o">.</span><span class="na">park</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+</span><span class="line">        <span class="k">if</span> <span class="o">((</span><span class="n">interruptMode</span> <span class="o">=</span> <span class="n">checkInterruptWhileWaiting</span><span class="o">(</span><span class="n">node</span><span class="o">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class="line">            <span class="k">break</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">acquireQueued</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="n">savedState</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="n">interruptMode</span> <span class="o">!=</span> <span class="n">THROW_IE</span><span class="o">)</span>
+</span><span class="line">        <span class="n">interruptMode</span> <span class="o">=</span> <span class="n">REINTERRUPT</span><span class="o">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">nextWaiter</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+</span><span class="line">        <span class="n">unlinkCancelledWaiters</span><span class="o">();</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">interruptMode</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class="line">        <span class="n">reportInterruptAfterWait</span><span class="o">(</span><span class="n">interruptMode</span><span class="o">);</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>整个 await 的过程如下：</p>
+
+<ul>
+  <li>在第 2 行处，如果当前线程被中断，则抛出中断异常。</li>
+  <li>在第 4 行处，将节点加入到 Condition 队列中去，这里如果 lastWaiter 是 cancel 状态，那么会把它踢出 Condition 队列。</li>
+  <li>在第 5 行处，调用 tryRelease，释放当前线程的锁</li>
+  <li>在第 7 行处，判断节点是否在等待队列中（signal 操作会将 Node 从 Condition 队列中拿出并且放入到等待队列中去），如果不在等待队列中了，就 park 当前线程，如果在，就退出循环，这个时候如果被中断，那么就退出循环</li>
+  <li>在第 12 行处，这个时候线程已经被 signal() 或者 signalAll() 操作给唤醒了，退出了 4 中的 while 循环，尝试再次获取锁，调用 acquireQueued 方法。</li>
+</ul>
+
+<p>可以看到，这个 await 的操作过程和 Object.wait() 方法是一样，只不过 await() 采用了 Condition 队列的方式实现了 Object.wait() 的功能。</p>
+
+<h3 id="signal--signalall-">signal 和 signalAll 方法</h3>
+
+<p>在了解了 await 方法的实现以后，signal 和 signalAll 方法的实现就相对简单了，先看看 signal 方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">signal</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(!</span><span class="n">isHeldExclusively</span><span class="o">())</span>
+</span><span class="line">        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalMonitorStateException</span><span class="o">();</span>
+</span><span class="line">    <span class="n">Node</span> <span class="n">first</span> <span class="o">=</span> <span class="n">firstWaiter</span><span class="o">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">first</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+</span><span class="line">        <span class="n">doSignal</span><span class="o">(</span><span class="n">first</span><span class="o">);</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这里先判断当前线程是否持有锁，如果没有持有，则抛出异常，然后判断整个 condition 队列是否为空，不为空则调用 doSignal 方法来唤醒线程，看看 doSignal 方法都干了一些什么：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">private</span> <span class="kt">void</span> <span class="nf">doSignal</span><span class="o">(</span><span class="n">Node</span> <span class="n">first</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">do</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">if</span> <span class="o">(</span> <span class="o">(</span><span class="n">firstWaiter</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="na">nextWaiter</span><span class="o">)</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+</span><span class="line">            <span class="n">lastWaiter</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class="line">        <span class="n">first</span><span class="o">.</span><span class="na">nextWaiter</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span> <span class="k">while</span> <span class="o">(!</span><span class="n">transferForSignal</span><span class="o">(</span><span class="n">first</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
+</span><span class="line">             <span class="o">(</span><span class="n">first</span> <span class="o">=</span> <span class="n">firstWaiter</span><span class="o">)</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">);</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个 while 循环的作用就是将 firstWaiter 往 Condition 队列的后面移一位，并且唤醒 first，看看 while 循环中 tranferForSignal：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">transferForSignal</span><span class="o">(</span><span class="n">Node</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="cm">/*</span>
+</span><span class="line"><span class="cm">     * If cannot change waitStatus, the node has been cancelled.</span>
+</span><span class="line"><span class="cm">     */</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(!</span><span class="n">compareAndSetWaitStatus</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="n">Node</span><span class="o">.</span><span class="na">CONDITION</span><span class="o">,</span> <span class="mi">0</span><span class="o">))</span>
+</span><span class="line">        <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="cm">/*</span>
+</span><span class="line"><span class="cm">     * Splice onto queue and try to set waitStatus of predecessor to</span>
+</span><span class="line"><span class="cm">     * indicate that thread is (probably) waiting. If cancelled or</span>
+</span><span class="line"><span class="cm">     * attempt to set waitStatus fails, wake up to resync (in which</span>
+</span><span class="line"><span class="cm">     * case the waitStatus can be transiently and harmlessly wrong).</span>
+</span><span class="line"><span class="cm">     */</span>
+</span><span class="line">    <span class="n">Node</span> <span class="n">p</span> <span class="o">=</span> <span class="n">enq</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">waitStatus</span><span class="o">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">c</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="o">!</span><span class="n">compareAndSetWaitStatus</span><span class="o">(</span><span class="n">p</span><span class="o">,</span> <span class="n">c</span><span class="o">,</span> <span class="n">Node</span><span class="o">.</span><span class="na">SIGNAL</span><span class="o">))</span>
+</span><span class="line">        <span class="n">LockSupport</span><span class="o">.</span><span class="na">unpark</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">thread</span><span class="o">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码的作用就是修改 Node 的 waitStatus 为 0，然后将 Node 插入到等待队列中，并且唤醒 Node。</p>
+
+<p>signalAll 和 signal 方法类似，主要的不同在于它不是调用 doSignal 方法，而是调用 doSignalAll 方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">private</span> <span class="kt">void</span> <span class="nf">doSignalAll</span><span class="o">(</span><span class="n">Node</span> <span class="n">first</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="n">lastWaiter</span> <span class="o">=</span> <span class="n">firstWaiter</span>  <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class="line">    <span class="k">do</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">Node</span> <span class="n">next</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="na">nextWaiter</span><span class="o">;</span>
+</span><span class="line">        <span class="n">first</span><span class="o">.</span><span class="na">nextWaiter</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class="line">        <span class="n">transferForSignal</span><span class="o">(</span><span class="n">first</span><span class="o">);</span>
+</span><span class="line">        <span class="n">first</span> <span class="o">=</span> <span class="n">next</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span> <span class="k">while</span> <span class="o">(</span><span class="n">first</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">);</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个方法就相当于把 Condition 队列中的所有 Node 全部取出插入到等待队列中去。</p>
+
+<h3 id="section">总结</h3>
+
+<p>在了解了 await，signal 和 signalAll 方法的实现以后，我们再来通过一副 gif 动画来看一看这一个整体的过程：</p>
+
+<p><img src="http://farm3.staticflickr.com/2888/9263654699_6b959eecb2_o.gif" alt="image" /></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
+      <h1 class="entry-title"><a href="/blog/2013/07/10/juc-lock-acquire-release/">Java 并发编程 J.U.C 之锁的获取与释放</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-10T20:14:00+08:00" pubdate data-updated="true">Jul 10<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/07/10/juc-lock-acquire-release/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>此篇文章是作者两年前发表在<a href="http://www.goldendoc.org/2011/06/lock_acquire_release/">黄金档</a>的文章。</strong></p>
+
+<p>上一篇文章中，我们对 <a href="http://www.goldendoc.org/2011/05/juc/">J.U.C 的一些大概的情况</a>做了了解，在这一篇文章我们将来以 ReentrantLock 为例，来分析一下锁的获取和释放的过程，让大家能够对锁的获取和释放的整体过程有一个了解。</p>
+
+<h3 id="section">一、锁的获取</h3>
+
+<p>先看下 ReentrantLock 的 lock() 方法，整个方法只有一行，调用 acquire 方法，看看 acquire 方法的实现：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">acquire</span><span class="o">(</span><span class="kt">int</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(!</span><span class="n">tryAcquire</span><span class="o">(</span><span class="n">arg</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
+</span><span class="line">        <span class="n">acquireQueued</span><span class="o">(</span><span class="n">addWaiter</span><span class="o">(</span><span class="n">Node</span><span class="o">.</span><span class="na">EXCLUSIVE</span><span class="o">),</span> <span class="n">arg</span><span class="o">))</span>
+</span><span class="line">        <span class="n">selfInterrupt</span><span class="o">();</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码的实现也是比较简洁，先尝试一次 tryAcquire 操作，如果失败，则把当前线程加入到同步队列中去，这个时候可能会反复的阻塞与唤醒这个线程，直到后续的 tryAcquire（看 acquireQueued 的实现）操作成功。</p>
+
+<p>再看看 tryAcquire 的实现：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">protected</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">tryAcquire</span><span class="o">(</span><span class="kt">int</span> <span class="n">acquires</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="kd">final</span> <span class="n">Thread</span> <span class="n">current</span> <span class="o">=</span> <span class="n">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">();</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">getState</span><span class="o">();</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">c</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">if</span> <span class="o">(</span><span class="n">isFirst</span><span class="o">(</span><span class="n">current</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
+</span><span class="line">            <span class="n">compareAndSetState</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">acquires</span><span class="o">))</span> <span class="o">{</span>
+</span><span class="line">            <span class="n">setExclusiveOwnerThread</span><span class="o">(</span><span class="n">current</span><span class="o">);</span>
+</span><span class="line">            <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class="line">        <span class="o">}</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">    <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">current</span> <span class="o">==</span> <span class="n">getExclusiveOwnerThread</span><span class="o">())</span> <span class="o">{</span>
+</span><span class="line">        <span class="kt">int</span> <span class="n">nextc</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="n">acquires</span><span class="o">;</span>
+</span><span class="line">        <span class="k">if</span> <span class="o">(</span><span class="n">nextc</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class="line">            <span class="k">throw</span> <span class="k">new</span> <span class="nf">Error</span><span class="o">(</span><span class="s">&quot;Maximum lock count exceeded&quot;</span><span class="o">);</span>
+</span><span class="line">        <span class="n">setState</span><span class="o">(</span><span class="n">nextc</span><span class="o">);</span>
+</span><span class="line">        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码是尝试获取锁的过程，它先判断当前的 AQS 的 state 值，如果为 0，则表示该锁没有被持有过，如果这个时候同步队列是空的或者当前线程就是在同步队列的头部，那么修改 state 的值，并且设置排他锁的持有线程为当前线程</p>
+
+<p>如果大于 0，则判断当前线程是否是排他锁的持有线程，如果是，那么把 state 值加 1（注意 state 是 int 类型的，所以 state 的最大值是就是 int 的最大值）</p>
+
+<p>如果第一次 tryAcquire() 操作失败，那么就把当前线程加入到等待队列中去，看 addWaiter() 方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">private</span> <span class="n">Node</span> <span class="nf">addWaiter</span><span class="o">(</span><span class="n">Node</span> <span class="n">mode</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="n">Node</span> <span class="n">node</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Node</span><span class="o">(</span><span class="n">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">(),</span> <span class="n">mode</span><span class="o">);</span>
+</span><span class="line">    <span class="c1">// Try the fast path of enq; backup to full enq on failure</span>
+</span><span class="line">    <span class="n">Node</span> <span class="n">pred</span> <span class="o">=</span> <span class="n">tail</span><span class="o">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">pred</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">node</span><span class="o">.</span><span class="na">prev</span> <span class="o">=</span> <span class="n">pred</span><span class="o">;</span>
+</span><span class="line">        <span class="k">if</span> <span class="o">(</span><span class="n">compareAndSetTail</span><span class="o">(</span><span class="n">pred</span><span class="o">,</span> <span class="n">node</span><span class="o">))</span> <span class="o">{</span>
+</span><span class="line">            <span class="n">pred</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">node</span><span class="o">;</span>
+</span><span class="line">            <span class="k">return</span> <span class="n">node</span><span class="o">;</span>
+</span><span class="line">        <span class="o">}</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">    <span class="n">enq</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">node</span><span class="o">;</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码中先尝试了一下了下 enq() 方法中等待队列不为空的情况，如果失败，再调用 enq() 方法将当前线程加入等待队列，enq() 的过程我们已经在上一篇文章中讲过了，不再赘述。</p>
+
+<p>最后在当前线程被加入到等待队列中去以后，再调用 acquireQueued 去获取锁，看看 acquireQueued 的代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">acquireQueued</span><span class="o">(</span><span class="kd">final</span> <span class="n">Node</span> <span class="n">node</span><span class="o">,</span> <span class="kt">int</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">try</span> <span class="o">{</span>
+</span><span class="line">        <span class="kt">boolean</span> <span class="n">interrupted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class="line">        <span class="k">for</span> <span class="o">(;;)</span> <span class="o">{</span>
+</span><span class="line">            <span class="kd">final</span> <span class="n">Node</span> <span class="n">p</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="na">predecessor</span><span class="o">();</span>
+</span><span class="line">            <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">==</span> <span class="n">head</span> <span class="o">&amp;&amp;</span> <span class="n">tryAcquire</span><span class="o">(</span><span class="n">arg</span><span class="o">))</span> <span class="o">{</span>
+</span><span class="line">                <span class="n">setHead</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+</span><span class="line">                <span class="n">p</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span> <span class="c1">// help GC</span>
+</span><span class="line">                <span class="k">return</span> <span class="n">interrupted</span><span class="o">;</span>
+</span><span class="line">            <span class="o">}</span>
+</span><span class="line">            <span class="k">if</span> <span class="o">(</span><span class="n">shouldParkAfterFailedAcquire</span><span class="o">(</span><span class="n">p</span><span class="o">,</span> <span class="n">node</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
+</span><span class="line">                <span class="n">parkAndCheckInterrupt</span><span class="o">())</span>
+</span><span class="line">                <span class="n">interrupted</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class="line">        <span class="o">}</span>
+</span><span class="line">    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">RuntimeException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">cancelAcquire</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+</span><span class="line">        <span class="k">throw</span> <span class="n">ex</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码中拿到当前线程在同步队列中的前面一个节点，如果这个节点是是头部，那么马上进行一次 tryAcquire 操作，如果操作成功，那么把当前线程弹出队列，整个操作就此结束。如果这个节点不是头部或者说 tryAcquire 操作失败的话，那么就判断是不是要将当前线程给阻塞掉（shouldParkAfterFailedAcquire）方法：判断当前线程是否应该被阻塞掉，实际上判断的是当前线程的前一个节点的状态，如果前一个节点的状态小于 0（condition 或者 signal），那么返回 true，阻塞当前线程；如果前一个节点的状态大于 0（cancelled），则向前遍历，直到找到一个节点状态不大于 0 的节点，并且将中间的 cancelled 状态的节点全部踢出队列；如果前一个节点的状态等于 0，那么将其状态置为 -1（signal），并且返回 false，等待下一次循环的时候再阻塞。</p>
+
+<p><strong>整个锁的获取过程就是这样，我们再来总结一下整个过程</strong>：acquire() 方法会先调用一次 tryAcquire 方法获取一次锁，如果失败，则把当前线程加入到等待队列中去，然后再调用 acquireQueued 获取锁，acquireQueued 在当前节点不在头部的时候会把当前线程的前一个结点的状态置为 SIGNAL，然后阻塞当前线程。当当前线程到了队列的头部的时候，那么获取锁的操作就会成功返回。</p>
+
+<h3 id="section-1">二、锁的释放</h3>
+
+<p>首先，我们知道在 acquireQueued 方法中，如果一个线程成功获取到了锁，那么它就应该是整个等待队列的 head 节点，然后，我们再来看一看 unlock() 方法，和 lock() 方法一样，unlock() 方法也是只有一行代码，直接调用 release() 方法，我们看看 release() 方法的实现：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">release</span><span class="o">(</span><span class="kt">int</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">tryRelease</span><span class="o">(</span><span class="n">arg</span><span class="o">))</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">Node</span> <span class="n">h</span> <span class="o">=</span> <span class="n">head</span><span class="o">;</span>
+</span><span class="line">        <span class="k">if</span> <span class="o">(</span><span class="n">h</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">h</span><span class="o">.</span><span class="na">waitStatus</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class="line">            <span class="n">unparkSuccessor</span><span class="o">(</span><span class="n">h</span><span class="o">);</span>
+</span><span class="line">        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个过程首先调用 tryRelease 方法，如果锁已经完全释放，那么就唤醒下一个节点，先来看看 tryRelease 方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">protected</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">tryRelease</span><span class="o">(</span><span class="kt">int</span> <span class="n">releases</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">getState</span><span class="o">()</span> <span class="o">-</span> <span class="n">releases</span><span class="o">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">()</span> <span class="o">!=</span> <span class="n">getExclusiveOwnerThread</span><span class="o">())</span>
+</span><span class="line">        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalMonitorStateException</span><span class="o">();</span>
+</span><span class="line">    <span class="kt">boolean</span> <span class="n">free</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">c</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">free</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class="line">        <span class="n">setExclusiveOwnerThread</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">    <span class="n">setState</span><span class="o">(</span><span class="n">c</span><span class="o">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">free</span><span class="o">;</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码首先获取当前 AQS 的 state 状态并且将其值减一，如果结果等于 0（锁已经被完全释放），那么将排他锁的持有线程置为 null。将 AQS 的 state 状态置为减一后的结果。</p>
+
+<p>然后再看看唤醒继任节点的代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">private</span> <span class="kt">void</span> <span class="nf">unparkSuccessor</span><span class="o">(</span><span class="n">Node</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="n">compareAndSetWaitStatus</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="n">Node</span><span class="o">.</span><span class="na">SIGNAL</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+</span><span class="line">    <span class="n">Node</span> <span class="n">s</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">s</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">s</span><span class="o">.</span><span class="na">waitStatus</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">s</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class="line">        <span class="k">for</span> <span class="o">(</span><span class="n">Node</span> <span class="n">t</span> <span class="o">=</span> <span class="n">tail</span><span class="o">;</span> <span class="n">t</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">t</span> <span class="o">!=</span> <span class="n">node</span><span class="o">;</span> <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="na">prev</span><span class="o">)</span>
+</span><span class="line">            <span class="k">if</span> <span class="o">(</span><span class="n">t</span><span class="o">.</span><span class="na">waitStatus</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class="line">                <span class="n">s</span> <span class="o">=</span> <span class="n">t</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">s</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+</span><span class="line">        <span class="n">LockSupport</span><span class="o">.</span><span class="na">unpark</span><span class="o">(</span><span class="n">s</span><span class="o">.</span><span class="na">thread</span><span class="o">);</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码先清除当前节点的 waitStatus 为 0，然后判断下一个节点是不是 null 或者 cancelled 的状态，如果是，则从队列的尾部往前开始找，找到一个非 cancelled 状态的节点，最后唤醒这个节点。</p>
+
+<p><strong>最后，总结一下释放操作的整个过程</strong>：其实整个释放过程就做了两件事情，一个是将state值减1，然后就是判断锁是否被完全释放，如果被完全释放，则唤醒继任节点。</p>
+
+<h3 id="section-2">三、整体过程描述</h3>
+
+<p>看了上面的锁的获取与释放操作以后，整体过程还是比较清晰的，在文章的最后，我们把获取与释放操作串在一起在简单看一下：</p>
+
+<ul>
+  <li>获取锁的时候将当前线程放入同步队列，并且将前一个节点的状态置为 signal 状态，然后阻塞</li>
+  <li>当这个节点的前一个节点成功获取到锁，前一个节点就成了整个同步队列的 head。</li>
+  <li>当前一个节点释放锁的时候，它就唤醒当前线程的这个节点，然后当前线程的节点就可以成功获取到锁了</li>
+  <li>这个时候它就到整个队列的头部了，然后 release 操作的时候又可以唤醒下一个。</li>
+</ul>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/07/10/bash-job-control/">Bash Job Control</a></h1>
     
     
@@ -760,139 +1263,9 @@ to f and colls.  Thus function f should return a collection.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/03/10/northwand/">北壁</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-03-10T11:20:00+08:00" pubdate data-updated="true">Mar 10<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/03/10/northwand/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>这是一部登山者必看的电影，根据真实故事改编，讲述了几个登山者挑战艾格峰北壁的故事，历史上曾有多人试图从北坡爬上艾格峰，但是在 1938 年之前都失败了，这部电影讲述的就是其中最著名的一个悲剧。</p>
-
-<p>电影的精彩之处在于基本还原了故事的事实，特别是最后只有 Toni 一个人幸存下来，悬在峭壁上一夜，等待援救，最后因为绳结无法通过下降器而没法下降到救援队的地方，悬挂在半空中最后冻死的场景，只是事实比电影还要残酷。</p>
-
-<p>刚好我也找到了当年 Toni 挂在半空中死去的照片：</p>
-
-<p><img src="http://www.wspinanie.pl/serwis/200806/12eiger_historia4.jpg" alt="image" /></p>
-
-<p>对比电影海报中照片：</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/CHrkhZ6L/vUPFo.jpg" alt="image" /></p>
-
-<p>相比于喜剧，悲剧总是更能够对后人起到惊醒的作用，如果 Andy 在上山完成 Hinterstoisser Traverse 后把绳子留在那里，或许最后几个人都能够活下来，当然，这只是事后的假设。无论是马拉松还是登山，在挑战自我的之前做好充分地准备，迎难而上的同时需要懂得知难而退，给自己留一条后路，毕竟，活着回来比什么都重要。但是，说永远比做要容易，迎难而上，知难而退，本身就是矛盾的一对词，我想我们能做的保持地理智，期望在那一刻来临的时候做出正确地选择。</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/03/01/apache-poi-notes/">使用 POI 解析 Excel 的几个注意点</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-03-01T22:35:00+08:00" pubdate data-updated="true">Mar 1<span>st</span>, 2013</time>
-        
-         | <a href="/blog/2013/03/01/apache-poi-notes/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近在写一个解析 Excel 的程序，需要把从前端上传上来的 Excel 程序解析成 JSON 格式返回给前端，期间也试过 <a href="http://jexcelapi.sourceforge.net/">jxl</a> ，不过它只支持到 Excel 2003。后来转而使用 apache 的 <a href="http://POI.apache.org/">POI</a>，作为初次使用者，使用过程中遇到了不少的问题，在这篇博客中记录一下：</p>
-
-<h3 id="xssf">如何引入 XSSF</h3>
-
-<p>刚下手写的时候，直接使用了 HSSFWorkbook 处理 Excel，后来发现它只能处理 2003 的 Excel，而不能处理 2007 版本的 Excel，翻了一下 POI 的文档，发现处理 2007 的 Excel 需要使用 XSSFWorkbook，但是引入的 POI 包中却找不到 XSSF 相关的类，原猜想是因为引入了版本较新的 POI，而官方的文档还是比较老的，因而被误导。结果发现使用 XSSF 需要额外引入 <strong>poi-ooxml</strong> 这个 jar 包， XSSF 相关的类都在这个 jar 包中，mvn 依赖如下：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="nt">&lt;dependency&gt;</span>
-</span><span class="line">    <span class="nt">&lt;groupId&gt;</span>org.apache.poi<span class="nt">&lt;/groupId&gt;</span>
-</span><span class="line">    <span class="nt">&lt;artifactId&gt;</span>poi-ooxml<span class="nt">&lt;/artifactId&gt;</span>
-</span><span class="line">    <span class="nt">&lt;version&gt;</span>3.9<span class="nt">&lt;/version&gt;</span>
-</span><span class="line"><span class="nt">&lt;/dependency&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3 id="excel-2003--2007">兼容处理 Excel 2003 和 2007</h3>
-
-<p>引入了 <strong>poi-ooxml</strong> 以后就使用 XSSF 来处理，本以为 XSSF 既然能够处理 Excel 2007，那么 2003 也该能处理吧？得向下兼容不是？没想到不行！总不能用扩展名来区别是 2003 还是 2007 吧，后来发现了 <strong>WorkbookFactory</strong> 这个类，它的 <code>create(InputStream inp)</code> 方法可以根据版本来选择创建 <code>HSSFWorkbook</code> 还是 <code>XSSFWorkbook</code>，使用者无需关心版本的问题，非常方便！</p>
-
-<h3 id="string-">以 String 的形式读取单元格的数据</h3>
-
-<p>要读取的 Excel 中有一些数据是数字的，单元格的类型是 Numberic 的，而我希望将单元格中的数据都以 String 的形式拿出来。于是当我看到 <code>Cell.getStringCellValue()</code> 这个方法的时候满心欢喜，但是当用了之后，这货居然直接给我一个异常，定眼一样，这方式是 get<strong>StringCell</strong>Value，而不是 get<strong>CellString</strong>Value，真是瞎了眼了。事实上，Cell 也根本没有 <code>getCellStringValue</code> 这样的方法，后来借助了 <a href="http://stackoverflow.com/questions/1072561/how-can-i-read-numeric-strings-in-excel-cells-as-string-not-numbers-with-apach">SOF</a>，查到了一个方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">setCellType</span><span class="o">(</span><span class="n">Cell</span><span class="o">.</span><span class="na">CELL_TYPE_STRING</span><span class="o">);</span>
-</span><span class="line"><span class="n">cellValue</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="na">getCell</span><span class="o">(</span><span class="n">j</span><span class="o">).</span><span class="na">getStringCellValue</span><span class="o">();</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>是的，就是先把单元格变成 String 类型的，然后再调用 <code>getStringCellValue()</code> 来获取数据，虽然这方法可行，但是总感觉有点猥琐，不知大家有没有更好的方法？</p>
-
-<h3 id="getphysicalnumberofcells">错误地使用 <code>getPhysicalNumberOfCells()</code></h3>
-
-<p>遇到的最后一个坑就是使用了 <code>getPhysicalNumberOfCells()</code> 这个方法来获取一行中单元格的数量以对行的中单元格进行遍历，依靠这个方法来遍历会出现的情况就是如果行中间的某些单元格是空的，那么你就解析不到这一行最后的几个单元格，原因是因为按照文档的说明</p>
-
-<blockquote>
-  <p>Gets the number of defined cells (NOT number of cells in the actual row!). That is to say if only columns 0,4,5 have values then there would be 3.</p>
-</blockquote>
-
-<p>这个方法只对有值的单元格进行计数，正确的遍历方法应该用 <code>getFirstCellNum()</code> 和 <code>getLastCellNum()</code> 来确定第一个单元格和最后一个单元格的位置，然后进行遍历，当然，要注意中间可能会出现空单元的情况，小心 NPE 异常。</p>
-
-<p>另外，我发现很多 POI 的中文介绍资料上遍历 Excel 的样例代码都是采用了 <code>getPhysicalNumberOfCells()</code>，估计作者也没有经过彻底的测试，或者仔细阅读官方的文档和例子，平时大家做开发的时候，还是尽量找官方的介绍资料为好，看二手资料，一不小心就踩坑了。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
+    
+    <li class="previous"><a href="/blog/page/5/">&larr; Older</a></li>
     
     <li><a href="/blog/archives">Blog Archives</a></li>
     
@@ -907,6 +1280,14 @@ to f and colls.  Thus function f should return a collection.</p>
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2016/09/29/intellij-idea-plugin-jvm-crash/">Intellij IDEA 插件开发 &#8212; 一次 JVM Crash 问题的解决</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/02/15/jvm-noclassdeffounterror-cache/">JVM 对 NoClassDefFoundError 的“缓存”</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/11/15/damn-the-carriage-return-character/">该死的 ^M</a>
       </li>
     
@@ -916,14 +1297,6 @@ to f and colls.  Thus function f should return a collection.</p>
     
       <li class="post">
         <a href="/blog/2014/08/16/why-i-hate-xiaomi/">为什么我讨厌小米</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/16/guice-collection-inject/">Guice 集合注入</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a>
       </li>
     
   </ul>
@@ -962,7 +1335,7 @@ to f and colls.  Thus function f should return a collection.</p>
   </div>
   <footer role="contentinfo" class="page-footer"><hr>
 <p>
-  Copyright &copy; 2014 - khotyn -
+  Copyright &copy; 2016 - khotyn -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
