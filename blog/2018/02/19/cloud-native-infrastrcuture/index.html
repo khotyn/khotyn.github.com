@@ -1,0 +1,338 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Cloud Native Infrastrcuture 阅读笔记 - 小径分岔的花园</title>
+  <meta name="author" content="khotyn">
+
+  
+  <meta name="description" content="">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://khotyn.github.com/blog/2018/02/19/cloud-native-infrastrcuture">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/syntax/syntax.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <style type="text/css">
+    body {
+      padding-bottom: 40px;
+    }
+    h1 {
+      margin-bottom: 15px;
+    }
+    img {
+      max-width: 100%;
+    }
+    .sharing, .meta, .pager {
+      margin: 20px 0px 20px 0px;
+    }
+    .page-footer p {
+      text-align: center;
+    }
+  </style>
+  <script src="/javascripts/libs/jquery.js"></script>
+  <script src="/javascripts/libs/modernizr-2.0.js"></script>
+  <script src="/javascripts/libs/bootstrap.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="小径分岔的花园" type="application/atom+xml">
+  
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44033767-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <nav role="navigation"><div class="navbar navbar-inverse">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a>
+
+      <a class="brand" href="/">小径分岔的花园</a>
+
+      <div class="nav-collapse">
+        <ul class="nav">
+  <li><a href="/blog/archives">归档</a></li>
+  <li><a href="/about">关于</a></li>
+</ul>
+
+
+        <ul class="nav pull-right" data-subscription="rss">
+          <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+          
+        </ul>
+
+        
+          <form class="pull-right navbar-search" action="http://google.com/search" method="get">
+            <fieldset role="search">
+              <input type="hidden" name="q" value="site:blog.khotyn.com" />
+              <input class="search-query" type="text" name="q" results="0" placeholder="Search"/>
+            </fieldset>
+          </form>
+        
+      </div>
+    </div>
+  </div>
+</div>
+</nav>
+  <div class="container">
+    <div class="row-fluid">
+      
+<article class="hentry span9" role="article">
+
+  
+  <header class="page-header">
+    
+      <h1 class="entry-title">Cloud Native Infrastrcuture 阅读笔记</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2018-02-19T21:00:00+08:00" pubdate data-updated="true">Feb 19<span>th</span>, 2018</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>这是假期读的第二本书，以下是对本书的阅读的内容的一些总结：</p>
+
+<p>就 Cloud native 这个词来说，已经被市场人员到处在用了，就跟 Microservice 一样，很难清晰地去定义到底什么是 Cloud native。在本书中，作者提到的 Cloud native 其实包含了两个部分的内容，一个是 Cloud native 的基础设施（Cloud native infrastructure），另一个是 Cloud native 的应用（Cloud native application）。作者对于 Cloud native infrastructure 的定义是：</p>
+
+<blockquote>
+  <p>Cloud native infrastructure is infrastructure that is hidden behind useful abstractions, controlled by APIs, managed by software, and has the purpose of running applications. Running infrastructure with these traits gives rise to a new pattern for managing that infrastructure in a scalable, efficient way.  </p>
+</blockquote>
+
+<p>所谓的 Cloud native 的基础设施就是当我们的基础设施（大量的 VM/Docker，复杂的网络，各种各样的储存等等）变的非常复杂和庞大的时候，通过人力是无法高效地进行运维的，在这样的大规模下，我们应该尽量地去避免人工介入，而是需要有一套软件来帮助我们更好地去管理我们的基础设施，可以让运行在这套基础设施上 Cloud  native 的应用可以非常方便地被运维，部署，监控等等。那么怎么去设计管理 Cloud native 的基础设施的系统呢，作者提到了几个点，其中包括系统的自举，API 的设计等等，但是我觉得其中最重要的一点是 Reconciler Pattern，关于这个 Pattern，书中提到了四个原则：</p>
+
+<ul>
+  <li>Use a data structure for all inputs and outputs.</li>
+  <li>Ensure that the data structure is immutable.</li>
+  <li>Keep the resource map simple.</li>
+  <li>Make the actual state match the expected state.</li>
+</ul>
+
+<p>其中最后一点和 Reconciler Pattern 的关系最大，这个也是 Kubernetes 中的方式，我们往 Kubernetes 中去提交一个 Spec，比如要求一个应用的实例的数量应该是 4，那么 Kubernetes 就会尽可能地去保证这个应用的实例的数量是 4，如果一个实例 Crash 了，它就马上新起一个实例。这就是所谓的 Reconciler Pattern，尽量让实际的状态可以和期望的状态匹配上。</p>
+
+<p>Reconciler Pattern 在设计上非常大的一个优势就是它是声明式的，而不是反应式的。用户要做的是按照系统提供出的 API，直接告诉系统你想要什么，比如说，我想要一个应用的实例的数量保持在 4 个，系统就去考虑各种情况，让你的应用的数量保持在 4 个。而反应式的话，则是监听系统的事件，比如你的应用的某个实例 Crash 了，然后你监听到了这个事件之后，就调用系统的 API 去新创建一个实例。显然，对于用户来说，声明式的方式要简单地很多，不容易出错。而反应式则要求每一个应用都去监听系统的事件，不但侵入到了应用，也很容易出错。</p>
+
+<p>在上面的 Reconciler Pattern 的四个原则中，第二点让数据结构是不可变的这一点也是非常重要的，但是我不是很明白这个点和 Reconciler Pattern 具体的关系在哪里？这个原则是说如果我们要修改一个数据结构，我们实际上不是修改它，而是新建一个新的，然后把原来的标记成过期，这样的好处是，我们可以保留数据结构中间的各种版本，当需要看下当前的 Infra 有哪些区别的，就可以把这些版本直接拿出来对比，非常方便地就可以回答线上环境到底发生了什么样的变更。</p>
+
+<p>有了 Cloud native 的基础设施，我们还要有 Cloud native 的应用运行在上面，那么作为基础设施，我们还应该给应用到底提供什么样的能力呢，书中提到了八点：</p>
+
+<ul>
+  <li>Runtime and isolation（这里的 isolation 是指资源的 isolation，比如 CPU，Memory，Storage 等等）</li>
+  <li>Resource allocation and scheduling</li>
+  <li>Environment isolation（这里的 isolation 指的是环境的 isolation，比如 dev，test，staging，product）</li>
+  <li>Service discovery</li>
+  <li>State management（Readiness, Liveness）</li>
+  <li>Monitoring and logging</li>
+  <li>Metrics aggregation</li>
+  <li>Debugging and tracing</li>
+</ul>
+
+<p>我们可以看到，上面的八个点中其实下面非常多的都是原来传统的中间件在干的一些事情，而在 Cloud native 的基础设施中，这些中间件正在往下沉，直接成为基础设施的一部分，为应用提供能力。而且在 CNCF 中，上面的八个点基本上都有一个对应的产品对应：</p>
+
+<ul>
+  <li>Runtime and isolation: containers, rkt</li>
+  <li>Resource allocation and scheduling: kubernetes</li>
+  <li>Environment isolation: kubernetes</li>
+  <li>Service discovery: kubernetes</li>
+  <li>State management: kubernetes</li>
+  <li>Monitoring and logging: Prometheus, Fluentd</li>
+  <li>Metrics aggregation: Prometheus</li>
+  <li>Debugging and tracing: OpenTracing, Jaeger</li>
+</ul>
+
+<p>除了上面的八个点之外，我个人认为应该还加上一个点，就是 Network Resilient，这可以极大程度地解决应用之间的网络通信的问题，这个正是 Service Mesh 所提供的能力，在 CNCF 里面对应的产品是 Envoy（奇怪 istio 怎么还没有进入 CNCF）。</p>
+
+<p>总结来说，本书的作者基本上把设计一个 Cloud native infrastructure 所需要做的事情都讲了一遍，包括上面没有提到的测试等等，大部分的内容其实就是 Kubernetes 目前已经做到的一些事情，如果你对 Kubernetes 的设计已经非常清楚了，那么这本书对你的价值可能不大，如果对 Kubernetes 的设计并不熟悉，那么相信你可以从这本书里面学到不少东西。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">khotyn</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2018-02-19T21:00:00+08:00" pubdate data-updated="true">Feb 19<span>th</span>, 2018</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    
+    <section>
+      <h1>Comments</h1>
+      <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+    </section>
+    
+    <ul class="pager">
+      
+      <li class="previous"><a class="basic-alignment left"
+        href="/blog/2018/02/18/bring-up-baby/" title="Previous Post:
+        「法国妈妈育儿经」阅读笔记">&laquo; 「法国妈妈育儿经」阅读笔记</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+    </ul>
+  </footer>
+</article>
+
+<aside class="sidebar-nav span3">
+  
+    <section class="well">
+  <ul id="recent_posts" class="nav nav-list">
+    <li class="nav-header">Recent Posts</li>
+    
+      <li class="post">
+        <a href="/blog/2018/02/19/cloud-native-infrastrcuture/">Cloud Native Infrastrcuture 阅读笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2018/02/18/bring-up-baby/">「法国妈妈育儿经」阅读笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/09/29/intellij-idea-plugin-jvm-crash/">Intellij IDEA 插件开发 --- 一次 JVM Crash 问题的解决</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/02/15/jvm-noclassdeffounterror-cache/">JVM 对 NoClassDefFoundError 的“缓存”</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/11/15/damn-the-carriage-return-character/">该死的 ^M</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section class="well">
+  <ul id="gh_repos" class="nav">
+    <li class="nav-header">GitHub Repos</li>
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/khotyn">@khotyn</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        github.showRepos({
+            user: 'khotyn',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/asides/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo" class="page-footer"><hr>
+<p>
+  Copyright &copy; 2018 - khotyn -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'khotynblog';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://khotyn.github.com/blog/2018/02/19/cloud-native-infrastrcuture/';
+        var disqus_url = 'http://khotyn.github.com/blog/2018/02/19/cloud-native-infrastrcuture/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

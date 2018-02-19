@@ -109,6 +109,95 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2018/02/19/cloud-native-infrastrcuture/">Cloud Native Infrastrcuture 阅读笔记</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2018-02-19T21:00:00+08:00" pubdate data-updated="true">Feb 19<span>th</span>, 2018</time>
+        
+         | <a href="/blog/2018/02/19/cloud-native-infrastrcuture/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>这是假期读的第二本书，以下是对本书的阅读的内容的一些总结：</p>
+
+<p>就 Cloud native 这个词来说，已经被市场人员到处在用了，就跟 Microservice 一样，很难清晰地去定义到底什么是 Cloud native。在本书中，作者提到的 Cloud native 其实包含了两个部分的内容，一个是 Cloud native 的基础设施（Cloud native infrastructure），另一个是 Cloud native 的应用（Cloud native application）。作者对于 Cloud native infrastructure 的定义是：</p>
+
+<blockquote>
+  <p>Cloud native infrastructure is infrastructure that is hidden behind useful abstractions, controlled by APIs, managed by software, and has the purpose of running applications. Running infrastructure with these traits gives rise to a new pattern for managing that infrastructure in a scalable, efficient way.  </p>
+</blockquote>
+
+<p>所谓的 Cloud native 的基础设施就是当我们的基础设施（大量的 VM/Docker，复杂的网络，各种各样的储存等等）变的非常复杂和庞大的时候，通过人力是无法高效地进行运维的，在这样的大规模下，我们应该尽量地去避免人工介入，而是需要有一套软件来帮助我们更好地去管理我们的基础设施，可以让运行在这套基础设施上 Cloud  native 的应用可以非常方便地被运维，部署，监控等等。那么怎么去设计管理 Cloud native 的基础设施的系统呢，作者提到了几个点，其中包括系统的自举，API 的设计等等，但是我觉得其中最重要的一点是 Reconciler Pattern，关于这个 Pattern，书中提到了四个原则：</p>
+
+<ul>
+  <li>Use a data structure for all inputs and outputs.</li>
+  <li>Ensure that the data structure is immutable.</li>
+  <li>Keep the resource map simple.</li>
+  <li>Make the actual state match the expected state.</li>
+</ul>
+
+<p>其中最后一点和 Reconciler Pattern 的关系最大，这个也是 Kubernetes 中的方式，我们往 Kubernetes 中去提交一个 Spec，比如要求一个应用的实例的数量应该是 4，那么 Kubernetes 就会尽可能地去保证这个应用的实例的数量是 4，如果一个实例 Crash 了，它就马上新起一个实例。这就是所谓的 Reconciler Pattern，尽量让实际的状态可以和期望的状态匹配上。</p>
+
+<p>Reconciler Pattern 在设计上非常大的一个优势就是它是声明式的，而不是反应式的。用户要做的是按照系统提供出的 API，直接告诉系统你想要什么，比如说，我想要一个应用的实例的数量保持在 4 个，系统就去考虑各种情况，让你的应用的数量保持在 4 个。而反应式的话，则是监听系统的事件，比如你的应用的某个实例 Crash 了，然后你监听到了这个事件之后，就调用系统的 API 去新创建一个实例。显然，对于用户来说，声明式的方式要简单地很多，不容易出错。而反应式则要求每一个应用都去监听系统的事件，不但侵入到了应用，也很容易出错。</p>
+
+<p>在上面的 Reconciler Pattern 的四个原则中，第二点让数据结构是不可变的这一点也是非常重要的，但是我不是很明白这个点和 Reconciler Pattern 具体的关系在哪里？这个原则是说如果我们要修改一个数据结构，我们实际上不是修改它，而是新建一个新的，然后把原来的标记成过期，这样的好处是，我们可以保留数据结构中间的各种版本，当需要看下当前的 Infra 有哪些区别的，就可以把这些版本直接拿出来对比，非常方便地就可以回答线上环境到底发生了什么样的变更。</p>
+
+<p>有了 Cloud native 的基础设施，我们还要有 Cloud native 的应用运行在上面，那么作为基础设施，我们还应该给应用到底提供什么样的能力呢，书中提到了八点：</p>
+
+<ul>
+  <li>Runtime and isolation（这里的 isolation 是指资源的 isolation，比如 CPU，Memory，Storage 等等）</li>
+  <li>Resource allocation and scheduling</li>
+  <li>Environment isolation（这里的 isolation 指的是环境的 isolation，比如 dev，test，staging，product）</li>
+  <li>Service discovery</li>
+  <li>State management（Readiness, Liveness）</li>
+  <li>Monitoring and logging</li>
+  <li>Metrics aggregation</li>
+  <li>Debugging and tracing</li>
+</ul>
+
+<p>我们可以看到，上面的八个点中其实下面非常多的都是原来传统的中间件在干的一些事情，而在 Cloud native 的基础设施中，这些中间件正在往下沉，直接成为基础设施的一部分，为应用提供能力。而且在 CNCF 中，上面的八个点基本上都有一个对应的产品对应：</p>
+
+<ul>
+  <li>Runtime and isolation: containers, rkt</li>
+  <li>Resource allocation and scheduling: kubernetes</li>
+  <li>Environment isolation: kubernetes</li>
+  <li>Service discovery: kubernetes</li>
+  <li>State management: kubernetes</li>
+  <li>Monitoring and logging: Prometheus, Fluentd</li>
+  <li>Metrics aggregation: Prometheus</li>
+  <li>Debugging and tracing: OpenTracing, Jaeger</li>
+</ul>
+
+<p>除了上面的八个点之外，我个人认为应该还加上一个点，就是 Network Resilient，这可以极大程度地解决应用之间的网络通信的问题，这个正是 Service Mesh 所提供的能力，在 CNCF 里面对应的产品是 Envoy（奇怪 istio 怎么还没有进入 CNCF）。</p>
+
+<p>总结来说，本书的作者基本上把设计一个 Cloud native infrastructure 所需要做的事情都讲了一遍，包括上面没有提到的测试等等，大部分的内容其实就是 Kubernetes 目前已经做到的一些事情，如果你对 Kubernetes 的设计已经非常清楚了，那么这本书对你的价值可能不大，如果对 Kubernetes 的设计并不熟悉，那么相信你可以从这本书里面学到不少东西。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2018/02/18/bring-up-baby/">「法国妈妈育儿经」阅读笔记</a></h1>
     
     
@@ -1008,142 +1097,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2014/01/21/turnoff-tomcat-tld-scan/">关闭 Tomcat 的 TLD 扫描的功能</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-01-21T19:12:00+08:00" pubdate data-updated="true">Jan 21<span>st</span>, 2014</time>
-        
-         | <a href="/blog/2014/01/21/turnoff-tomcat-tld-scan/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h3 id="section">背景</h3>
-
-<p>Tomcat 作为 Servlet 规范的实现者，它在应用启动的时候会扫描 Jar 包里面的 .tld 文件，加载里面定义的标签库，但是，我们在开发的时候很多都不是采用 JSP 作为 Web 页面的模板的，很多都是使用  Velocity 之类的模板引擎，自然而然，为了加快应用的启动速度，我们可以把 Tomcat 里面的这个功能给关掉。</p>
-
-<h3 id="section-1">方法</h3>
-
-<p>看 Tomcat 的配置文档，关于 Context 的设置这一块，看到了 <code>processTlds</code> 这个属性可以设置，看下这个属性的说明：</p>
-
-<blockquote>
-  <p>Whether the context should process TLDs on startup. The default is true. The false setting is intended for special cases that know in advance TLDs are not part of the webapp.</p>
-</blockquote>
-
-<p>只要在 Context 中把这个属性设置成 false，那么我们就可以关闭 Tomcat 的 TLD 扫描功能了，为了让所有的应用都可以关闭这个功能，我们可以将 Tomcat 目录下的 conf/context.xml 修改成如下这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">&lt;?xml version='1.0' encoding='utf-8'?&gt;
-</span><span class="line">&lt;Context processTlds="false"&gt;
-</span><span class="line">    &lt;WatchedResource&gt;WEB-INF/web.xml&lt;/WatchedResource&gt;
-</span><span class="line">&lt;/Context&gt;
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h4 id="section-2">坑</h4>
-
-<p>但是，在 Tomcat 6 中测试的时候，发现这个功能没有生效，无奈只能 Debug Tomcat 的源码，发现 StandardContext 的 init 方法下有如下代码：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">if (processTlds) {
-</span><span class="line">    this.addLifecycleListener(new TldConfig());
-</span><span class="line">}
-</span><span class="line">
-</span><span class="line">super.init();
-</span><span class="line">
-</span><span class="line">// Notify our interested LifecycleListeners
-</span><span class="line">lifecycle.fireLifecycleEvent(INIT_EVENT, null);</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这里需要说明的一点是，我们的默认的 context 配置是在 <code>lifecycle.fireLifecycleEvent(INIT_EVENT, null);</code> 这行代码中被处理的，而在这行代码之前，Tomcat 就已经使用了 <code>processTlds</code>，我们的配置完全没有生效。</p>
-
-<h4 id="workaround">Workaround</h4>
-
-<p>那么，这么解决呢？在 context 中，我们还可以配置一个 JarScanner，这个 JarScanner 会被用来扫描 Jar 包中的 tld 文件，我们可以在默认的 context.xml 中配置一个空的 JarScanner，像下面这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">&lt;?xml version='1.0' encoding='utf-8'?&gt;
-</span><span class="line">&lt;Context processTlds="false"&gt;
-</span><span class="line">    &lt;JarScanner className="com.alipay.sofa.runtime.test.patch.tomcat.NullJarScanner"/&gt;
-</span><span class="line">&lt;/Context&gt;</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>NullJarScanner 的代码如下：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">package com.alipay.sofa.runtime.test.patch.tomcat;
-</span><span class="line">
-</span><span class="line">import org.apache.tomcat.JarScanner;
-</span><span class="line">import org.apache.tomcat.JarScannerCallback;
-</span><span class="line">
-</span><span class="line">import javax.servlet.ServletContext;
-</span><span class="line">import java.util.Set;
-</span><span class="line">
-</span><span class="line">/**
-</span><span class="line"> * @author khotyn 14-1-21 下午4:37
-</span><span class="line"> */
-</span><span class="line">public class NullJarScanner implements JarScanner {
-</span><span class="line">    @Override
-</span><span class="line">    public void scan(ServletContext context, ClassLoader classloader, JarScannerCallback callback, Set&lt;String&gt; jarsToSkip) {
-</span><span class="line">        // Do nothing at all.
-</span><span class="line">    }
-</span><span class="line">}
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><strong>需要注意的是，Tomcat 7 不会出现上述的问题，你只要在配置中把 processTlds 设置成 false 即可。</strong></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -1159,6 +1112,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2018/02/19/cloud-native-infrastrcuture/">Cloud Native Infrastrcuture 阅读笔记</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/02/18/bring-up-baby/">「法国妈妈育儿经」阅读笔记</a>
       </li>
     
@@ -1172,10 +1129,6 @@
     
       <li class="post">
         <a href="/blog/2014/11/15/damn-the-carriage-return-character/">该死的 ^M</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/10/19/intellij-idea-feature/">Intellij IDEA 的一些使用技巧</a>
       </li>
     
   </ul>
