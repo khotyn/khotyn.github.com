@@ -4,7 +4,7 @@
   <title><![CDATA[小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2018-02-19T21:01:41+08:00</updated>
+  <updated>2018-03-21T16:38:34+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,91 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Java 10 新特性之 AppCDS]]></title>
+    <link href="http://khotyn.github.com/blog/2018/03/21/app-cds/"/>
+    <updated>2018-03-21T15:41:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2018/03/21/app-cds</id>
+    <content type="html"><![CDATA[<p>Oracle 昨天<a href="https://www.oracle.com/corporate/pressrelease/Java-10-032018.html">公布了 Java 10 的 GA 版本</a>，Java 10 里面除了<a href="http://openjdk.java.net/jeps/286">本地变量类型推断</a>之外，还扩展了原来的 CDS 的能力为 <a href="http://openjdk.java.net/jeps/310">AppCDS</a>。</p>
+
+<h2 id="cds">什么是 CDS</h2>
+<p>CDS 的全称是 Class-Data Sharing，CDS 的作用是可以让类可以被预处理放到一个归档文件中，后续 Java 程序启动的时候可以直接带上这个归档文件，这样  JVM 可以直接将这个归档文件映射到内存中，以节约应用启动的时间。</p>
+
+<p>这个特性其实 JDK 1.5 就开始引入了，但是 CDS 只能作用与 Boot Class Loader 加载的类，不能作用于 App Class Loader 或者自定义的 Class Loader 加载的类，其实有点鸡肋，而且这个是 Oracle JDK 的商业特性，在 OpenJDK 中似乎没有。</p>
+
+<p>这次在 Java 10 中，则将 CDS 扩展为 AppCDS，顾名思义，AppCDS 不止能够作用于 Boot Class Loader，App Class Loader 和自定义的 Class Loader 也都能够起作用，大大加大了 CDS 的适用范围。有了 AppCDS，可以给 Java 的应用程序带来两个方面的好处：</p>
+
+<ul>
+  <li>可以提升一些大型的 Java 应用的启动速度。</li>
+  <li>可以提升 Serverless 的应用程序的启动速度。我觉得这个点可能是 Java 10 提供 AppCDS 的主要原因，Serverless 极可能成为未来的应用的一种非常常见的形态，而把 Java 应用在 Serverless 上，相比于其他的语言来说，一个很大的劣势就是 JVM 的启动速度太慢了，虽然像 AWS 的 Lambda，会给 Java 的 Serverless 应用加上 <code>-client</code> 来用 Client 模式跑加快启动速度，但是实际上效果甚微。有了 AppCDS，可以大大加快 Serverless 应用的启动速度，按照 AppCDS 的 JEP 的说明，对于一个 JEdit 来说，AppCDS 可以为 JEdit 提升 20% 到 30% 的启动速度。</li>
+</ul>
+
+<h2 id="appcds">尝试 AppCDS</h2>
+<p>作者写了一个简单的 Java 应用，来测试 AppCDS 的效果。程序的代码已经放到了 Github 上面，大家可以直接去看，这里只给出大概的操作步骤和最后的测试效果。</p>
+
+<h3 id="dump--class">1. 决定要 Dump 哪些 Class</h3>
+<p>一般来说，一个 Java 应用程序会包含很多的 Class 文件，但是在运行中，并不是所有的 Class 文件都会被用到，所以，第一步我们需要来决定具体需要使用哪些 Class 文件，你需要给你的运行命令上加上如下的 JVM 参数：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">-Xshare:off -XX:+UseAppCDS -XX:DumpLoadedClassList=hello.lst</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>几个参数的意思分别是：
+* <code>-Xshare:off</code>：这个参数的意思是不做任何内存的共享，也就是不利用 AppCDS 产生的文件来做内存映射。因为是要决定 Dump 哪些类的内存到归档文件中，所以这个参数需要关掉。
+* <code>-XX:+UserAppCDS</code>：默认的情况下 AppCDS 不会开启，所以我们需要加上这个参数来开启 AppCDS。
+* <code>-XX:DumpLoadedClassList</code>：表示需要把需要做 Dump 的类名写入到哪个文件中。</p>
+
+<p>这个命令执行之后，会出现一个 hello.lst 的文件，里面就是一个个的类名，下面是一部分内容的截图：
+<img src="http://khotyn.github.com/images/app_cds_dump_file_list.png" alt="" /></p>
+
+<h3 id="dump-">2. 将类的内存 Dump 到归档文件中</h3>
+<p>有一个需要 Dump 的类的列表之后，第二步，我们就可以将类的内存 Dump 到归档文件中了，在这一步中，我们需要将以下的参数加入到 JVM 参数中去：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">-Xshare:dump -XX:+UseAppCDS -XX:SharedClassListFile=hello.lst -XX:SharedArchiveFile=hello.jsa</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>几个参数的含义分别如下：</p>
+
+<ul>
+  <li><code>-Xshare:dump</code>：表示现在要进行类的内存的 Dump。</li>
+  <li><code>-XX:SharedClassListFile</code>：用来指定需要 Dump 的类的列表。</li>
+  <li><code>-XX:SharedArchiveFile</code>：表示需要将类的内存 Dump 到哪个归档文件中。</li>
+</ul>
+
+<p>运行上面的命令之后，我们会得到一个 <code>hello.jsa</code> 的文件，包含需要的内存信息的 Dump。</p>
+
+<h3 id="dump--1">3. 使用 Dump 出来的归档文件加快应用启动速度</h3>
+<p>有了前面的归档文件之后，我们就可以来加速应用的启动速度了，为了使用上述的归档文件，我们需要在 JVM 中加上如下的参数：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">-Xshare:on -XX:+UseAppCDS -XX:SharedArchiveFile=hello.jsa</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>几个参数的含义分别如下：</p>
+
+<ul>
+  <li><code>-Xshare:on</code>：表示打开内存映射。</li>
+  <li><code>-XX:SharedArchiveFile=hello.jsa</code>：表示用来做内存映射的归档文件是 <code>hello.jsa</code>。</li>
+</ul>
+
+<h3 id="section">4. 测试效果</h3>
+<p>在我的本机上，不使用 AppCDS 和使用 AppCDS 的效果如下：</p>
+
+<h4 id="appcds-1">不使用 AppCDS</h4>
+<p><img src="http://khotyn.github.com/images/app_cds_disable.png" alt="" /></p>
+
+<h4 id="appcds-2">使用 AppCDS</h4>
+<p><img src="http://khotyn.github.com/images/app_cds_enable.png" alt="" />
+可以看到，对于这样一个简单的应用，AppCDS 还是有 20% 左右的启动速度提升的，当然这个应用的很多的启动时间都花在了类加载上，其他的耗时不多，所以效果挺好。如果其他的应用程序的启动时间花在类上的加载时间比较少的话，可能效果就没有这么明显。</p>
+
+<h2 id="section-1">坑</h2>
+<p>看起来 AppCDS 很美好，但是目前我使用下来有几个坑：</p>
+
+<ul>
+  <li>虽然 AppCDS 号称可以支持自定义的 ClassLoader，但是我试了一个 SpringBoot 的应用，发现对于没有在 <code>-classpath</code> 中指定的 JAR 包中的类，并不会有效果。</li>
+  <li>如果你下载 Oracle 的 JDK，需要加上 <code>-XX:+UnlockCommercialFeature</code> 来开启 AppCDS，但是 OpenJDK 却不用，也是很奇怪，😅</li>
+</ul>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Cloud Native Infrastrcuture 阅读笔记]]></title>
@@ -1185,44 +1270,6 @@
 <p>而那些盲目的乐观主义者（我们的周围不缺乏这样的人），由于对现实有着过高的认识和期望，对问题认识不足，月盈而亏，当结果不尽如人意的时候，各种负面情绪就会出现。你以为你有光明的未来，以为有特殊的才能，但是，到最后却发现你不过是芸芸众生中平凡的一员，很多中年人的失落就是来源于此吧。</p>
 
 <p>所以，与其做个乐观主义者，不如做个悲观的行动主义者，与其相信有那种可能性，不如自己去寻找那种可能性，并且为可能的失败做好准备（成功永远都是属于少数人的）。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Git flow 分支管理模型简介]]></title>
-    <link href="http://khotyn.github.com/blog/2013/10/01/git-flow/"/>
-    <updated>2013-10-01T10:43:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/10/01/git-flow</id>
-    <content type="html"><![CDATA[<p>有一次和 <a href="https://twitter.com/imsoz">@imsoz</a> 在聊天的时候，他给我介绍了一个叫做 Git flow 的分支管理模型，我听了很有兴趣，于是昨天花了一点时间去了解了一下。</p>
-
-<h4 id="git-flow-">Git flow 分支模型</h4>
-
-<p>Git flow 是一个分支模型，它提供了一个经过实践检验的分支管理的模型。整个分支模型的工作图大概是下面这样样子的：</p>
-
-<p><img src="http://nvie.com/img/2009/12/Screen-shot-2009-12-24-at-11.32.03.png" alt="image" /></p>
-
-<p>它包含有两个长期分支和三个支持的分支：</p>
-
-<ul>
-  <li>master 分支：使用过 git 的同学应该都这个分支很熟悉，这个分支代表了可以用于生产环境的代码。</li>
-  <li>develop 分支：用于开发的分支，或者叫做“集成分支”，这里的代码可以用来做 nightly build。</li>
-</ul>
-
-<p>上面两个是长期的分支，这两个分支在开发的过程中会一直存在下去。除了这两个长期分支，还有三个用于支持的分支：</p>
-
-<ul>
-  <li>feature 分支：一般上从 develop 分支拉出来，最后要 merge 回 develop 分支，或者废弃掉。feature 分支是用来开发一个在下一次的产品 release 中可能被加上去的特性的，一个 feature 分支在特性开发完毕后就结束了，所以 feature 分支只是短暂地存在。</li>
-  <li>release 分支：release 分支用来支持准备一个将要被 release 的产品版本，在这个分支上，我们可能会修改版本号，做一些 release 相关的事情，或者做一些 bug 的 hotfix，release 分支从 develop 分支拉出来，当你认为你的下一次的 release 所需要的特性都已经开发完毕的时候，你就可以从 develop 分支拉出 release 分支来，最后 release 分支需要 merge 回 develop 分支和 master 分支。</li>
-  <li>hotfix 分支：顾名思义，hotfix 分支就是当生产环境的代码出现了重大的 bug 的时候需要的分支，这个时候你可以从 master 分支中拉出一个 hotfix 分支，在修复完 bug 后，记得要把 hotfix 的分支合并回到 develop 和 master 分支上。</li>
-</ul>
-
-<p>上面就是 Git flow 的整个分支模型，相对来说还是比较简单的，更加具体的说明可以看这篇关于 Git flow 分支模型最原始的 blog：<a href="http://nvie.com/posts/a-successful-git-branching-model/">http://nvie.com/posts/a-successful-git-branching-model/</a></p>
-
-<h4 id="git-flow--1">Git flow 扩展</h4>
-
-<p>但是有一个问题就是上面的这些分支的创建，合并，删除等等操作，都是需要好几步的，比较费时间，费精力，Git flow 还提供了一个 git 的扩展，让我们可以非常方便地在项目中使用上述的分支模型，具体的使用方式作者都已经写在了 github 上，大家可以自己去看：<a href="https://github.com/nvie/gitflow">https://github.com/nvie/gitflow</a>。在 Mac 下可以用 <code>brew install git-flow</code> 来安装。</p>
-
-<p>之前我也了解过 git 的一些使用，并且已经在一些项目中尝试去使用 git，但是在分支管理这一块一直比较头疼，而 Git flow 恰好给我提供了一个现成的经过实践的分支模型，刚好公司后面有一个项目可能也会用到 git，到时候我会尝试下在项目组中推广使用 Git flow，让实践去检验一把。</p>
 ]]></content>
   </entry>
   
