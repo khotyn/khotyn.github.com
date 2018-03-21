@@ -1,0 +1,80 @@
+---
+layout: post
+title: "Java 10 新特性之 AppCDS"
+date: 2018-03-21 15:41
+comments: true
+categories: 
+---
+
+Oracle 昨天[公布了 Java 10 的 GA 版本](https://www.oracle.com/corporate/pressrelease/Java-10-032018.html)，Java 10 里面除了[本地变量类型推断](http://openjdk.java.net/jeps/286)之外，还扩展了原来的 CDS 的能力为 [AppCDS](http://openjdk.java.net/jeps/310)。
+
+## 什么是 CDS
+CDS 的全称是 Class-Data Sharing，CDS 的作用是可以让类可以被预处理放到一个归档文件中，后续 Java 程序启动的时候可以直接带上这个归档文件，这样  JVM 可以直接将这个归档文件映射到内存中，以节约应用启动的时间。
+
+这个特性其实 JDK 1.5 就开始引入了，但是 CDS 只能作用与 Boot Class Loader 加载的类，不能作用于 App Class Loader 或者自定义的 Class Loader 加载的类，其实有点鸡肋，而且这个是 Oracle JDK 的商业特性，在 OpenJDK 中似乎没有。
+
+这次在 Java 10 中，则将 CDS 扩展为 AppCDS，顾名思义，AppCDS 不止能够作用于 Boot Class Loader，App Class Loader 和自定义的 Class Loader 也都能够起作用，大大加大了 CDS 的适用范围。有了 AppCDS，可以给 Java 的应用程序带来两个方面的好处：
+
+* 可以提升一些大型的 Java 应用的启动速度。
+* 可以提升 Serverless 的应用程序的启动速度。我觉得这个点可能是 Java 10 提供 AppCDS 的主要原因，Serverless 极可能成为未来的应用的一种非常常见的形态，而把 Java 应用在 Serverless 上，相比于其他的语言来说，一个很大的劣势就是 JVM 的启动速度太慢了，虽然像 AWS 的 Lambda，会给 Java 的 Serverless 应用加上 `-client` 来用 Client 模式跑加快启动速度，但是实际上效果甚微。有了 AppCDS，可以大大加快 Serverless 应用的启动速度，按照 AppCDS 的 JEP 的说明，对于一个 JEdit 来说，AppCDS 可以为 JEdit 提升 20% 到 30% 的启动速度。
+
+## 尝试 AppCDS
+作者写了一个简单的 Java 应用，来测试 AppCDS 的效果。程序的代码已经放到了 Github 上面，大家可以直接去看，这里只给出大概的操作步骤和最后的测试效果。
+
+### 1. 决定要 Dump 哪些 Class
+一般来说，一个 Java 应用程序会包含很多的 Class 文件，但是在运行中，并不是所有的 Class 文件都会被用到，所以，第一步我们需要来决定具体需要使用哪些 Class 文件，你需要给你的运行命令上加上如下的 JVM 参数：
+
+```
+-Xshare:off -XX:+UseAppCDS -XX:DumpLoadedClassList=hello.lst
+```
+
+几个参数的意思分别是：
+* `-Xshare:off`：这个参数的意思是不做任何内存的共享，也就是不利用 AppCDS 产生的文件来做内存映射。因为是要决定 Dump 哪些类的内存到归档文件中，所以这个参数需要关掉。
+* `-XX:+UserAppCDS`：默认的情况下 AppCDS 不会开启，所以我们需要加上这个参数来开启 AppCDS。
+* `-XX:DumpLoadedClassList`：表示需要把需要做 Dump 的类名写入到哪个文件中。
+
+这个命令执行之后，会出现一个 hello.lst 的文件，里面就是一个个的类名，下面是一部分内容的截图：
+![](/images/app_cds_dump_file_list.png)
+
+### 2. 将类的内存 Dump 到归档文件中
+有一个需要 Dump 的类的列表之后，第二步，我们就可以将类的内存 Dump 到归档文件中了，在这一步中，我们需要将以下的参数加入到 JVM 参数中去：
+
+```
+-Xshare:dump -XX:+UseAppCDS -XX:SharedClassListFile=hello.lst -XX:SharedArchiveFile=hello.jsa
+```
+
+几个参数的含义分别如下：
+
+* `-Xshare:dump`：表示现在要进行类的内存的 Dump。
+* `-XX:SharedClassListFile`：用来指定需要 Dump 的类的列表。
+* `-XX:SharedArchiveFile`：表示需要将类的内存 Dump 到哪个归档文件中。
+
+运行上面的命令之后，我们会得到一个 `hello.jsa` 的文件，包含需要的内存信息的 Dump。
+
+### 3. 使用 Dump 出来的归档文件加快应用启动速度
+有了前面的归档文件之后，我们就可以来加速应用的启动速度了，为了使用上述的归档文件，我们需要在 JVM 中加上如下的参数：
+
+```
+-Xshare:on -XX:+UseAppCDS -XX:SharedArchiveFile=hello.jsa
+```
+
+几个参数的含义分别如下：
+
+* `-Xshare:on`：表示打开内存映射。
+* `-XX:SharedArchiveFile=hello.jsa`：表示用来做内存映射的归档文件是 `hello.jsa`。
+
+### 4. 测试效果
+在我的本机上，不使用 AppCDS 和使用 AppCDS 的效果如下：
+
+#### 不使用 AppCDS
+![](/images/app_cds_disable.png)
+
+#### 使用 AppCDS
+![](/images/app_cds_enable.png)
+可以看到，对于这样一个简单的应用，AppCDS 还是有 20% 左右的启动速度提升的，当然这个应用的很多的启动时间都花在了类加载上，其他的耗时不多，所以效果挺好。如果其他的应用程序的启动时间花在类上的加载时间比较少的话，可能效果就没有这么明显。
+
+## 坑
+看起来 AppCDS 很美好，但是目前我使用下来有几个坑：
+
+* 虽然 AppCDS 号称可以支持自定义的 ClassLoader，但是我试了一个 SpringBoot 的应用，发现对于没有在 `-classpath` 中指定的 JAR 包中的类，并不会有效果。
+* 如果你下载 Oracle 的 JDK，需要加上 `-XX:+UnlockCommercialFeature` 来开启 AppCDS，但是 OpenJDK 却不用，也是很奇怪，😅
