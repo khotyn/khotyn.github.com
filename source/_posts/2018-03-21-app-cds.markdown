@@ -19,7 +19,7 @@ CDS 的全称是 Class-Data Sharing，CDS 的作用是可以让类可以被预�
 * 可以提升 Serverless 的应用程序的启动速度。我觉得这个点可能是 Java 10 提供 AppCDS 的主要原因，Serverless 极可能成为未来的应用的一种非常常见的形态，而把 Java 应用在 Serverless 上，相比于其他的语言来说，一个很大的劣势就是 JVM 的启动速度太慢了，虽然像 AWS 的 Lambda，会给 Java 的 Serverless 应用加上 `-client` 来用 Client 模式跑加快启动速度，但是实际上效果甚微。有了 AppCDS，可以大大加快 Serverless 应用的启动速度，按照 AppCDS 的 JEP 的说明，对于一个 JEdit 来说，AppCDS 可以为 JEdit 提升 20% 到 30% 的启动速度。
 
 ## 尝试 AppCDS
-作者写了一个简单的 Java 应用，来测试 AppCDS 的效果。程序的代码已经放到了 Github 上面，大家可以直接去看，这里只给出大概的操作步骤和最后的测试效果。
+作者写了一个简单的 Java 应用，来测试 AppCDS 的效果。程序的代码已经放到了 [Github](https://github.com/khotyn/java-ten-app-cds) 上面，大家可以直接去看，这里只给出大概的操作步骤和最后的测试效果。
 
 ### 1. 决定要 Dump 哪些 Class
 一般来说，一个 Java 应用程序会包含很多的 Class 文件，但是在运行中，并不是所有的 Class 文件都会被用到，所以，第一步我们需要来决定具体需要使用哪些 Class 文件，你需要给你的运行命令上加上如下的 JVM 参数：
