@@ -109,6 +109,188 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2018/03/24/springboot-on-kubernetes/">SpringBoot on Kubernetes</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2018-03-24T16:40:00+08:00" pubdate data-updated="true">Mar 24<span>th</span>, 2018</time>
+        
+         | <a href="/blog/2018/03/24/springboot-on-kubernetes/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>本文将从创建一个 SpringBoot 的应用开始，详细讲述如何将一个 SpringBoot 的应用部署到本地的 Kubernetes 集群上面去。</p>
+
+<h2 id="springboot-">创建 SpringBoot 应用</h2>
+<p>首先，我们需要创建一个 SpringBoot 的应用，可以到 <a href="http://start.spring.io/">http://start.spring.io/</a> 创建一个，在创建的时候，我们需要选择一个 Web 的依赖，以方便部署到 Kubernetes 之后可以看到效果。</p>
+
+<p>创建完成之后，可以修改一下 SpringBoot 应用的 <code>main</code> 函数所在的类，让它成为一个 Controller：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@SpringBootApplication</span>
+</span><span class="line"><span class="nd">@Controller</span>
+</span><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">WebDemoApplication</span> <span class="o">{</span>
+</span><span class="line">
+</span><span class="line">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">SpringApplication</span><span class="o">.</span><span class="na">run</span><span class="o">(</span><span class="n">WebDemoApplication</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">args</span><span class="o">);</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="nd">@RequestMapping</span><span class="o">(</span><span class="s">&quot;/hello&quot;</span><span class="o">)</span>
+</span><span class="line">    <span class="nd">@ResponseBody</span>
+</span><span class="line">    <span class="kd">public</span> <span class="n">String</span> <span class="nf">hello</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;Hello, Kubernetes!&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这样，在本地启动这个 SpringBoot 的应用之后，如果我们访问 <code>http://localhost:8080/hello</code> 的话，就可以看到 <code>Hello, Kubernetes!</code> 这句话。</p>
+
+<h2 id="dockerfile">创建一个 Dockerfile</h2>
+<p>为了能够将这个 SpringBoot 的应用部署到 Kubernetes 里面去，我们需要创建一个 Dockerfile，将它打成一个 Docker 镜像：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">FROM</span> <span class="nl">openjdk:</span><span class="mi">8</span><span class="o">-</span><span class="n">jdk</span><span class="o">-</span><span class="n">alpine</span>
+</span><span class="line"><span class="n">ARG</span> <span class="n">JAR_FILE</span>
+</span><span class="line"><span class="n">ADD</span> <span class="n">$</span><span class="o">{</span><span class="n">JAR_FILE</span><span class="o">}</span> <span class="n">app</span><span class="o">.</span><span class="na">jar</span>
+</span><span class="line"><span class="n">ENTRYPOINT</span> <span class="o">[</span> <span class="s">&quot;java&quot;</span><span class="o">,</span> <span class="s">&quot;-jar&quot;</span><span class="o">,</span> <span class="s">&quot;/app.jar&quot;</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面的 Dockerfile 是一个非常简单的 Dockerfile，只是将 SpringBoot 应用打包后的 uber-jar 拷贝到容器里面去，然后运行这个 jar 包。有了这个 Dockerfile 之后，我们就可以在本地把 Docker 镜像打包出来了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">docker</span> <span class="n">build</span> <span class="o">--</span><span class="n">build</span><span class="o">-</span><span class="n">arg</span> <span class="n">JAR_FILE</span><span class="o">=./</span><span class="n">target</span><span class="o">/</span><span class="n">web</span><span class="o">-</span><span class="n">demo</span><span class="o">-</span><span class="mf">0.0</span><span class="o">.</span><span class="mi">1</span><span class="o">-</span><span class="n">SNAPSHOT</span><span class="o">.</span><span class="na">jar</span> <span class="o">.</span> <span class="o">-</span><span class="n">t</span> <span class="n">springboot</span><span class="o">-</span><span class="n">demo</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后需要注意的是，这样打出来的镜像是在本地的，没有办法被 minikube 找到，所以，要么将这个镜像放到一个中央的镜像仓库上，要么我们使用 minikube 的 docker daemon 来打镜像，这样 minikube 就可以找到这个镜像。</p>
+
+<p>所以，你首先需要在本地将 minikube 安装上去，具体可以看官方的<a href="https://kubernetes.io/docs/tasks/tools/install-minikube/">安装教程</a>。安装完成之后，先运行：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">minikube</span> <span class="n">start</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>来将 minikube 启动起来，然后可以运行</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eval</span> <span class="n">$</span><span class="o">(</span><span class="n">minikube</span> <span class="n">docker</span><span class="o">-</span><span class="n">env</span><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>将 docker daemon 切换成 minikube 的。最后，我们再用上面的 <code>docker build</code> 来进行打包，minikube 就可以看到了。</p>
+
+<h2 id="minikube-">将应用部署到 minikube 中去</h2>
+<p>Docker 镜像都准备好了，现在我们可以将应用部署到 minikube 中去了，首先我们需要创建一个 deployment 对象，这个可以用 yml 文件来描述：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+</pre></td><td class="code"><pre><code class="yaml"><span class="line"><span class="l-Scalar-Plain">apiVersion</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">apps/v1beta1</span>
+</span><span class="line"><span class="l-Scalar-Plain">kind</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Deployment</span>
+</span><span class="line"><span class="l-Scalar-Plain">metadata</span><span class="p-Indicator">:</span>
+</span><span class="line">  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo-deployment</span>
+</span><span class="line">  <span class="l-Scalar-Plain">labels</span><span class="p-Indicator">:</span>
+</span><span class="line">    <span class="l-Scalar-Plain">app</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line"><span class="l-Scalar-Plain">spec</span><span class="p-Indicator">:</span>
+</span><span class="line">  <span class="l-Scalar-Plain">replicas</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">3</span>
+</span><span class="line">  <span class="l-Scalar-Plain">selector</span><span class="p-Indicator">:</span>
+</span><span class="line">    <span class="l-Scalar-Plain">matchLabels</span><span class="p-Indicator">:</span>
+</span><span class="line">      <span class="l-Scalar-Plain">app</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line">  <span class="l-Scalar-Plain">template</span><span class="p-Indicator">:</span>
+</span><span class="line">    <span class="l-Scalar-Plain">metadata</span><span class="p-Indicator">:</span>
+</span><span class="line">      <span class="l-Scalar-Plain">labels</span><span class="p-Indicator">:</span>
+</span><span class="line">        <span class="l-Scalar-Plain">app</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line">    <span class="l-Scalar-Plain">spec</span><span class="p-Indicator">:</span>
+</span><span class="line">      <span class="l-Scalar-Plain">containers</span><span class="p-Indicator">:</span>
+</span><span class="line">        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line">          <span class="l-Scalar-Plain">image</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line">          <span class="l-Scalar-Plain">imagePullPolicy</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">IfNotPresent</span>
+</span><span class="line">          <span class="l-Scalar-Plain">ports</span><span class="p-Indicator">:</span>
+</span><span class="line">            <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">containerPort</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8080</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面的 yaml 文件没有什么特别的地方，除了 <code>imagePullPolicy</code> 需要指定成 <code>IfNotPresent</code>，这样 minikube 才会从本地去找镜像。</p>
+
+<p>有了上面的 yaml 文件之后，我们就可以运行 <code>kubectl apply -f springboot-demo.yml</code> 来让 minikube 将我们的 SpringBoot 的应用的集群给创建出来。</p>
+
+<h2 id="minikube--springboot-">访问 minikube 中的 SpringBoot 集群</h2>
+<p>现在我们已经将 SpringBoot 应用部署到了 minikube 中去，那么怎么访问这个集群呢，首先我们需要将端口暴露出来：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="yaml"><span class="line"><span class="l-Scalar-Plain">kubectl expose deployment springboot-demo-deployment --type=NodePort</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后运行：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="yaml"><span class="line"><span class="l-Scalar-Plain">minikube service springboot-demo-deployment --url</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>得到访问的 URL。再在得到的 URL 后面加上 <code>/hello</code>，就可以看到 <code>Hello, Kubernetes!</code> 了。</p>
+
+<p>或者，我们可以直接运行 <code>curl $(minikube service springboot-demo-deployment --url)/hello</code> 来访问。</p>
+
+<p>以上就是如何将一个 SpringBoot 的应用部署到 Kubernetes 里面去的全过程。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2018/03/21/app-cds/">Java 10 新特性之 AppCDS</a></h1>
     
     
@@ -149,7 +331,7 @@
 </ul>
 
 <h2 id="appcds">尝试 AppCDS</h2>
-<p>作者写了一个简单的 Java 应用，来测试 AppCDS 的效果。程序的代码已经放到了 Github 上面，大家可以直接去看，这里只给出大概的操作步骤和最后的测试效果。</p>
+<p>作者写了一个简单的 Java 应用，来测试 AppCDS 的效果。程序的代码已经放到了 <a href="https://github.com/khotyn/java-ten-app-cds">Github</a> 上面，大家可以直接去看，这里只给出大概的操作步骤和最后的测试效果。</p>
 
 <h3 id="dump--class">1. 决定要 Dump 哪些 Class</h3>
 <p>一般来说，一个 Java 应用程序会包含很多的 Class 文件，但是在运行中，并不是所有的 Class 文件都会被用到，所以，第一步我们需要来决定具体需要使用哪些 Class 文件，你需要给你的运行命令上加上如下的 JVM 参数：</p>
@@ -953,208 +1135,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-08-14T22:07:00+08:00" pubdate data-updated="true">Aug 14<span>th</span>, 2014</time>
-        
-         | <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近在写框架的测试代码的时候，有需求要对 Log4j 的输出进行测试（<strong>依赖 Log4j 的输出来进行测试，这一点本身可能得深思一下</strong>），之前也有对 stdout 和 stderr 进行测试，用了一个叫做 <code>system-rule</code> 的包：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="nt">&lt;dependency&gt;</span>
-</span><span class="line">    <span class="nt">&lt;groupId&gt;</span>com.github.stefanbirkner<span class="nt">&lt;/groupId&gt;</span>
-</span><span class="line">    <span class="nt">&lt;artifactId&gt;</span>system-rules<span class="nt">&lt;/artifactId&gt;</span>
-</span><span class="line">    <span class="nt">&lt;version&gt;</span>1.5.0<span class="nt">&lt;/version&gt;</span>
-</span><span class="line"><span class="nt">&lt;/dependency&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>利用这个包中类，只需要在测试用例中加上一个 JUnit Rule，就可以获取到 stdout 和 stderr 中的内容，然后对其进行测试。现在我也想对 Log4j 的输出采用类似的方式进行测试，于是扩展了 JUnit 的 Rule，就有了以下这一段代码：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-<span class="line-number">50</span>
-<span class="line-number">51</span>
-<span class="line-number">52</span>
-<span class="line-number">53</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="cm">/**</span>
-</span><span class="line"><span class="cm"> * 此 Rule 用于对 Log4j 进行测试</span>
-</span><span class="line"><span class="cm"> *</span>
-</span><span class="line"><span class="cm"> * @author khotyn 8/14/14 9:18 PM</span>
-</span><span class="line"><span class="cm"> */</span>
-</span><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Log4jRule</span> <span class="kd">extends</span> <span class="n">ExternalResource</span> <span class="o">{</span>
-</span><span class="line">    <span class="kd">private</span> <span class="n">String</span>       <span class="n">logName</span><span class="o">;</span>
-</span><span class="line">    <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">loggerMessages</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;();</span>
-</span><span class="line">
-</span><span class="line">    <span class="kd">public</span> <span class="nf">Log4jRule</span><span class="o">(</span><span class="n">String</span> <span class="n">loggerName</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">        <span class="k">this</span><span class="o">.</span><span class="na">logName</span> <span class="o">=</span> <span class="n">loggerName</span><span class="o">;</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="kd">public</span> <span class="nf">Log4jRule</span><span class="o">(</span><span class="n">Class</span> <span class="n">className</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">        <span class="k">this</span><span class="o">.</span><span class="na">logName</span> <span class="o">=</span> <span class="n">className</span><span class="o">.</span><span class="na">getName</span><span class="o">();</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">getLoggerMessages</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">loggerMessages</span><span class="o">;</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getLogMessageAsString</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">        <span class="n">String</span> <span class="n">result</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
-</span><span class="line">
-</span><span class="line">        <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">loggerMessage</span> <span class="o">:</span> <span class="n">loggerMessages</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">            <span class="n">result</span> <span class="o">+=</span> <span class="n">loggerMessage</span><span class="o">;</span>
-</span><span class="line">            <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;\n&quot;</span><span class="o">;</span>
-</span><span class="line">        <span class="o">}</span>
-</span><span class="line">
-</span><span class="line">        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="nd">@Override</span>
-</span><span class="line">    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">before</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Throwable</span> <span class="o">{</span>
-</span><span class="line">        <span class="n">Logger</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">LogManager</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="n">logName</span><span class="o">);</span>
-</span><span class="line">        <span class="n">logger</span><span class="o">.</span><span class="na">addAppender</span><span class="o">(</span><span class="k">new</span> <span class="n">AppenderSkeleton</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">            <span class="nd">@Override</span>
-</span><span class="line">            <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">append</span><span class="o">(</span><span class="n">LoggingEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">                <span class="n">loggerMessages</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">event</span><span class="o">.</span><span class="na">getMessage</span><span class="o">().</span><span class="na">toString</span><span class="o">());</span>
-</span><span class="line">            <span class="o">}</span>
-</span><span class="line">
-</span><span class="line">            <span class="nd">@Override</span>
-</span><span class="line">            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">
-</span><span class="line">            <span class="o">}</span>
-</span><span class="line">
-</span><span class="line">            <span class="nd">@Override</span>
-</span><span class="line">            <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">requiresLayout</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">                <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-</span><span class="line">            <span class="o">}</span>
-</span><span class="line">        <span class="o">});</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>整段代码非常简单，继承了 JUnit 的 <code>ExternalResource</code> 类，然后在 <code>before</code> 方法中，给对应的 Logger 加上了一个 Appender，在 Appender 中，将日志内容收集到一个 List 中，然后拿到这个 List 就可以拿到日志的输出了。</p>
-
-<p>使用的时候非常简单：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SampleTest</span> <span class="o">{</span>
-</span><span class="line">    <span class="nd">@Rule</span>
-</span><span class="line">    <span class="kd">public</span> <span class="n">Log4jRule</span> <span class="n">log4jRule</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Log4jRule</span><span class="o">(</span><span class="n">SampleTest</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="nd">@Test</span>
-</span><span class="line">    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
-</span><span class="line">      	<span class="c1">// .........</span>
-</span><span class="line">        <span class="n">Assert</span><span class="o">.</span><span class="na">assertTrue</span><span class="o">(</span><span class="n">log4jRule</span><span class="o">.</span><span class="na">getLogMessageAsString</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span>
-</span><span class="line">            <span class="s">&quot;Hello, world&quot;</span><span class="o">));</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line"><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>通过 </p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">log4jRule</span><span class="o">.</span><span class="na">getLogMessageAsString</span><span class="o">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>可以拿到一个 String 格式的日志输出，或者通过：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">log4jRule</span><span class="o">.</span><span class="na">getLoggerMessages</span><span class="o">()</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>来获得一个日志输出的内容的 List，List 中的没一行就是日志中的一行</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -1170,6 +1150,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2018/03/24/springboot-on-kubernetes/">SpringBoot on Kubernetes</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/03/21/app-cds/">Java 10 新特性之 AppCDS</a>
       </li>
     
@@ -1183,10 +1167,6 @@
     
       <li class="post">
         <a href="/blog/2016/09/29/intellij-idea-plugin-jvm-crash/">Intellij IDEA 插件开发 &#8212; 一次 JVM Crash 问题的解决</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/02/15/jvm-noclassdeffounterror-cache/">JVM 对 NoClassDefFoundError 的“缓存”</a>
       </li>
     
   </ul>

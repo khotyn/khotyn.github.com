@@ -109,6 +109,54 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2013/10/15/positive-illusion-and-depressive-realism/">乐观错觉与悲观现实</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-15T01:17:00+08:00" pubdate data-updated="true">Oct 15<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/10/15/positive-illusion-and-depressive-realism/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><img src="http://ww1.sinaimg.cn/mw690/61c0c922gw1e055mycdv7j.jpg" alt="image" /></p>
+
+<p>近日在读阿兰•德波顿的<a href="http://book.douban.com/subject/10594802/">「写给无神论者」</a>，里面提到基督教的人性本恶的观点给人带来的好处，当你对一件事情的结果期望并不高的时候，那么当结果出现一点好处的时候，你就会感到很快乐；相反，当你对一件事情有着过高的期望，最后结果并不令人满意的时候，你就会感到失落，绝望。</p>
+
+<p>德波顿这样捧高悲观，而贬低乐观有点太偏颇了。但是，在各种舆论阵地上，“悲观主义”都在被不公正地对待，各个社交网络上永远都是“正能量”，“乐观”，“积极向上”，每一个人似乎都非常排斥“悲观主义”，我想悲观的人大概也比较受人讨厌。</p>
+
+<p>诚然，过分地悲观会无情地伤害你的心灵，<a href="http://zh.wikipedia.org/wiki/%E5%A4%AA%E5%AE%B0%E6%B2%BB">太宰治</a>（愿我们都不要成为他那样的人）笔下的叶藏就是个典型的例子，由于对人类普遍的失望，叶藏一直都是郁郁寡欢、懦弱怕事，不断地和遇到他的女子殉情，最终失去了为人的资格。但是适度地悲观是非常有善的。现实是现实，到了一个人的心中，就成了“心中的现实”。当一个人处于乐观的状态下的时候，往往会对高估了现实的状况，而轻微悲观的人“心中的现实”更加接近实际的现实，他们能够更加准确地估计到现实中可能存在的一些问题，并且做好相应的准备，在问题真正到来的时候不会惊慌失措，因而能够保持更加稳定，更加健康的心理状态。</p>
+
+<p>而那些盲目的乐观主义者（我们的周围不缺乏这样的人），由于对现实有着过高的认识和期望，对问题认识不足，月盈而亏，当结果不尽如人意的时候，各种负面情绪就会出现。你以为你有光明的未来，以为有特殊的才能，但是，到最后却发现你不过是芸芸众生中平凡的一员，很多中年人的失落就是来源于此吧。</p>
+
+<p>所以，与其做个乐观主义者，不如做个悲观的行动主义者，与其相信有那种可能性，不如自己去寻找那种可能性，并且为可能的失败做好准备（成功永远都是属于少数人的）。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2013/10/01/git-flow/">Git Flow 分支管理模型简介</a></h1>
     
     
@@ -1656,76 +1704,6 @@ n
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/24/match-line-not-contain-a-string/">再论如何匹配不包含连续字符串的行</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-24T22:35:00+08:00" pubdate data-updated="true">Jul 24<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/24/match-line-not-contain-a-string/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>在前一篇文章中，我讨论过如何使用<a href="http://blog.khotyn.com/blog/2013/07/24/zero-width-assert/">使用零宽断言来匹配不包含连续字符串的行</a>，这个方法采用了零宽断言这种不怎么常见的正则表达式用法，虽然行之有效，但是总归是个麻烦的方法，而且，零宽断言很多的正则表达式解释器都不支持，用 grep 的话，得加上 -P 参数，让 grep 采用 Perl 的方式解释正则表达式，更加遗憾的一点是 -P 参数似乎只有在 GNU 的版本中才有，在我的 Mac 上的 BSD 版本的 grep 中，并没有这个参数。</p>
-
-<p>所幸的是今天无聊翻了翻 grep 的 man page，发现了几个更加方便的方法也更加通用的办法，在这里和大家分享一下：</p>
-
-<h3 id="grep--invert-match">grep 的 invert match</h3>
-
-<p>今天翻 grep 的 man page，发现了一个 <code>-v</code> 参数，它的说明是这样的：</p>
-
-<blockquote>
-  <p>Selected lines are those not matching any of the specified patterns.</p>
-</blockquote>
-
-<p>正是我们想要，可以传入一个正则表达式，它帮你匹配不符合这个正则表达式的行，而且 <code>-v</code> 参数各个 grep 的版本都支持，无需担心换个系统就不能用的情况。</p>
-
-<h3 id="sed--pattern-">采用 sed 来删除符合某个 pattern 的行</h3>
-
-<p>其实不用 grep，用 sed 也可以做到这个需求，sed 本身就是一个强大的行处理工具，sed 可以用如下的方式把符合某个 pattern 的行给删除掉：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">sed '/pattern/D'</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>怎么样？也是非常方便的吧，它可以做到和 grep 一样的功能，非常有效。</p>
-
-<h3 id="sed--pattern--1">采用 sed 来打印不符合某个 pattern 的行</h3>
-
-<p>要用 sed 来解决这个问题，其实不止上面一个方法，还可以用以下的方法来做：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">sed -n '/pattern/!p'</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>解释一下这段 sed 脚本的作用，首先是 <code>-n</code> 参数，大家知道 sed 的默认将处理和没有处理过的行都定向到输出流上，而 <code>-n</code> 参数是用来关闭这个功能，我们当然不希望 sed 将所有的行都打印出来。然后脚本的开始是一个行的选择器，前面是一个正则表达式（sed 的正则表达式都是放在两个斜杠之间的），后面的是一个<code>!</code>号，这样就表示选择反向选择，即选择不符合 pattern 的行，然后最后是一个 <code>p</code> 命令，把这样的行打印出来，这里的 pattern 当然可以是需求中的那个连续的字符串，这样，我们就达到了需求的目的了。</p>
-
-<p>总结一下，推荐大家还是用 grep 的 invert match 或者 sed 来完成这个功能，零宽断言在解决这个问题上感觉有点杀鸡焉用牛刀（<strong>零宽断言还有很多适用的场景，不仅仅可以用来解决这个问题</strong>）。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/4/">&larr; Older</a></li>
@@ -1743,6 +1721,10 @@ n
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2018/03/24/springboot-on-kubernetes/">SpringBoot on Kubernetes</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/03/21/app-cds/">Java 10 新特性之 AppCDS</a>
       </li>
     
@@ -1756,10 +1738,6 @@ n
     
       <li class="post">
         <a href="/blog/2016/09/29/intellij-idea-plugin-jvm-crash/">Intellij IDEA 插件开发 &#8212; 一次 JVM Crash 问题的解决</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/02/15/jvm-noclassdeffounterror-cache/">JVM 对 NoClassDefFoundError 的“缓存”</a>
       </li>
     
   </ul>

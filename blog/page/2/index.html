@@ -109,6 +109,208 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/">利用 JUnit 的 Rule 对 Log4j 的输出进行测试</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-08-14T22:07:00+08:00" pubdate data-updated="true">Aug 14<span>th</span>, 2014</time>
+        
+         | <a href="/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近在写框架的测试代码的时候，有需求要对 Log4j 的输出进行测试（<strong>依赖 Log4j 的输出来进行测试，这一点本身可能得深思一下</strong>），之前也有对 stdout 和 stderr 进行测试，用了一个叫做 <code>system-rule</code> 的包：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="nt">&lt;dependency&gt;</span>
+</span><span class="line">    <span class="nt">&lt;groupId&gt;</span>com.github.stefanbirkner<span class="nt">&lt;/groupId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;artifactId&gt;</span>system-rules<span class="nt">&lt;/artifactId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;version&gt;</span>1.5.0<span class="nt">&lt;/version&gt;</span>
+</span><span class="line"><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>利用这个包中类，只需要在测试用例中加上一个 JUnit Rule，就可以获取到 stdout 和 stderr 中的内容，然后对其进行测试。现在我也想对 Log4j 的输出采用类似的方式进行测试，于是扩展了 JUnit 的 Rule，就有了以下这一段代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="cm">/**</span>
+</span><span class="line"><span class="cm"> * 此 Rule 用于对 Log4j 进行测试</span>
+</span><span class="line"><span class="cm"> *</span>
+</span><span class="line"><span class="cm"> * @author khotyn 8/14/14 9:18 PM</span>
+</span><span class="line"><span class="cm"> */</span>
+</span><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Log4jRule</span> <span class="kd">extends</span> <span class="n">ExternalResource</span> <span class="o">{</span>
+</span><span class="line">    <span class="kd">private</span> <span class="n">String</span>       <span class="n">logName</span><span class="o">;</span>
+</span><span class="line">    <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">loggerMessages</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;();</span>
+</span><span class="line">
+</span><span class="line">    <span class="kd">public</span> <span class="nf">Log4jRule</span><span class="o">(</span><span class="n">String</span> <span class="n">loggerName</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">this</span><span class="o">.</span><span class="na">logName</span> <span class="o">=</span> <span class="n">loggerName</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="kd">public</span> <span class="nf">Log4jRule</span><span class="o">(</span><span class="n">Class</span> <span class="n">className</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">this</span><span class="o">.</span><span class="na">logName</span> <span class="o">=</span> <span class="n">className</span><span class="o">.</span><span class="na">getName</span><span class="o">();</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">getLoggerMessages</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">loggerMessages</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getLogMessageAsString</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">String</span> <span class="n">result</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">loggerMessage</span> <span class="o">:</span> <span class="n">loggerMessages</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">            <span class="n">result</span> <span class="o">+=</span> <span class="n">loggerMessage</span><span class="o">;</span>
+</span><span class="line">            <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;\n&quot;</span><span class="o">;</span>
+</span><span class="line">        <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="nd">@Override</span>
+</span><span class="line">    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">before</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Throwable</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">Logger</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">LogManager</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="n">logName</span><span class="o">);</span>
+</span><span class="line">        <span class="n">logger</span><span class="o">.</span><span class="na">addAppender</span><span class="o">(</span><span class="k">new</span> <span class="n">AppenderSkeleton</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">            <span class="nd">@Override</span>
+</span><span class="line">            <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">append</span><span class="o">(</span><span class="n">LoggingEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">                <span class="n">loggerMessages</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">event</span><span class="o">.</span><span class="na">getMessage</span><span class="o">().</span><span class="na">toString</span><span class="o">());</span>
+</span><span class="line">            <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">            <span class="nd">@Override</span>
+</span><span class="line">            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">
+</span><span class="line">            <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">            <span class="nd">@Override</span>
+</span><span class="line">            <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">requiresLayout</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">                <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class="line">            <span class="o">}</span>
+</span><span class="line">        <span class="o">});</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>整段代码非常简单，继承了 JUnit 的 <code>ExternalResource</code> 类，然后在 <code>before</code> 方法中，给对应的 Logger 加上了一个 Appender，在 Appender 中，将日志内容收集到一个 List 中，然后拿到这个 List 就可以拿到日志的输出了。</p>
+
+<p>使用的时候非常简单：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SampleTest</span> <span class="o">{</span>
+</span><span class="line">    <span class="nd">@Rule</span>
+</span><span class="line">    <span class="kd">public</span> <span class="n">Log4jRule</span> <span class="n">log4jRule</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Log4jRule</span><span class="o">(</span><span class="n">SampleTest</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="nd">@Test</span>
+</span><span class="line">    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">      	<span class="c1">// .........</span>
+</span><span class="line">        <span class="n">Assert</span><span class="o">.</span><span class="na">assertTrue</span><span class="o">(</span><span class="n">log4jRule</span><span class="o">.</span><span class="na">getLogMessageAsString</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span>
+</span><span class="line">            <span class="s">&quot;Hello, world&quot;</span><span class="o">));</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>通过 </p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">log4jRule</span><span class="o">.</span><span class="na">getLogMessageAsString</span><span class="o">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>可以拿到一个 String 格式的日志输出，或者通过：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">log4jRule</span><span class="o">.</span><span class="na">getLoggerMessages</span><span class="o">()</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>来获得一个日志输出的内容的 List，List 中的没一行就是日志中的一行</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2014/03/31/unittest/">一些关于单元测试的思考</a></h1>
     
     
@@ -845,54 +1047,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2013/10/15/positive-illusion-and-depressive-realism/">乐观错觉与悲观现实</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-10-15T01:17:00+08:00" pubdate data-updated="true">Oct 15<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/10/15/positive-illusion-and-depressive-realism/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><img src="http://ww1.sinaimg.cn/mw690/61c0c922gw1e055mycdv7j.jpg" alt="image" /></p>
-
-<p>近日在读阿兰•德波顿的<a href="http://book.douban.com/subject/10594802/">「写给无神论者」</a>，里面提到基督教的人性本恶的观点给人带来的好处，当你对一件事情的结果期望并不高的时候，那么当结果出现一点好处的时候，你就会感到很快乐；相反，当你对一件事情有着过高的期望，最后结果并不令人满意的时候，你就会感到失落，绝望。</p>
-
-<p>德波顿这样捧高悲观，而贬低乐观有点太偏颇了。但是，在各种舆论阵地上，“悲观主义”都在被不公正地对待，各个社交网络上永远都是“正能量”，“乐观”，“积极向上”，每一个人似乎都非常排斥“悲观主义”，我想悲观的人大概也比较受人讨厌。</p>
-
-<p>诚然，过分地悲观会无情地伤害你的心灵，<a href="http://zh.wikipedia.org/wiki/%E5%A4%AA%E5%AE%B0%E6%B2%BB">太宰治</a>（愿我们都不要成为他那样的人）笔下的叶藏就是个典型的例子，由于对人类普遍的失望，叶藏一直都是郁郁寡欢、懦弱怕事，不断地和遇到他的女子殉情，最终失去了为人的资格。但是适度地悲观是非常有善的。现实是现实，到了一个人的心中，就成了“心中的现实”。当一个人处于乐观的状态下的时候，往往会对高估了现实的状况，而轻微悲观的人“心中的现实”更加接近实际的现实，他们能够更加准确地估计到现实中可能存在的一些问题，并且做好相应的准备，在问题真正到来的时候不会惊慌失措，因而能够保持更加稳定，更加健康的心理状态。</p>
-
-<p>而那些盲目的乐观主义者（我们的周围不缺乏这样的人），由于对现实有着过高的认识和期望，对问题认识不足，月盈而亏，当结果不尽如人意的时候，各种负面情绪就会出现。你以为你有光明的未来，以为有特殊的才能，但是，到最后却发现你不过是芸芸众生中平凡的一员，很多中年人的失落就是来源于此吧。</p>
-
-<p>所以，与其做个乐观主义者，不如做个悲观的行动主义者，与其相信有那种可能性，不如自己去寻找那种可能性，并且为可能的失败做好准备（成功永远都是属于少数人的）。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/3/">&larr; Older</a></li>
@@ -910,6 +1064,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2018/03/24/springboot-on-kubernetes/">SpringBoot on Kubernetes</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/03/21/app-cds/">Java 10 新特性之 AppCDS</a>
       </li>
     
@@ -923,10 +1081,6 @@
     
       <li class="post">
         <a href="/blog/2016/09/29/intellij-idea-plugin-jvm-crash/">Intellij IDEA 插件开发 &#8212; 一次 JVM Crash 问题的解决</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/02/15/jvm-noclassdeffounterror-cache/">JVM 对 NoClassDefFoundError 的“缓存”</a>
       </li>
     
   </ul>

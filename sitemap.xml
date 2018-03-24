@@ -180,11 +180,15 @@
     </url>
     <url>
         <loc>http://khotyn.github.com/blog/2018/03/21/app-cds/</loc>
-        <lastmod>2018-03-21T15:44:45+08:00</lastmod>
+        <lastmod>2018-03-21T18:07:15+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://khotyn.github.com/blog/2018/03/24/springboot-on-kubernetes/</loc>
+        <lastmod>2018-03-24T16:42:34+08:00</lastmod>
     </url>
     <url>
         <loc>http://khotyn.github.com/</loc>
-        <lastmod>2018-03-21T15:44:45+08:00</lastmod>
+        <lastmod>2018-03-24T16:42:34+08:00</lastmod>
     </url>
     <url>
         <loc>http://khotyn.github.com/humans.txt</loc>
@@ -208,7 +212,7 @@
     </url>
     <url>
         <loc>http://khotyn.github.com/archives/</loc>
-        <lastmod>2018-03-21T15:44:45+08:00</lastmod>
+        <lastmod>2018-03-24T16:42:34+08:00</lastmod>
     </url>
     <url>
         <loc>http://khotyn.github.com/about/</loc>
@@ -216,7 +220,7 @@
     </url>
     <url>
         <loc>http://khotyn.github.com/blog/archives/</loc>
-        <lastmod>2018-03-21T15:44:45+08:00</lastmod>
+        <lastmod>2018-03-24T16:42:34+08:00</lastmod>
     </url>
     <url>
         <loc>http://khotyn.github.com/robots.txt</loc>

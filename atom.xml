@@ -4,7 +4,7 @@
   <title><![CDATA[小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2018-03-21T16:38:34+08:00</updated>
+  <updated>2018-03-24T16:44:20+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,159 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[SpringBoot on Kubernetes]]></title>
+    <link href="http://khotyn.github.com/blog/2018/03/24/springboot-on-kubernetes/"/>
+    <updated>2018-03-24T16:40:00+08:00</updated>
+    <id>http://khotyn.github.com/blog/2018/03/24/springboot-on-kubernetes</id>
+    <content type="html"><![CDATA[<p>本文将从创建一个 SpringBoot 的应用开始，详细讲述如何将一个 SpringBoot 的应用部署到本地的 Kubernetes 集群上面去。</p>
+
+<h2 id="springboot-">创建 SpringBoot 应用</h2>
+<p>首先，我们需要创建一个 SpringBoot 的应用，可以到 <a href="http://start.spring.io/">http://start.spring.io/</a> 创建一个，在创建的时候，我们需要选择一个 Web 的依赖，以方便部署到 Kubernetes 之后可以看到效果。</p>
+
+<p>创建完成之后，可以修改一下 SpringBoot 应用的 <code>main</code> 函数所在的类，让它成为一个 Controller：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="nd">@SpringBootApplication</span>
+</span><span class="line"><span class="nd">@Controller</span>
+</span><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">WebDemoApplication</span> <span class="o">{</span>
+</span><span class="line">
+</span><span class="line">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">        <span class="n">SpringApplication</span><span class="o">.</span><span class="na">run</span><span class="o">(</span><span class="n">WebDemoApplication</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">args</span><span class="o">);</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="nd">@RequestMapping</span><span class="o">(</span><span class="s">&quot;/hello&quot;</span><span class="o">)</span>
+</span><span class="line">    <span class="nd">@ResponseBody</span>
+</span><span class="line">    <span class="kd">public</span> <span class="n">String</span> <span class="nf">hello</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;Hello, Kubernetes!&quot;</span><span class="o">;</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这样，在本地启动这个 SpringBoot 的应用之后，如果我们访问 <code>http://localhost:8080/hello</code> 的话，就可以看到 <code>Hello, Kubernetes!</code> 这句话。</p>
+
+<h2 id="dockerfile">创建一个 Dockerfile</h2>
+<p>为了能够将这个 SpringBoot 的应用部署到 Kubernetes 里面去，我们需要创建一个 Dockerfile，将它打成一个 Docker 镜像：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">FROM</span> <span class="nl">openjdk:</span><span class="mi">8</span><span class="o">-</span><span class="n">jdk</span><span class="o">-</span><span class="n">alpine</span>
+</span><span class="line"><span class="n">ARG</span> <span class="n">JAR_FILE</span>
+</span><span class="line"><span class="n">ADD</span> <span class="n">$</span><span class="o">{</span><span class="n">JAR_FILE</span><span class="o">}</span> <span class="n">app</span><span class="o">.</span><span class="na">jar</span>
+</span><span class="line"><span class="n">ENTRYPOINT</span> <span class="o">[</span> <span class="s">&quot;java&quot;</span><span class="o">,</span> <span class="s">&quot;-jar&quot;</span><span class="o">,</span> <span class="s">&quot;/app.jar&quot;</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面的 Dockerfile 是一个非常简单的 Dockerfile，只是将 SpringBoot 应用打包后的 uber-jar 拷贝到容器里面去，然后运行这个 jar 包。有了这个 Dockerfile 之后，我们就可以在本地把 Docker 镜像打包出来了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">docker</span> <span class="n">build</span> <span class="o">--</span><span class="n">build</span><span class="o">-</span><span class="n">arg</span> <span class="n">JAR_FILE</span><span class="o">=./</span><span class="n">target</span><span class="o">/</span><span class="n">web</span><span class="o">-</span><span class="n">demo</span><span class="o">-</span><span class="mf">0.0</span><span class="o">.</span><span class="mi">1</span><span class="o">-</span><span class="n">SNAPSHOT</span><span class="o">.</span><span class="na">jar</span> <span class="o">.</span> <span class="o">-</span><span class="n">t</span> <span class="n">springboot</span><span class="o">-</span><span class="n">demo</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后需要注意的是，这样打出来的镜像是在本地的，没有办法被 minikube 找到，所以，要么将这个镜像放到一个中央的镜像仓库上，要么我们使用 minikube 的 docker daemon 来打镜像，这样 minikube 就可以找到这个镜像。</p>
+
+<p>所以，你首先需要在本地将 minikube 安装上去，具体可以看官方的<a href="https://kubernetes.io/docs/tasks/tools/install-minikube/">安装教程</a>。安装完成之后，先运行：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">minikube</span> <span class="n">start</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>来将 minikube 启动起来，然后可以运行</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eval</span> <span class="n">$</span><span class="o">(</span><span class="n">minikube</span> <span class="n">docker</span><span class="o">-</span><span class="n">env</span><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>将 docker daemon 切换成 minikube 的。最后，我们再用上面的 <code>docker build</code> 来进行打包，minikube 就可以看到了。</p>
+
+<h2 id="minikube-">将应用部署到 minikube 中去</h2>
+<p>Docker 镜像都准备好了，现在我们可以将应用部署到 minikube 中去了，首先我们需要创建一个 deployment 对象，这个可以用 yml 文件来描述：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+</pre></td><td class="code"><pre><code class="yaml"><span class="line"><span class="l-Scalar-Plain">apiVersion</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">apps/v1beta1</span>
+</span><span class="line"><span class="l-Scalar-Plain">kind</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Deployment</span>
+</span><span class="line"><span class="l-Scalar-Plain">metadata</span><span class="p-Indicator">:</span>
+</span><span class="line">  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo-deployment</span>
+</span><span class="line">  <span class="l-Scalar-Plain">labels</span><span class="p-Indicator">:</span>
+</span><span class="line">    <span class="l-Scalar-Plain">app</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line"><span class="l-Scalar-Plain">spec</span><span class="p-Indicator">:</span>
+</span><span class="line">  <span class="l-Scalar-Plain">replicas</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">3</span>
+</span><span class="line">  <span class="l-Scalar-Plain">selector</span><span class="p-Indicator">:</span>
+</span><span class="line">    <span class="l-Scalar-Plain">matchLabels</span><span class="p-Indicator">:</span>
+</span><span class="line">      <span class="l-Scalar-Plain">app</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line">  <span class="l-Scalar-Plain">template</span><span class="p-Indicator">:</span>
+</span><span class="line">    <span class="l-Scalar-Plain">metadata</span><span class="p-Indicator">:</span>
+</span><span class="line">      <span class="l-Scalar-Plain">labels</span><span class="p-Indicator">:</span>
+</span><span class="line">        <span class="l-Scalar-Plain">app</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line">    <span class="l-Scalar-Plain">spec</span><span class="p-Indicator">:</span>
+</span><span class="line">      <span class="l-Scalar-Plain">containers</span><span class="p-Indicator">:</span>
+</span><span class="line">        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line">          <span class="l-Scalar-Plain">image</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">springboot-demo</span>
+</span><span class="line">          <span class="l-Scalar-Plain">imagePullPolicy</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">IfNotPresent</span>
+</span><span class="line">          <span class="l-Scalar-Plain">ports</span><span class="p-Indicator">:</span>
+</span><span class="line">            <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">containerPort</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8080</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面的 yaml 文件没有什么特别的地方，除了 <code>imagePullPolicy</code> 需要指定成 <code>IfNotPresent</code>，这样 minikube 才会从本地去找镜像。</p>
+
+<p>有了上面的 yaml 文件之后，我们就可以运行 <code>kubectl apply -f springboot-demo.yml</code> 来让 minikube 将我们的 SpringBoot 的应用的集群给创建出来。</p>
+
+<h2 id="minikube--springboot-">访问 minikube 中的 SpringBoot 集群</h2>
+<p>现在我们已经将 SpringBoot 应用部署到了 minikube 中去，那么怎么访问这个集群呢，首先我们需要将端口暴露出来：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="yaml"><span class="line"><span class="l-Scalar-Plain">kubectl expose deployment springboot-demo-deployment --type=NodePort</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后运行：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="yaml"><span class="line"><span class="l-Scalar-Plain">minikube service springboot-demo-deployment --url</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>得到访问的 URL。再在得到的 URL 后面加上 <code>/hello</code>，就可以看到 <code>Hello, Kubernetes!</code> 了。</p>
+
+<p>或者，我们可以直接运行 <code>curl $(minikube service springboot-demo-deployment --url)/hello</code> 来访问。</p>
+
+<p>以上就是如何将一个 SpringBoot 的应用部署到 Kubernetes 里面去的全过程。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Java 10 新特性之 AppCDS]]></title>
@@ -33,7 +186,7 @@
 </ul>
 
 <h2 id="appcds">尝试 AppCDS</h2>
-<p>作者写了一个简单的 Java 应用，来测试 AppCDS 的效果。程序的代码已经放到了 Github 上面，大家可以直接去看，这里只给出大概的操作步骤和最后的测试效果。</p>
+<p>作者写了一个简单的 Java 应用，来测试 AppCDS 的效果。程序的代码已经放到了 <a href="https://github.com/khotyn/java-ten-app-cds">Github</a> 上面，大家可以直接去看，这里只给出大概的操作步骤和最后的测试效果。</p>
 
 <h3 id="dump--class">1. 决定要 Dump 哪些 Class</h3>
 <p>一般来说，一个 Java 应用程序会包含很多的 Class 文件，但是在运行中，并不是所有的 Class 文件都会被用到，所以，第一步我们需要来决定具体需要使用哪些 Class 文件，你需要给你的运行命令上加上如下的 JVM 参数：</p>
@@ -1251,25 +1404,6 @@
 <p>想要去培养这种对“程序美”的感受能力，一个很好的方式就是去阅读优秀的开源代码，比如 Tomcat，Dubbo 等等，有时候，当你看到一段不错的代码，一个简洁的有用的架构设计的时候，你会感到来自内心深处的愉悦，这就是“美”的一个侧面。我相信，培养这样的感受能力，是非常有益于身心健康的，并且我也相信那些透露出“美”的代码在某种程度上也是更加优秀的代码（内王而外圣）。</p>
 
 <p>这个世界已经够丑陋了，如果我们已经解决了温饱问题，又有了这么多的自由时间，不如做点“漂亮”点的东西出来，写一些更有用，更“美”的代码出来~</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[乐观错觉与悲观现实]]></title>
-    <link href="http://khotyn.github.com/blog/2013/10/15/positive-illusion-and-depressive-realism/"/>
-    <updated>2013-10-15T01:17:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/10/15/positive-illusion-and-depressive-realism</id>
-    <content type="html"><![CDATA[<p><img src="http://ww1.sinaimg.cn/mw690/61c0c922gw1e055mycdv7j.jpg" alt="image" /></p>
-
-<p>近日在读阿兰•德波顿的<a href="http://book.douban.com/subject/10594802/">「写给无神论者」</a>，里面提到基督教的人性本恶的观点给人带来的好处，当你对一件事情的结果期望并不高的时候，那么当结果出现一点好处的时候，你就会感到很快乐；相反，当你对一件事情有着过高的期望，最后结果并不令人满意的时候，你就会感到失落，绝望。</p>
-
-<p>德波顿这样捧高悲观，而贬低乐观有点太偏颇了。但是，在各种舆论阵地上，“悲观主义”都在被不公正地对待，各个社交网络上永远都是“正能量”，“乐观”，“积极向上”，每一个人似乎都非常排斥“悲观主义”，我想悲观的人大概也比较受人讨厌。</p>
-
-<p>诚然，过分地悲观会无情地伤害你的心灵，<a href="http://zh.wikipedia.org/wiki/%E5%A4%AA%E5%AE%B0%E6%B2%BB">太宰治</a>（愿我们都不要成为他那样的人）笔下的叶藏就是个典型的例子，由于对人类普遍的失望，叶藏一直都是郁郁寡欢、懦弱怕事，不断地和遇到他的女子殉情，最终失去了为人的资格。但是适度地悲观是非常有善的。现实是现实，到了一个人的心中，就成了“心中的现实”。当一个人处于乐观的状态下的时候，往往会对高估了现实的状况，而轻微悲观的人“心中的现实”更加接近实际的现实，他们能够更加准确地估计到现实中可能存在的一些问题，并且做好相应的准备，在问题真正到来的时候不会惊慌失措，因而能够保持更加稳定，更加健康的心理状态。</p>
-
-<p>而那些盲目的乐观主义者（我们的周围不缺乏这样的人），由于对现实有着过高的认识和期望，对问题认识不足，月盈而亏，当结果不尽如人意的时候，各种负面情绪就会出现。你以为你有光明的未来，以为有特殊的才能，但是，到最后却发现你不过是芸芸众生中平凡的一员，很多中年人的失落就是来源于此吧。</p>
-
-<p>所以，与其做个乐观主义者，不如做个悲观的行动主义者，与其相信有那种可能性，不如自己去寻找那种可能性，并且为可能的失败做好准备（成功永远都是属于少数人的）。</p>
 ]]></content>
   </entry>
   
