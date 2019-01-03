@@ -82,5 +82,11 @@ if (isAlive())
 ### Java Bean 规范对布尔类型属性的定义
 
 当然，照理说像 velocity 这样的著名开源组件，不应该在这种问题上犯错误，然后我看了一下 Java Bean 的规范：
-![image](http://pic.yupoo.com/khotyn/DbKXKmwa/medish.jpg)其实这段话已经说的很清楚了，只有原生类型的 `boolean` 的 Accessor 方法才能够用 **is** 前缀，其他的都用 get，其实在 JDK 的 Introspector 的实现中，也是这样处理的。
-那么，这么看来，Velocity 1.5 的处理是正确的，那么 1.7 增加对 `Boolean` 的支持是为什么呢？其实，Java Bean 的规范在 `is` 这种 Accessor 的规定上，是有点不怎么符合开发人员的直觉的，很多人都会在这个问题上纠结：**`Boolean` 类型的属性的 Accessor 是不是应该用 is 开头？**，我觉得大部分人的直觉对这个答案的回答应该都是*是*，所以 Velocity 这样处理只不过是顺着大多数人的直觉的意思罢了，无可厚非。
+
+![image](https://pic.yupoo.com/khotyn/DbKXKmwa/medish.jpg)
+
+其实这段话已经说的很清楚了，只有原生类型的 `boolean` 的 Accessor 方法才能够用 **is** 前缀，其他的都用 get，其实在 JDK 的 Introspector 的实现中，也是这样处理的。
+
+那么，这么看来，Velocity 1.5 的处理是正确的，那么 1.7 增加对 `Boolean` 的支持是为什么呢？
+
+其实，Java Bean 的规范在 `is` 这种 Accessor 的规定上，是有点不怎么符合开发人员的直觉的，很多人都会在这个问题上纠结：**`Boolean` 类型的属性的 Accessor 是不是应该用 is 开头？**，我觉得大部分人的直觉对这个答案的回答应该都是*是*，所以 Velocity 这样处理只不过是顺着大多数人的直觉的意思罢了，无可厚非。

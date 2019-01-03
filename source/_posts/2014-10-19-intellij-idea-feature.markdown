@@ -14,7 +14,7 @@ categories: [Programming]
 
 第一个是可以在打开类的时候直接跳到某一行，比如下面这样：
 
-![](http://pic.yupoo.com/khotyn/E8WysuL3/Pv6jh.png)
+![](https://pic.yupoo.com/khotyn/E8WysuL3/Pv6jh.png)
 
 打开 String 这个类的同时直接跳转到 String 的第 40 行。
 
@@ -22,7 +22,7 @@ categories: [Programming]
 
 IDEA 的 Open Symbol 功能可以直接定位到某一个类的某一个方法，默认的快捷键是 `Option+Command+O`，如下：
 
-![](http://pic.yupoo.com/khotyn/E8WRrUjB/I2Vom.png)
+![](https://pic.yupoo.com/khotyn/E8WRrUjB/I2Vom.png)
 
 ### 像 Sublime 那样多行编辑
 

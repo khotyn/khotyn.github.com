@@ -12,11 +12,11 @@ categories: [Programming]
 
 这个得先从 Windows 和 Unix 下的换行符开始说起，在我的 Intellij IDEA 的右下方的状态栏上，有一块是展示当前文件的换行符的：
 
-![Windows 和 Unix 下的文件换行符](http://pic.yupoo.com/khotyn/EcY8fTut/ksIoo.png)
+![Windows 和 Unix 下的文件换行符](https://pic.yupoo.com/khotyn/EcY8fTut/ksIoo.png)
 
 可以看到在 Windows 下，换行符是 `\r\n`，在 Unix 下换行符是 `\n`。如果我们用把一个文件的换行符换成 Windows 的换行符，那么当我们用 `cat -v` 来看的时候，就可以看到：
 
-![cat -v 查看文件是否含有 ^M](http://pic.yupoo.com/khotyn/EcYbafeN/medish.jpg) 
+![cat -v 查看文件是否含有 ^M](https://pic.yupoo.com/khotyn/EcYbafeN/medish.jpg) 
 
 实际上 `^M` 就是 Windows 下的换行符中的 `\r` 部分。因为 Unix 下的换行符是 `\n`，所以当一个用 Windows 下的换行符的文件放在 Unix 下的时候，单行的最后一个字符就变成了 `\r`，`\r` 在 ASCII 码中是 `0xD`，而 `0xD` 在 VIM 和 `cat -v` 则刚好被显示为 `^M`。
 

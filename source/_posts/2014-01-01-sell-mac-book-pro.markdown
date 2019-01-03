@@ -14,12 +14,12 @@ categories: [Life]
 
 关于这个型号的 MBP 的其他参数，可以直接看下面这张图：
 
-![image](http://pic.yupoo.com/khotyn/DqBJdz79/medish.jpg)
+![image](https://pic.yupoo.com/khotyn/DqBJdz79/medish.jpg)
 
 上几张本本的照片：
 
 合上后，有些许划痕
 
-![image](http://pic.yupoo.com/khotyn/DqBPAi4B/medish.jpg)
+![image](https://pic.yupoo.com/khotyn/DqBPAi4B/medish.jpg)
 
-![image](http://pic.yupoo.com/khotyn/DqBQFoio/medish.jpg)
+![image](https://pic.yupoo.com/khotyn/DqBQFoio/medish.jpg)

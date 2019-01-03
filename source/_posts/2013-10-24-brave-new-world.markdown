@@ -6,7 +6,7 @@ comments: true
 categories: [Life]
 ---
 
-![image](http://pic.yupoo.com/khotyn/Dg6bDXhi/Zb6Cy.jpg)
+![image](https://pic.yupoo.com/khotyn/Dg6bDXhi/Zb6Cy.jpg)
 
 今天和朋友聊天，说起眼见的问题，以前在业务团队的时候大家都奔着业务而去，完成业务上的需求，最多了解一下所用到的框架，鲜有关注业界的开源软件的动态。
 

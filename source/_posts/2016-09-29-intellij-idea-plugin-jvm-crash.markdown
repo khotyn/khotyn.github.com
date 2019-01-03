@@ -10,7 +10,7 @@ categories: [Intellij, Programming]
 
 前几天手贱升级了 macOS Sierra，本来看到 Intellij IDEA 在 macOS Sierra 下面只有一个触摸板异常灵活的问题，觉得自己触摸板用地比较少就直接升级了，哪知道升级以后，在开发我们自己的 Intellij IDEA 插件的时候，启动的 IDEA 一会儿就出现了 Crash 的问题（Crash 的是通过 Intellij IDEA 启动起来的用来测试插件的 Intellij IDEA）。具体的 Crash 截图如下：
 
-![intellij_idea_crash.png](http://upload-images.jianshu.io/upload_images/134563-0a04b1b5cc9bb723.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![intellij_idea_crash.png](https://upload-images.jianshu.io/upload_images/134563-0a04b1b5cc9bb723.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 本来想是不是要直接回到 OS X Yosemite，但是不甘心啊，觉得既然都已经升级了，那遇到问题就解决吧，幸好在 Jetbrains 官方的问题跟踪平台上看到了有了提了类似的问题：<https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FJRE-3>
 
@@ -22,7 +22,7 @@ categories: [Intellij, Programming]
 
 下载过来以后在插件工程的「Project Structure」配置界面进行如下配置即可：
 
-![](http://upload-images.jianshu.io/upload_images/134563-eb53c97aca4ff78a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/134563-eb53c97aca4ff78a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 1. 将下载过来的 JDK 增加到 SDK 里面。
 2. 找到当前正在用来运行插件的插件 SDK，将其以依赖的 JDK 修改成刚刚增加的 JDK。

@@ -20,7 +20,7 @@ jvmtop.sh
 
 显示出的信息类似下面这样：
 
-![image](http://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg)
+![image](https://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg)
 
 其中，各个字段的意义分别如下：
 
@@ -45,7 +45,7 @@ jvmtop.sh <pid>
 
 显示的信息类似下面这样：
 
-![image](http://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png)
+![image](https://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png)
 
 其中，各个字段的意义如下：
 
@@ -62,7 +62,7 @@ jvmtop.sh <pid>
 
 jvmtop 的实现相对来说还是比较简单的，整个 jvmtop 才 14 个类。
 
-![image](http://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png)
+![image](https://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png)
 
 其中 JvmTop.java 是入口类。
 

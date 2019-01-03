@@ -6,7 +6,7 @@ comments: true
 categories: [Life]
 ---
 
-![image](http://ww1.sinaimg.cn/mw690/61c0c922gw1e055mycdv7j.jpg)
+![image](https://ww1.sinaimg.cn/mw690/61c0c922gw1e055mycdv7j.jpg)
 
 近日在读阿兰•德波顿的[「写给无神论者」](http://book.douban.com/subject/10594802/)，里面提到基督教的人性本恶的观点给人带来的好处，当你对一件事情的结果期望并不高的时候，那么当结果出现一点好处的时候，你就会感到很快乐；相反，当你对一件事情有着过高的期望，最后结果并不令人满意的时候，你就会感到失落，绝望。
 
