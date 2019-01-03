@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Java | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/java/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2019-01-03T23:17:45+08:00</updated>
+  <updated>2019-01-03T23:29:49+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -287,7 +287,7 @@ jvmtop.sh
 
 <p>显示出的信息类似下面这样：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg" alt="image" /></p>
+<p><img src="https://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg" alt="image" /></p>
 
 <p>其中，各个字段的意义分别如下：</p>
 
@@ -314,7 +314,7 @@ jvmtop.sh &lt;pid&gt;
 
 <p>显示的信息类似下面这样：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png" alt="image" /></p>
+<p><img src="https://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png" alt="image" /></p>
 
 <p>其中，各个字段的意义如下：</p>
 
@@ -333,7 +333,7 @@ jvmtop.sh &lt;pid&gt;
 
 <p>jvmtop 的实现相对来说还是比较简单的，整个 jvmtop 才 14 个类。</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png" alt="image" /></p>
+<p><img src="https://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png" alt="image" /></p>
 
 <p>其中 JvmTop.java 是入口类。</p>
 
@@ -426,7 +426,7 @@ if (isAlive())
 
 <p>当然，照理说像 velocity 这样的著名开源组件，不应该在这种问题上犯错误，然后我看了一下 Java Bean 的规范：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/DbKXKmwa/medish.jpg" alt="image" /></p>
+<p><img src="https://pic.yupoo.com/khotyn/DbKXKmwa/medish.jpg" alt="image" /></p>
 
 <p>其实这段话已经说的很清楚了，只有原生类型的 <code>boolean</code> 的 Accessor 方法才能够用 <strong>is</strong> 前缀，其他的都用 get，其实在 JDK 的 Introspector 的实现中，也是这样处理的。</p>
 

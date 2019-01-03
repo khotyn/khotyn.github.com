@@ -245,7 +245,7 @@
 
 <p>当然，照理说像 velocity 这样的著名开源组件，不应该在这种问题上犯错误，然后我看了一下 Java Bean 的规范：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/DbKXKmwa/medish.jpg" alt="image" /></p>
+<p><img src="https://pic.yupoo.com/khotyn/DbKXKmwa/medish.jpg" alt="image" /></p>
 
 <p>其实这段话已经说的很清楚了，只有原生类型的 <code>boolean</code> 的 Accessor 方法才能够用 <strong>is</strong> 前缀，其他的都用 get，其实在 JDK 的 Introspector 的实现中，也是这样处理的。</p>
 

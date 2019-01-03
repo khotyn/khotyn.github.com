@@ -139,11 +139,11 @@
 
 <p>这个得先从 Windows 和 Unix 下的换行符开始说起，在我的 Intellij IDEA 的右下方的状态栏上，有一块是展示当前文件的换行符的：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/EcY8fTut/ksIoo.png" alt="Windows 和 Unix 下的文件换行符" /></p>
+<p><img src="https://pic.yupoo.com/khotyn/EcY8fTut/ksIoo.png" alt="Windows 和 Unix 下的文件换行符" /></p>
 
 <p>可以看到在 Windows 下，换行符是 <code>\r\n</code>，在 Unix 下换行符是 <code>\n</code>。如果我们用把一个文件的换行符换成 Windows 的换行符，那么当我们用 <code>cat -v</code> 来看的时候，就可以看到：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/EcYbafeN/medish.jpg" alt="cat -v 查看文件是否含有 ^M" /> </p>
+<p><img src="https://pic.yupoo.com/khotyn/EcYbafeN/medish.jpg" alt="cat -v 查看文件是否含有 ^M" /> </p>
 
 <p>实际上 <code>^M</code> 就是 Windows 下的换行符中的 <code>\r</code> 部分。因为 Unix 下的换行符是 <code>\n</code>，所以当一个用 Windows 下的换行符的文件放在 Unix 下的时候，单行的最后一个字符就变成了 <code>\r</code>，<code>\r</code> 在 ASCII 码中是 <code>0xD</code>，而 <code>0xD</code> 在 VIM 和 <code>cat -v</code> 则刚好被显示为 <code>^M</code>。</p>
 

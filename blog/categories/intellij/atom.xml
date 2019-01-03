@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Intellij | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/intellij/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2019-01-03T23:17:45+08:00</updated>
+  <updated>2019-01-03T23:29:49+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -22,7 +22,7 @@
 
 <p>前几天手贱升级了 macOS Sierra，本来看到 Intellij IDEA 在 macOS Sierra 下面只有一个触摸板异常灵活的问题，觉得自己触摸板用地比较少就直接升级了，哪知道升级以后，在开发我们自己的 Intellij IDEA 插件的时候，启动的 IDEA 一会儿就出现了 Crash 的问题（Crash 的是通过 Intellij IDEA 启动起来的用来测试插件的 Intellij IDEA）。具体的 Crash 截图如下：</p>
 
-<p><img src="http://upload-images.jianshu.io/upload_images/134563-0a04b1b5cc9bb723.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="intellij_idea_crash.png" /></p>
+<p><img src="https://upload-images.jianshu.io/upload_images/134563-0a04b1b5cc9bb723.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="intellij_idea_crash.png" /></p>
 
 <p>本来想是不是要直接回到 OS X Yosemite，但是不甘心啊，觉得既然都已经升级了，那遇到问题就解决吧，幸好在 Jetbrains 官方的问题跟踪平台上看到了有了提了类似的问题：<a href="https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FJRE-3">https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FJRE-3</a></p>
 
@@ -34,7 +34,7 @@
 
 <p>下载过来以后在插件工程的「Project Structure」配置界面进行如下配置即可：</p>
 
-<p><img src="http://upload-images.jianshu.io/upload_images/134563-eb53c97aca4ff78a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="" /></p>
+<p><img src="https://upload-images.jianshu.io/upload_images/134563-eb53c97aca4ff78a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="" /></p>
 
 <ol>
   <li>将下载过来的 JDK 增加到 SDK 里面。</li>

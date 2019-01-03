@@ -574,7 +574,7 @@
 
 <p>前几天手贱升级了 macOS Sierra，本来看到 Intellij IDEA 在 macOS Sierra 下面只有一个触摸板异常灵活的问题，觉得自己触摸板用地比较少就直接升级了，哪知道升级以后，在开发我们自己的 Intellij IDEA 插件的时候，启动的 IDEA 一会儿就出现了 Crash 的问题（Crash 的是通过 Intellij IDEA 启动起来的用来测试插件的 Intellij IDEA）。具体的 Crash 截图如下：</p>
 
-<p><img src="http://upload-images.jianshu.io/upload_images/134563-0a04b1b5cc9bb723.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="intellij_idea_crash.png" /></p>
+<p><img src="https://upload-images.jianshu.io/upload_images/134563-0a04b1b5cc9bb723.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="intellij_idea_crash.png" /></p>
 
 <p>本来想是不是要直接回到 OS X Yosemite，但是不甘心啊，觉得既然都已经升级了，那遇到问题就解决吧，幸好在 Jetbrains 官方的问题跟踪平台上看到了有了提了类似的问题：<a href="https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FJRE-3">https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FJRE-3</a></p>
 
@@ -586,7 +586,7 @@
 
 <p>下载过来以后在插件工程的「Project Structure」配置界面进行如下配置即可：</p>
 
-<p><img src="http://upload-images.jianshu.io/upload_images/134563-eb53c97aca4ff78a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="" /></p>
+<p><img src="https://upload-images.jianshu.io/upload_images/134563-eb53c97aca4ff78a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="" /></p>
 
 <ol>
   <li>将下载过来的 JDK 增加到 SDK 里面。</li>
@@ -800,11 +800,11 @@
 
 <p>这个得先从 Windows 和 Unix 下的换行符开始说起，在我的 Intellij IDEA 的右下方的状态栏上，有一块是展示当前文件的换行符的：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/EcY8fTut/ksIoo.png" alt="Windows 和 Unix 下的文件换行符" /></p>
+<p><img src="https://pic.yupoo.com/khotyn/EcY8fTut/ksIoo.png" alt="Windows 和 Unix 下的文件换行符" /></p>
 
 <p>可以看到在 Windows 下，换行符是 <code>\r\n</code>，在 Unix 下换行符是 <code>\n</code>。如果我们用把一个文件的换行符换成 Windows 的换行符，那么当我们用 <code>cat -v</code> 来看的时候，就可以看到：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/EcYbafeN/medish.jpg" alt="cat -v 查看文件是否含有 ^M" /> </p>
+<p><img src="https://pic.yupoo.com/khotyn/EcYbafeN/medish.jpg" alt="cat -v 查看文件是否含有 ^M" /> </p>
 
 <p>实际上 <code>^M</code> 就是 Windows 下的换行符中的 <code>\r</code> 部分。因为 Unix 下的换行符是 <code>\n</code>，所以当一个用 Windows 下的换行符的文件放在 Unix 下的时候，单行的最后一个字符就变成了 <code>\r</code>，<code>\r</code> 在 ASCII 码中是 <code>0xD</code>，而 <code>0xD</code> 在 VIM 和 <code>cat -v</code> 则刚好被显示为 <code>^M</code>。</p>
 
@@ -917,7 +917,7 @@
 
 <p>第一个是可以在打开类的时候直接跳到某一行，比如下面这样：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/E8WysuL3/Pv6jh.png" alt="" /></p>
+<p><img src="https://pic.yupoo.com/khotyn/E8WysuL3/Pv6jh.png" alt="" /></p>
 
 <p>打开 String 这个类的同时直接跳转到 String 的第 40 行。</p>
 
@@ -925,7 +925,7 @@
 
 <p>IDEA 的 Open Symbol 功能可以直接定位到某一个类的某一个方法，默认的快捷键是 <code>Option+Command+O</code>，如下：</p>
 
-<p><img src="http://pic.yupoo.com/khotyn/E8WRrUjB/I2Vom.png" alt="" /></p>
+<p><img src="https://pic.yupoo.com/khotyn/E8WRrUjB/I2Vom.png" alt="" /></p>
 
 <h3 id="sublime-">像 Sublime 那样多行编辑</h3>
 
@@ -993,7 +993,7 @@
 
 <p>不过，今天在多看阅读上看书的时候，却弹出了这样的东西：</p>
 
-<p><img src="http://ww2.sinaimg.cn/large/61c0c922jw1ejergg5hj9j20g00qomzt.jpg" alt="多看阅读弹窗" /></p>
+<p><img src="https://ww2.sinaimg.cn/large/61c0c922jw1ejergg5hj9j20g00qomzt.jpg" alt="多看阅读弹窗" /></p>
 
 <p>多看在读者阅读书籍的中间弹出了这样的东西，并且不止弹出了一次，过个几分钟又弹出一次。我觉得多看这种极度不尊重读者的做法与被小米收购有着莫大的关系，小米一直以来给我的印象就是一个营销的公司，而不是一个认真做产品的公司，多看到了小米手里已经沦落成这份模样了，靠这样的弹窗来增加用户量，我决定在看完目前的这本书以后，就卸载多看阅读，以后看书还是买个 Kindle 省事。</p>
 </div>

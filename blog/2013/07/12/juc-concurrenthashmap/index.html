@@ -141,7 +141,7 @@
 
 <p>ConcurrentHashMap 为了提高本身的并发能力，在内部采用了一个叫做 Segment 的结构，一个 Segment 其实就是一个类 Hash Table 的结构，Segment 内部维护了一个链表数组，我们用下面这一幅图来看下 ConcurrentHashMap 的内部结构：</p>
 
-<p><img src="http://pic.yupoo.com/goldendoc/Ba4GCFe1/nuEZ0.png" alt="image" /></p>
+<p><img src="https://pic.yupoo.com/goldendoc/Ba4GCFe1/nuEZ0.png" alt="image" /></p>
 
 <p>从上面的结构我们可以了解到，ConcurrentHashMap 定位一个元素的过程需要进行两次 Hash 操作，第一次 Hash 定位到 Segment，第二次 Hash 定位到元素所在的链表的头部，因此，这一种结构的带来的副作用是 Hash 的过程要比普通的 HashMap 要长，但是带来的好处是写操作的时候可以只对元素所在的 Segment 进行加锁即可，不会影响到其他的 Segment，这样，在最理想的情况下，ConcurrentHashMap 可以最高同时支持 Segment 数量大小的写操作（刚好这些写操作都非常平均地分布在所有的 Segment 上），所以，通过这一种结构，ConcurrentHashMap 的并发能力可以大大的提高。</p>
 
@@ -485,11 +485,11 @@
 
 <p>首先 remove 操作也是确定需要删除的元素的位置，不过这里删除元素的方法不是简单地把待删除元素的前面的一个元素的 next 指向后面一个就完事了，我们之前已经说过 HashEntry 中的 next 是 final 的，一经赋值以后就不可修改，在定位到待删除元素的位置以后，程序就将待删除元素前面的那一些元素全部复制一遍，然后再一个一个重新接到链表上去，看一下下面这一幅图来了解这个过程：</p>
 
-<p><img src="http://pic.yupoo.com/goldendoc/Ba3OfBv8/medish.jpg" alt="image" /></p>
+<p><img src="https://pic.yupoo.com/goldendoc/Ba3OfBv8/medish.jpg" alt="image" /></p>
 
 <p>假设链表中原来的元素如上图所示，现在要删除元素 3，那么删除元素 3 以后的链表就如下图所示：</p>
 
-<p><img src="http://pic.yupoo.com/goldendoc/Ba3OfPQE/medish.jpg" alt="image" /></p>
+<p><img src="https://pic.yupoo.com/goldendoc/Ba3OfPQE/medish.jpg" alt="image" /></p>
 
 <h3 id="concurrenthashmap--size-">ConcurrentHashMap 的 size 操作</h3>
 
