@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Clojure | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/clojure/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2019-01-03T23:40:18+08:00</updated>
+  <updated>2019-10-06T05:01:32-05:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[成就达成：4clojure 题目全破！]]></title>
     <link href="http://khotyn.github.com/blog/2013/06/21/4clojure/"/>
-    <updated>2013-06-21T22:09:00+08:00</updated>
+    <updated>2013-06-21T22:09:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2013/06/21/4clojure</id>
     <content type="html"><![CDATA[<p>经过了一个多月的努力，终于将 <a href="http://www.4clojure.com/">4clojure.com</a> 上面的的题目全部解出了，经过这段时间不断地用 clojure，对 Clojure 也有了一些基本的认识，目前让我觉得 clojure 强大的地方在于：</p>
 
@@ -42,7 +42,7 @@
   <entry>
     <title type="html"><![CDATA[Clojure 如何判断一个序列中是否存在某个元素]]></title>
     <link href="http://khotyn.github.com/blog/2013/05/09/clojure-element-in-seq/"/>
-    <updated>2013-05-09T21:17:00+08:00</updated>
+    <updated>2013-05-09T21:17:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2013/05/09/clojure-element-in-seq</id>
     <content type="html"><![CDATA[<p>最近一直在看 Clojure，经常碰到的一个问题是怎么判断一个序列中是否存在某个元素。对于这个问题的第一反应就是用<code>contains?</code>来判断，但是<code>contains?</code>的第二个参数是<code>key</code>而不是元素的值，对于 vector 或者 array 这样的数据结构不能做判断：</p>
 
@@ -67,7 +67,7 @@ user=&gt; (some #{101} '(101 102 103 104))
   <entry>
     <title type="html"><![CDATA[Clojure 学习笔记：生命游戏]]></title>
     <link href="http://khotyn.github.com/blog/2013/03/23/clojure-game-of-life/"/>
-    <updated>2013-03-23T16:49:00+08:00</updated>
+    <updated>2013-03-23T16:49:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2013/03/23/clojure-game-of-life</id>
     <content type="html"><![CDATA[<p>本周继续在看「Clojure Programming」这本书，这本书的第三章讲的是 Clojure 的集合和数据结构，作为这章的结束，作者举了一个「生命游戏」的例子来讲解 Clojure 数据结构的使用，作者一共提供了三种方式来解这个生命游戏，其中前两种方式比较好理解，最后一种方式对我来说理解起来比较困难，不过经过几个小时的推敲，总算是基本搞明白了，这里就将我理解的过程记录一下。</p>
 
@@ -146,7 +146,7 @@ to f and colls.  Thus function f should return a collection.</p>
   <entry>
     <title type="html"><![CDATA[Clojure 学习笔记：开始]]></title>
     <link href="http://khotyn.github.com/blog/2013/03/17/learning-clojure-partone/"/>
-    <updated>2013-03-17T20:44:00+08:00</updated>
+    <updated>2013-03-17T20:44:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2013/03/17/learning-clojure-partone</id>
     <content type="html"><![CDATA[<h3 id="clojure">一、 为什么学 Clojure</h3>
 

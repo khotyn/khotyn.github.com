@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Intellij | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/intellij/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2019-01-03T23:40:18+08:00</updated>
+  <updated>2019-10-06T05:01:32-05:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Intellij IDEA 插件开发 --- 一次 JVM Crash 问题的解决]]></title>
     <link href="http://khotyn.github.com/blog/2016/09/29/intellij-idea-plugin-jvm-crash/"/>
-    <updated>2016-09-29T09:07:00+08:00</updated>
+    <updated>2016-09-29T09:07:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2016/09/29/intellij-idea-plugin-jvm-crash</id>
     <content type="html"><![CDATA[<p>虽然今天遇到的不是一个有什么技术含量的问题，但是国内做这块的人太少了，觉得还是需要多分享分享，至少可以帮助新人走一些弯路，^_^</p>
 

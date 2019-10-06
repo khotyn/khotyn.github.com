@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Bash | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/bash/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2019-01-03T23:40:18+08:00</updated>
+  <updated>2019-10-06T05:01:32-05:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Bash Job Control]]></title>
     <link href="http://khotyn.github.com/blog/2013/07/10/bash-job-control/"/>
-    <updated>2013-07-10T19:43:00+08:00</updated>
+    <updated>2013-07-10T19:43:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2013/07/10/bash-job-control</id>
     <content type="html"><![CDATA[<p>这两天在给 <a href="https://github.com/khotyn/hotcode">HotCode</a> 写<a href="https://github.com/khotyn/hotcode/blob/master/test.sh">测试脚本</a>，其中用到了 Bash 的任务控制功能，说白了就是把一个任务放到后台，拉到前台之类的操作，这里做一下总结。</p>
 

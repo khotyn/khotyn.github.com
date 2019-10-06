@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Regex | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/regex/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2019-01-03T23:40:18+08:00</updated>
+  <updated>2019-10-06T05:01:32-05:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[再论如何匹配不包含连续字符串的行]]></title>
     <link href="http://khotyn.github.com/blog/2013/07/24/match-line-not-contain-a-string/"/>
-    <updated>2013-07-24T22:35:00+08:00</updated>
+    <updated>2013-07-24T22:35:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2013/07/24/match-line-not-contain-a-string</id>
     <content type="html"><![CDATA[<p>在前一篇文章中，我讨论过如何使用<a href="http://blog.khotyn.com/blog/2013/07/24/zero-width-assert/">使用零宽断言来匹配不包含连续字符串的行</a>，这个方法采用了零宽断言这种不怎么常见的正则表达式用法，虽然行之有效，但是总归是个麻烦的方法，而且，零宽断言很多的正则表达式解释器都不支持，用 grep 的话，得加上 -P 参数，让 grep 采用 Perl 的方式解释正则表达式，更加遗憾的一点是 -P 参数似乎只有在 GNU 的版本中才有，在我的 Mac 上的 BSD 版本的 grep 中，并没有这个参数。</p>
 
@@ -59,7 +59,7 @@ sed -n '/pattern/!p'
   <entry>
     <title type="html"><![CDATA[使用零宽断言来匹配不包含连续字符串的行]]></title>
     <link href="http://khotyn.github.com/blog/2013/07/24/zero-width-assert/"/>
-    <updated>2013-07-24T16:34:00+08:00</updated>
+    <updated>2013-07-24T16:34:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2013/07/24/zero-width-assert</id>
     <content type="html"><![CDATA[<p>最近在工作中遇到一个问题，有 N 个字符串，需要用正则表达式去过滤掉不包含某一个特定连续字符串(比如abc)的字符串。</p>
 

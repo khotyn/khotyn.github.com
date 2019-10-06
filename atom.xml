@@ -4,7 +4,7 @@
   <title><![CDATA[小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2019-01-03T23:40:18+08:00</updated>
+  <updated>2019-10-06T05:01:32-05:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -14,9 +14,28 @@
 
   
   <entry>
+    <title type="html"><![CDATA[闪之轨迹 4 玩后感]]></title>
+    <link href="http://khotyn.github.com/blog/2019/10/06/the-legend-of-heroes-4/"/>
+    <updated>2019-10-06T04:56:00-05:00</updated>
+    <id>http://khotyn.github.com/blog/2019/10/06/the-legend-of-heroes-4</id>
+    <content type="html"><![CDATA[<p><img src="https://cdn.nlark.com/yuque/0/2019/jpeg/117032/1567947892371-d4fe946d-6508-4b13-83d3-626658f61738.jpeg#align=left&amp;display=inline&amp;height=720&amp;name=maxresdefault.jpg&amp;originHeight=720&amp;originWidth=1280&amp;size=261324&amp;status=done&amp;width=1280" alt="maxresdefault.jpg" /></p>
+
+<p>从入手闪之轨迹 4 到现在应该有大半年的时间了，平时并没有什么时间可以用来玩游戏，只有周末几个小时的时间，所以通关速度比较慢，我一直以来对于游戏都非常感兴趣，也希望将自己体验过的一些游戏的感受给写下来，在玩游戏方面，我绝对不是一个资深的玩家，更多写的是一些个人的感受，大部分都是一些主观感受，写下来的目的也是为了加强自己的文字的表达能力，让自己有机会可以深入思考游戏的一些体验，而不是通关就算数了。</p>
+
+<p>这次我第一次通关了轨迹系列，首先讲一下整个过程中最大的体感，闪之轨迹 4 是一个对非粉丝不太友好的游戏，游戏刚刚开始的时候，人物一批批地出场，加上大量的世界观设定的名词，如果你之前没有玩过任何轨迹系列的作品，肯定会有和我一样感觉到完全不知道在干些什么，实际上，到了游戏通关的时候，有一些角色之间的关系我都还没有搞懂，如果你是一个非轨迹系列的粉丝，没有玩过轨迹系列的作品，那你得有游戏一开始就有大量的信息涌现到你的面前的准备，只有挺过前面的这一段之后，到悠娜寻找黎恩剧情展开之后，才会稍微有点儿好转。</p>
+
+<p>因为我是以最低难度剧情通关的，所以接下来先来谈一下剧情方面，说实话，闪之轨迹 4 的剧情真的是太过于“中二”，太过于模式化了，敌方阵营的人没有几个人是有坚定的意志的，基本上被主角团打到了之后就开始反省，洗白，一直到倒数第二个 Boss，还在洗白，喂，洗白洗地是不是太过分了，洗到最后 Boss 还没有开始打地时候，就知道打赢了一定会洗白了。另外，剧情其实是挺枯燥，整个剧情总结起来就是找小伙伴，找黎恩，继续找小伙伴，然后开干，特别是第二章和第三章，都在大量地找各种小伙伴，这一段真地是有点儿玩不下去了。</p>
+
+<p>最后还是谈一下战斗吧，其实我应该没有什么资格来谈闪之轨迹 4 的战斗系统，因为我是最低难度通关的嘛，但是无脑输出后面，发现了回合制战斗系统里面一些可以玩的地方，比如有些时候第 N 个回合会有必杀、破防之类的特效，如果刚好这个是一个敌方的回合，你可以通过时间加速把敌方挤到后面去，让这个回合变成己方回合，从而拿到特效，之前在玩 P5 的时候好像并没有这样的设计，这种设计让很少接触回合制游戏的我来说，还是有一点儿新意，感受到了整个游戏一定的可玩性的。</p>
+
+<p>总结一下闪之轨迹 4 的话，如果是 10 分是满分的话，我给打个 7 分吧，如果你没有玩过轨迹系列的话，并且没有好游戏玩了，是可以玩一下的。如果你是轨迹系列的粉丝的话，那就另当别论了，毕竟我并不是粉丝。</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[SpringBoot on Kubernetes]]></title>
     <link href="http://khotyn.github.com/blog/2018/03/24/springboot-on-kubernetes/"/>
-    <updated>2018-03-24T16:40:00+08:00</updated>
+    <updated>2018-03-24T16:40:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2018/03/24/springboot-on-kubernetes</id>
     <content type="html"><![CDATA[<p>本文将从创建一个 SpringBoot 的应用开始，详细讲述如何将一个 SpringBoot 的应用部署到本地的 Kubernetes 集群上面去。</p>
 
@@ -169,7 +188,7 @@
   <entry>
     <title type="html"><![CDATA[Java 10 新特性之 AppCDS]]></title>
     <link href="http://khotyn.github.com/blog/2018/03/21/app-cds/"/>
-    <updated>2018-03-21T15:41:00+08:00</updated>
+    <updated>2018-03-21T15:41:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2018/03/21/app-cds</id>
     <content type="html"><![CDATA[<p>Oracle 昨天<a href="https://www.oracle.com/corporate/pressrelease/Java-10-032018.html">公布了 Java 10 的 GA 版本</a>，Java 10 里面除了<a href="http://openjdk.java.net/jeps/286">本地变量类型推断</a>之外，还扩展了原来的 CDS 的能力为 <a href="http://openjdk.java.net/jeps/310">AppCDS</a>。</p>
 
@@ -254,7 +273,7 @@
   <entry>
     <title type="html"><![CDATA[Cloud Native Infrastrcuture 阅读笔记]]></title>
     <link href="http://khotyn.github.com/blog/2018/02/19/cloud-native-infrastrcuture/"/>
-    <updated>2018-02-19T21:00:00+08:00</updated>
+    <updated>2018-02-19T21:00:00-06:00</updated>
     <id>http://khotyn.github.com/blog/2018/02/19/cloud-native-infrastrcuture</id>
     <content type="html"><![CDATA[<p>这是假期读的第二本书，以下是对本书的阅读的内容的一些总结：</p>
 
@@ -314,7 +333,7 @@
   <entry>
     <title type="html"><![CDATA[「法国妈妈育儿经」阅读笔记]]></title>
     <link href="http://khotyn.github.com/blog/2018/02/18/bring-up-baby/"/>
-    <updated>2018-02-18T15:54:00+08:00</updated>
+    <updated>2018-02-18T15:54:00-06:00</updated>
     <id>http://khotyn.github.com/blog/2018/02/18/bring-up-baby</id>
     <content type="html"><![CDATA[<p>浅浅出生快半个月了，这半个月的时间基本上没有睡好觉，刚好在豆瓣上看到一个友邻分享了看完这本书的一些看法，挺有意思的，于是花了几个小时的时间看了一下。</p>
 
@@ -335,7 +354,7 @@
   <entry>
     <title type="html"><![CDATA[Intellij IDEA 插件开发 --- 一次 JVM Crash 问题的解决]]></title>
     <link href="http://khotyn.github.com/blog/2016/09/29/intellij-idea-plugin-jvm-crash/"/>
-    <updated>2016-09-29T09:07:00+08:00</updated>
+    <updated>2016-09-29T09:07:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2016/09/29/intellij-idea-plugin-jvm-crash</id>
     <content type="html"><![CDATA[<p>虽然今天遇到的不是一个有什么技术含量的问题，但是国内做这块的人太少了，觉得还是需要多分享分享，至少可以帮助新人走一些弯路，^_^</p>
 
@@ -371,7 +390,7 @@
   <entry>
     <title type="html"><![CDATA[JVM 对 NoClassDefFoundError 的“缓存”]]></title>
     <link href="http://khotyn.github.com/blog/2015/02/15/jvm-noclassdeffounterror-cache/"/>
-    <updated>2015-02-15T20:44:00+08:00</updated>
+    <updated>2015-02-15T20:44:00-06:00</updated>
     <id>http://khotyn.github.com/blog/2015/02/15/jvm-noclassdeffounterror-cache</id>
     <content type="html"><![CDATA[<h2 id="section">问题</h2>
 
@@ -501,7 +520,7 @@
   <entry>
     <title type="html"><![CDATA[该死的 ^M]]></title>
     <link href="http://khotyn.github.com/blog/2014/11/15/damn-the-carriage-return-character/"/>
-    <updated>2014-11-15T08:33:00+08:00</updated>
+    <updated>2014-11-15T08:33:00-06:00</updated>
     <id>http://khotyn.github.com/blog/2014/11/15/damn-the-carriage-return-character</id>
     <content type="html"><![CDATA[<p><code>^M</code>，神奇的字符！相信很多人写 Shell 脚本的时候都被这个字符坑过，我自己也至少被坑过两次。最近周围的好几个小伙伴又被 <code>^M</code> 坑，花了好几个小时检查脚本的错误，结果发现是 <code>^M</code> 导致的。所以写了这篇文章讲一下什么是 <code>^M</code>，当 <code>^M</code> 出现的时候一般会伴随着什么样的现象，出现了我们可以用什么手段去解决。</p>
 
@@ -587,7 +606,7 @@
   <entry>
     <title type="html"><![CDATA[Intellij IDEA 的一些使用技巧]]></title>
     <link href="http://khotyn.github.com/blog/2014/10/19/intellij-idea-feature/"/>
-    <updated>2014-10-19T21:41:00+08:00</updated>
+    <updated>2014-10-19T21:41:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2014/10/19/intellij-idea-feature</id>
     <content type="html"><![CDATA[<p><strong>所有的这些功能都是在 Intellij IDEA 14 中测试的，其他的版本不一定适用</strong></p>
 
@@ -638,7 +657,7 @@
   <entry>
     <title type="html"><![CDATA[为什么我讨厌小米]]></title>
     <link href="http://khotyn.github.com/blog/2014/08/16/why-i-hate-xiaomi/"/>
-    <updated>2014-08-16T20:53:00+08:00</updated>
+    <updated>2014-08-16T20:53:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2014/08/16/why-i-hate-xiaomi</id>
     <content type="html"><![CDATA[<p>「多看阅读」一直是我最喜欢的阅读器，没有之一，在多看阅读上买的书也不少了，绝佳的用户体验，「多看阅读」甩出豆瓣阅读、唐茶等 N 条街。</p>
 
@@ -653,7 +672,7 @@
   <entry>
     <title type="html"><![CDATA[Guice 集合注入]]></title>
     <link href="http://khotyn.github.com/blog/2014/08/16/guice-collection-inject/"/>
-    <updated>2014-08-16T18:47:00+08:00</updated>
+    <updated>2014-08-16T18:47:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2014/08/16/guice-collection-inject</id>
     <content type="html"><![CDATA[<p>Guice 的初学者在使用 Guice 往一个类中注入一个集合注入的时候，肯定有感觉到非常地不自然（这里的不自然我觉得一定程度上是不符合 Guice 给人的初印象），由于最近在项目中也在使用 Guice，所以在这里对 Guice 的集合注入做一个记录。</p>
 
@@ -757,7 +776,7 @@
   <entry>
     <title type="html"><![CDATA[利用 JUnit 的 Rule 对 Log4j 的输出进行测试]]></title>
     <link href="http://khotyn.github.com/blog/2014/08/14/use-junit-rule-to-assert-log4j-output/"/>
-    <updated>2014-08-14T22:07:00+08:00</updated>
+    <updated>2014-08-14T22:07:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2014/08/14/use-junit-rule-to-assert-log4j-output</id>
     <content type="html"><![CDATA[<p>最近在写框架的测试代码的时候，有需求要对 Log4j 的输出进行测试（<strong>依赖 Log4j 的输出来进行测试，这一点本身可能得深思一下</strong>），之前也有对 stdout 和 stderr 进行测试，用了一个叫做 <code>system-rule</code> 的包：</p>
 
@@ -930,7 +949,7 @@
   <entry>
     <title type="html"><![CDATA[一些关于单元测试的思考]]></title>
     <link href="http://khotyn.github.com/blog/2014/03/31/unittest/"/>
-    <updated>2014-03-31T09:06:00+08:00</updated>
+    <updated>2014-03-31T09:06:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2014/03/31/unittest</id>
     <content type="html"><![CDATA[<p>最近在开发公司的集成测试框架，有一些关于单元测试的体会，写一个博客记录一下想法。</p>
 
@@ -957,7 +976,7 @@
   <entry>
     <title type="html"><![CDATA[关闭 Tomcat 的 TLD 扫描的功能]]></title>
     <link href="http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan/"/>
-    <updated>2014-01-21T19:12:00+08:00</updated>
+    <updated>2014-01-21T19:12:00-06:00</updated>
     <id>http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan</id>
     <content type="html"><![CDATA[<h3 id="section">背景</h3>
 
@@ -1064,7 +1083,7 @@
   <entry>
     <title type="html"><![CDATA[Java 8 之 default method]]></title>
     <link href="http://khotyn.github.com/blog/2014/01/19/java-8-default-method/"/>
-    <updated>2014-01-19T22:13:00+08:00</updated>
+    <updated>2014-01-19T22:13:00-06:00</updated>
     <id>http://khotyn.github.com/blog/2014/01/19/java-8-default-method</id>
     <content type="html"><![CDATA[<p>如果进度正常，新版本的 Java，Java 8 将在三月份发布，Java 开发人员期待已久的 lambda 也将在 Java 8 中得到支持。目前，Java 8 的早期版本已经可以在 Java 的网站上下载到了，Intellij IDEA 也已经在其最新的版本支持了 Java 8。所以，最近花了点时间了解了一下 Java 8 中新增加的一些特性。</p>
 
@@ -1183,7 +1202,7 @@
   <entry>
     <title type="html"><![CDATA[转让自用 13 寸 MacBook Pro]]></title>
     <link href="http://khotyn.github.com/blog/2014/01/01/sell-mac-book-pro/"/>
-    <updated>2014-01-01T11:02:00+08:00</updated>
+    <updated>2014-01-01T11:02:00-06:00</updated>
     <id>http://khotyn.github.com/blog/2014/01/01/sell-mac-book-pro</id>
     <content type="html"><![CDATA[<p><strong>已经出售，谢谢</strong></p>
 
@@ -1208,7 +1227,7 @@
   <entry>
     <title type="html"><![CDATA[Google Guava 之 EventBus]]></title>
     <link href="http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus/"/>
-    <updated>2013-12-07T19:49:00+08:00</updated>
+    <updated>2013-12-07T19:49:00-06:00</updated>
     <id>http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus</id>
     <content type="html"><![CDATA[<p>Google 的 Guava 库是一个 Java 程序员必须了解的库，它提供了一些非常强大的功能，比如函数式风格的集合操作，Cache Builder 等等的功能，另外 Google Guava 还提供了一个非常方便的观察者模式的实现：EventBus。这篇文章就来介绍一下 EventBus 的使用。</p>
 
@@ -1265,7 +1284,7 @@
   <entry>
     <title type="html"><![CDATA[发泄快感]]></title>
     <link href="http://khotyn.github.com/blog/2013/11/06/abreact-pleasant/"/>
-    <updated>2013-11-06T19:16:00+08:00</updated>
+    <updated>2013-11-06T19:16:00-06:00</updated>
     <id>http://khotyn.github.com/blog/2013/11/06/abreact-pleasant</id>
     <content type="html"><![CDATA[<p>前一段时间特别喜欢上知乎，觉得还是一个挺有意思的网站，同类的国外网站有 Quora，不过我英语不太好，所以平时还是喜欢逛逛知乎，但是最近逛知乎的时候发现一个问题，里面的有一些的问题的高票答案其实不是在回答问题，而是在发泄自己的情感，而这些答案往往还能够得到高票（历史上的煽动家大概也是这样的，让自己的话迎合大众的情感，以此得到他们的支持），比如下面这个：</p>
 
@@ -1284,7 +1303,7 @@
   <entry>
     <title type="html"><![CDATA[jvmtop 介绍和实现分析]]></title>
     <link href="http://khotyn.github.com/blog/2013/11/02/jvmtop-impl/"/>
-    <updated>2013-11-02T15:36:00+08:00</updated>
+    <updated>2013-11-02T15:36:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2013/11/02/jvmtop-impl</id>
     <content type="html"><![CDATA[<h3 id="section">简介</h3>
 
@@ -1357,7 +1376,7 @@
   <entry>
     <title type="html"><![CDATA[在更大的世界遇见更好的自己]]></title>
     <link href="http://khotyn.github.com/blog/2013/10/24/brave-new-world/"/>
-    <updated>2013-10-24T08:31:00+08:00</updated>
+    <updated>2013-10-24T08:31:00-05:00</updated>
     <id>http://khotyn.github.com/blog/2013/10/24/brave-new-world</id>
     <content type="html"><![CDATA[<p><img src="https://pic.yupoo.com/khotyn/Dg6bDXhi/Zb6Cy.jpg" alt="image" /></p>
 
@@ -1372,38 +1391,6 @@
 <p>一直很佩服身边的一些朋友和同事，他们能够把一件事情坚持两三年，有些人跑地并不快，但是他们总能比你更加坚持，跑得更远，和他们相比，我的生活是不是太过肤浅，似乎从来没有坚持一件事情超过一年，对于那个超过一年的世界，我陌生无比，这大概是因为我一直都比较缺乏意志力和专注力。</p>
 
 <p>旧世界纵然舒适无比，但是前方永远有一个更吸引人，更宽广，更深邃的世界，多年以后，希望在那个世界遇见更好的自己。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[代码之美]]></title>
-    <link href="http://khotyn.github.com/blog/2013/10/16/beautiful-code/"/>
-    <updated>2013-10-16T00:55:00+08:00</updated>
-    <id>http://khotyn.github.com/blog/2013/10/16/beautiful-code</id>
-    <content type="html"><![CDATA[<p>今天的工作基本上就是在重构实习生写的 JS 代码，改的昏天暗地，他们基本把整个工程的 JS 代码都放到了一个文件中，代码中一会儿以空格缩进，一会儿以 tab 缩进，到处都是不必要的变量，我的代码洁癖又犯了，忍不住直接进行了重构，对 JS 进行模块化的拆分，每一个模块都有相对独立的功能，改了之后舒畅了很多，就像拿掉了卡在喉咙中鱼刺。</p>
-
-<p>工作这几年以来，我也遇到过几个和我一样，有着或者或少代码洁癖的人，看到 IDE 中出现的警告信息就会感到不舒服（从 Eclipse 转到 Intellij IDEA 以后，洁癖的程度越来越严重了，Intellij IDEA 会对你的代码风格做更彻底的检查），看到以 tab 来做缩进简直就像看到异教徒一样，看到代码中已经被注释掉的废弃代码那肯定得马上删掉。</p>
-
-<p>可惜的是，工作遇到的更多的人，在这方面要随意的多，他们更多追求的是把工作完成，让功能能够跑起来，其实一定程度上来说，他们是对的，他们是更加实用主义的程序员，实用主义能够帮助我们更快地达到自己的目标，而不会被和目标无关的东西所牵绊。但是，我觉得，一个程序员在追求程序的实用主义的时候，也应该去追求程序本身的美感。</p>
-
-<p>或许有人会问，什么是程序的美感，关于这一点，我们可以从很多的侧面去描述：</p>
-
-<ul>
-  <li>更人性化的用户体验</li>
-  <li>更简洁的架构</li>
-  <li>程序内一致的代码风格</li>
-  <li>更易读的代码</li>
-</ul>
-
-<p>但是，“美”本身是用语言是无法完整描述的，你可以说娜塔丽•波特曼很美，你也可以说加西莫多很多，但是他们之间的差距是如此之大，除了他们都是人之外你都找不到他们的共同点。所以“美”就是“美”，只有你身在其中的时候你才能够感受到。</p>
-
-<p>或许对于很多人而言，“代码美”根本就是个扯淡的东西。其实写代码的过程和做木工的过程是很像的，说白了，都是设计出一样东西，然后拿来用而已。看看下面的无印良品木制家居，不得不承认，它比我们平时从市面上看到的普通的木制家居要舒服地多。同样一段代码也可以比另一段代码看起来更加“舒服”，更加“美”，只是每一个人对这种“美”的感受能力不同而已，有些能够感受到，有些不能感受到（在这一点上，不得不承认，我对“代码美”的感受能力是比较差的）。</p>
-
-<p><img src="http://pic.yupoo.com/khotyn/DePKb6au/13WWB6.png" alt="image" /></p>
-
-<p>想要去培养这种对“程序美”的感受能力，一个很好的方式就是去阅读优秀的开源代码，比如 Tomcat，Dubbo 等等，有时候，当你看到一段不错的代码，一个简洁的有用的架构设计的时候，你会感到来自内心深处的愉悦，这就是“美”的一个侧面。我相信，培养这样的感受能力，是非常有益于身心健康的，并且我也相信那些透露出“美”的代码在某种程度上也是更加优秀的代码（内王而外圣）。</p>
-
-<p>这个世界已经够丑陋了，如果我们已经解决了温饱问题，又有了这么多的自由时间，不如做点“漂亮”点的东西出来，写一些更有用，更“美”的代码出来~</p>
 ]]></content>
   </entry>
   
