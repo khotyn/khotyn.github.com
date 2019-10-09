@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Google Guava 之 EventBus - 小径分岔的花园</title>
+  <title>JDK13 新特性之 Dynamic CDS - 小径分岔的花园</title>
   <meta name="author" content="khotyn">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus">
+  <link rel="canonical" href="http://khotyn.github.com/blog/2019/10/08/jdk13-dynamic-cds">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -108,7 +108,7 @@
   
   <header class="page-header">
     
-      <h1 class="entry-title">Google Guava 之 EventBus</h1>
+      <h1 class="entry-title">JDK13 新特性之 Dynamic CDS</h1>
     
     
       <p class="meta">
@@ -124,7 +124,7 @@
   
 
 
-<time datetime="2013-12-07T19:49:00-06:00" pubdate data-updated="true">Dec 7<span>th</span>, 2013</time>
+<time datetime="2019-10-08T20:51:00-05:00" pubdate data-updated="true">Oct 8<span>th</span>, 2019</time>
         
          | <a href="#disqus_thread">Comments</a>
         
@@ -133,19 +133,34 @@
   </header>
 
 
-<div class="entry-content"><p>Google 的 Guava 库是一个 Java 程序员必须了解的库，它提供了一些非常强大的功能，比如函数式风格的集合操作，Cache Builder 等等的功能，另外 Google Guava 还提供了一个非常方便的观察者模式的实现：EventBus。这篇文章就来介绍一下 EventBus 的使用。</p>
+<div class="entry-content"><p>一年多以前，我写过一篇文章<a href="/blog/2018/03/21/app-cds/">Java 10 新特性之 AppCDS</a>，文章的最后有一个结论：</p>
 
-<h3 id="eventbus-">EventBus 对象</h3>
+<blockquote>
+  <p>虽然 AppCDS 号称可以支持自定义的 Classloader，但是我试了一个 SpringBoot 的应用，发现对于没有在 -classpath 中指定的 JAR 包中的类，并不会有效果。</p>
+</blockquote>
 
-<p>在举例说明 EventBus 的使用方式之前，我们先来看一下 EventBus 对象，EventBus 对象整个负责了观察者模式监听者的注册，事件的分发，所以，在使用 EventBus 的时候，你就省去了非常多的工作，你只要去使用 EventBus 就可以了，不用再去自己实现一个 Publisher 的类，使用 EventBus 的第一步就是你需要一个 EventBus 的实例：</p>
+<p>在 Java 的世界中，自定义的 Classloader 情况太多了，这个大大限制了 AppCDS 的应用，不过，这次看了 JDK13 的 Release Note，很开心看到 JDK13 对 CDS 的功能进行了增强，本次对 CDS 的增强主要是两个方面：</p>
+
+<ul>
+  <li>一个是简化了 CDS 的使用，在原来的步骤中，需要生成能够 dump 的 Class 文件的列表，然后再根据这份文件生成 dump 的内容，然后再使用 dump 的内容进行启动的加速。现在一步就可以直接生成 dump 文件了拿过来做启动的加速了，比原来少了一步。</li>
+  <li>另一个增强是现在 CDS 不仅仅会 dump <code>-cp</code> 指定的类路径下的 Class，并且会 dump 在应用退出之前所有已经加载的类，有个这个特性，CDS 就能够用在各种场景下了。</li>
+</ul>
+
+<p>接下来，我们就尝试一下在 SOFABoot 中使用 Dynamic CDS，首先新建一个 Spring Boot 的应用，并且把 parent 替换为：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">EventBus</span> <span class="n">eventBus</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EventBus</span><span class="o">();</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="nt">&lt;parent&gt;</span>
+</span><span class="line">    <span class="nt">&lt;groupId&gt;</span>com.alipay.sofa<span class="nt">&lt;/groupId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;artifactId&gt;</span>sofaboot-dependencies<span class="nt">&lt;/artifactId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;version&gt;</span>3.1.5<span class="nt">&lt;/version&gt;</span>
+</span><span class="line"><span class="nt">&lt;/parent&gt;</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<h3 id="section">注册监听者</h3>
-
-<p>使用 EventBus 监听事件，只需要在你的处理事件的方法上添加一个 <code>@Subscribe</code> 注解就可以：</p>
+<p>然后我们可以编译并且启动一下，看下耗时情况：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -153,35 +168,78 @@
 <span class="line-number">4</span>
 <span class="line-number">5</span>
 <span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">static</span> <span class="kd">class</span> <span class="nc">Subscriber</span> <span class="o">{</span>
-</span><span class="line">    <span class="nd">@Subscribe</span>
-</span><span class="line">    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">subscribe</span><span class="o">(</span><span class="n">Event</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
-</span><span class="line">        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">event</span><span class="o">.</span><span class="na">getWord</span><span class="o">());</span>
-</span><span class="line">    <span class="o">}</span>
-</span><span class="line"><span class="o">}</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">➜  time java -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span><span class="line">
+</span><span class="line">  .   ____          _            __ _ _
+</span><span class="line"> /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
+</span><span class="line">( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
+</span><span class="line"> \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+</span><span class="line">  &#39;  |____| .__|_| |_|_| |_\__, | / / / /
+</span><span class="line"> =========|_|==============|___/=/_/_/_/
+</span><span class="line"> :: Spring Boot ::        (v2.1.0.RELEASE)
+</span><span class="line">
+</span><span class="line">2019-10-08 23:16:55.768  INFO 69815 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Starting DynamiccdsApplication v0.0.1-SNAPSHOT on lotus.local with PID 69815 (/Users/khotyn/Downloads/dynamiccds/target/dynamiccds-0.0.1-SNAPSHOT.jar started by khotyn in /Users/khotyn/Downloads/dynamiccds)
+</span><span class="line">2019-10-08 23:16:55.772  INFO 69815 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : No active profile set, falling back to default profiles: default
+</span><span class="line">2019-10-08 23:16:56.377  INFO 69815 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Started DynamiccdsApplication in 0.981 seconds (JVM running for 1.411)
+</span><span class="line">java -jar target/dynamiccds-0.0.1-SNAPSHOT.jar  4.14s user 0.29s system 301% cpu 1.473 total
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>这里的事件对象 <code>Event</code> 可以是任何的对象，可以是 <code>Object</code>，但是也可以是任何你自定义的消息对象。</p>
+<p>耗时时间是 4.14s。</p>
 
-<p>建立一个类以后，就可以往 EventBus 中注册 Subscriber：</p>
+<p>然后我们用如下的命令生成一下 Class 的 Dump：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eventBus</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="k">new</span> <span class="n">Subscriber</span><span class="o">());</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">java -XX:ArchiveClassesAtExit=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<h3 id="section-1">分发事件</h3>
-
-<p>在注册完事件后，就可以去分发事件了，分发的代码非常简单：</p>
+<p>然后我们再执行以下命令就可以使用刚才 Dump 出来的文件了：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">eventBus</span><span class="o">.</span><span class="na">post</span><span class="o">(</span><span class="k">new</span> <span class="n">Event</span><span class="o">(</span><span class="s">&quot;Hello world&quot;</span><span class="o">));</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">time java -XX:SharedArchiveFile=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>这样，所有的注册在 EventBus 中的监听者，只要它的监听方法的参数是 <code>Event</code> 或者 <code>Event</code> 的超类，那么都会收到事件。</p>
+<p>可以看下输出：</p>
 
-<h3 id="section-2">结论</h3>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">➜  time java -XX:SharedArchiveFile=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span><span class="line">
+</span><span class="line">  .   ____          _            __ _ _
+</span><span class="line"> /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
+</span><span class="line">( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
+</span><span class="line"> \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+</span><span class="line">  &#39;  |____| .__|_| |_|_| |_\__, | / / / /
+</span><span class="line"> =========|_|==============|___/=/_/_/_/
+</span><span class="line"> :: Spring Boot ::        (v2.1.0.RELEASE)
+</span><span class="line">
+</span><span class="line">2019-10-08 23:20:44.078  INFO 70738 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Starting DynamiccdsApplication v0.0.1-SNAPSHOT on lotus.local with PID 70738 (/Users/khotyn/Downloads/dynamiccds/target/dynamiccds-0.0.1-SNAPSHOT.jar started by khotyn in /Users/khotyn/Downloads/dynamiccds)
+</span><span class="line">2019-10-08 23:20:44.083  INFO 70738 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : No active profile set, falling back to default profiles: default
+</span><span class="line">2019-10-08 23:20:44.636  INFO 70738 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Started DynamiccdsApplication in 0.91 seconds (JVM running for 1.462)
+</span><span class="line">java -XX:SharedArchiveFile=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar  2.94s user 0.30s system 210% cpu 1.540 total
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>EventBus 作为一个 In-JVM 的观察者模式的实现，非常使用，使用起来非常简单，可以减少不少的工作，建议在项目中可以多多使用。</p>
+<p>耗时是 2.94s，时间快了将近一秒多，这个时间可能相比于有大量业务逻辑的应用来说意义不大，但是也算是非常可观了。</p>
+
 </div>
 
 
@@ -204,14 +262,8 @@
   
 
 
-<time datetime="2013-12-07T19:49:00-06:00" pubdate data-updated="true">Dec 7<span>th</span>, 2013</time>
+<time datetime="2019-10-08T20:51:00-05:00" pubdate data-updated="true">Oct 8<span>th</span>, 2019</time>
       
-
-<span class="categories">
-  
-    <a class='category' href='/blog/categories/programming/'>Programming</a>
-  
-</span>
 
 
     </p>
@@ -233,14 +285,10 @@
     <ul class="pager">
       
       <li class="previous"><a class="basic-alignment left"
-        href="/blog/2013/11/06/abreact-pleasant/" title="Previous Post:
-        发泄快感">&laquo; 发泄快感</a></li>
+        href="/blog/2019/10/06/new-zealand/" title="Previous Post:
+        新西兰游记">&laquo; 新西兰游记</a></li>
       
       <li><a href="/blog/archives">Blog Archives</a></li>
-      
-      <li class="next"><a class="basic-alignment right" href="/blog/2014/01/01/sell-mac-book-pro/"
-        title="Next Post: 转让自用 13 寸 MacBook Pro">转让自用 13 寸 MacBook Pro
-        &raquo;</a></li>
       
     </ul>
   </footer>
@@ -321,8 +369,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus/';
-        var disqus_url = 'http://khotyn.github.com/blog/2013/12/07/google-guava-eventbus/';
+        var disqus_identifier = 'http://khotyn.github.com/blog/2019/10/08/jdk13-dynamic-cds/';
+        var disqus_url = 'http://khotyn.github.com/blog/2019/10/08/jdk13-dynamic-cds/';
         var disqus_script = 'embed.js';
       
     (function () {

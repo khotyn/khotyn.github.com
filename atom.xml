@@ -4,7 +4,7 @@
   <title><![CDATA[小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2019-10-06T07:12:38-05:00</updated>
+  <updated>2019-10-08T23:26:07-05:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -12,6 +12,121 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[JDK13 新特性之 Dynamic CDS]]></title>
+    <link href="http://khotyn.github.com/blog/2019/10/08/jdk13-dynamic-cds/"/>
+    <updated>2019-10-08T20:51:00-05:00</updated>
+    <id>http://khotyn.github.com/blog/2019/10/08/jdk13-dynamic-cds</id>
+    <content type="html"><![CDATA[<p>一年多以前，我写过一篇文章<a href="http://khotyn.github.com/blog/2018/03/21/app-cds/">Java 10 新特性之 AppCDS</a>，文章的最后有一个结论：</p>
+
+<blockquote>
+  <p>虽然 AppCDS 号称可以支持自定义的 Classloader，但是我试了一个 SpringBoot 的应用，发现对于没有在 -classpath 中指定的 JAR 包中的类，并不会有效果。</p>
+</blockquote>
+
+<p>在 Java 的世界中，自定义的 Classloader 情况太多了，这个大大限制了 AppCDS 的应用，不过，这次看了 JDK13 的 Release Note，很开心看到 JDK13 对 CDS 的功能进行了增强，本次对 CDS 的增强主要是两个方面：</p>
+
+<ul>
+  <li>一个是简化了 CDS 的使用，在原来的步骤中，需要生成能够 dump 的 Class 文件的列表，然后再根据这份文件生成 dump 的内容，然后再使用 dump 的内容进行启动的加速。现在一步就可以直接生成 dump 文件了拿过来做启动的加速了，比原来少了一步。</li>
+  <li>另一个增强是现在 CDS 不仅仅会 dump <code>-cp</code> 指定的类路径下的 Class，并且会 dump 在应用退出之前所有已经加载的类，有个这个特性，CDS 就能够用在各种场景下了。</li>
+</ul>
+
+<p>接下来，我们就尝试一下在 SOFABoot 中使用 Dynamic CDS，首先新建一个 Spring Boot 的应用，并且把 parent 替换为：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="nt">&lt;parent&gt;</span>
+</span><span class="line">    <span class="nt">&lt;groupId&gt;</span>com.alipay.sofa<span class="nt">&lt;/groupId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;artifactId&gt;</span>sofaboot-dependencies<span class="nt">&lt;/artifactId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;version&gt;</span>3.1.5<span class="nt">&lt;/version&gt;</span>
+</span><span class="line"><span class="nt">&lt;/parent&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后我们可以编译并且启动一下，看下耗时情况：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">➜  time java -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span><span class="line">
+</span><span class="line">  .   ____          _            __ _ _
+</span><span class="line"> /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
+</span><span class="line">( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
+</span><span class="line"> \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+</span><span class="line">  &#39;  |____| .__|_| |_|_| |_\__, | / / / /
+</span><span class="line"> =========|_|==============|___/=/_/_/_/
+</span><span class="line"> :: Spring Boot ::        (v2.1.0.RELEASE)
+</span><span class="line">
+</span><span class="line">2019-10-08 23:16:55.768  INFO 69815 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Starting DynamiccdsApplication v0.0.1-SNAPSHOT on lotus.local with PID 69815 (/Users/khotyn/Downloads/dynamiccds/target/dynamiccds-0.0.1-SNAPSHOT.jar started by khotyn in /Users/khotyn/Downloads/dynamiccds)
+</span><span class="line">2019-10-08 23:16:55.772  INFO 69815 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : No active profile set, falling back to default profiles: default
+</span><span class="line">2019-10-08 23:16:56.377  INFO 69815 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Started DynamiccdsApplication in 0.981 seconds (JVM running for 1.411)
+</span><span class="line">java -jar target/dynamiccds-0.0.1-SNAPSHOT.jar  4.14s user 0.29s system 301% cpu 1.473 total
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>耗时时间是 4.14s。</p>
+
+<p>然后我们用如下的命令生成一下 Class 的 Dump：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">java -XX:ArchiveClassesAtExit=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后我们再执行以下命令就可以使用刚才 Dump 出来的文件了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">time java -XX:SharedArchiveFile=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>可以看下输出：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">➜  time java -XX:SharedArchiveFile=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span><span class="line">
+</span><span class="line">  .   ____          _            __ _ _
+</span><span class="line"> /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
+</span><span class="line">( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
+</span><span class="line"> \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+</span><span class="line">  &#39;  |____| .__|_| |_|_| |_\__, | / / / /
+</span><span class="line"> =========|_|==============|___/=/_/_/_/
+</span><span class="line"> :: Spring Boot ::        (v2.1.0.RELEASE)
+</span><span class="line">
+</span><span class="line">2019-10-08 23:20:44.078  INFO 70738 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Starting DynamiccdsApplication v0.0.1-SNAPSHOT on lotus.local with PID 70738 (/Users/khotyn/Downloads/dynamiccds/target/dynamiccds-0.0.1-SNAPSHOT.jar started by khotyn in /Users/khotyn/Downloads/dynamiccds)
+</span><span class="line">2019-10-08 23:20:44.083  INFO 70738 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : No active profile set, falling back to default profiles: default
+</span><span class="line">2019-10-08 23:20:44.636  INFO 70738 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Started DynamiccdsApplication in 0.91 seconds (JVM running for 1.462)
+</span><span class="line">java -XX:SharedArchiveFile=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar  2.94s user 0.30s system 210% cpu 1.540 total
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>耗时是 2.94s，时间快了将近一秒多，这个时间可能相比于有大量业务逻辑的应用来说意义不大，但是也算是非常可观了。</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[新西兰游记]]></title>
@@ -1365,79 +1480,6 @@
 <p>既然提到了快感，顺便说一句：“阅读新闻也是一种快感”，这是浪费时间的快感，不看新闻，你也不会错过任何重要的消息，所以，不如把手机上的新闻客户端给删掉，它不能给你带来任何东西。</p>
 
 <p>哦，对了，有一个新闻客户端，素以评论见长，它提供了另一种形式的快感发泄，是的，我说的就是「网易新闻」。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[jvmtop 介绍和实现分析]]></title>
-    <link href="http://khotyn.github.com/blog/2013/11/02/jvmtop-impl/"/>
-    <updated>2013-11-02T15:36:00-05:00</updated>
-    <id>http://khotyn.github.com/blog/2013/11/02/jvmtop-impl</id>
-    <content type="html"><![CDATA[<h3 id="section">简介</h3>
-
-<p>jvmtop 是一个分析工具，顾名思义，它是一个针对 jvm 的 工具，展示的方式和 unix 的 top 命令相似。</p>
-
-<p>jvmtop 的项目地址是：<a href="https://code.google.com/p/jvmtop/">jvmtop</a>，安装 jvmtop 除了项目地址上的方式以外，还可以通过 jenv 安装：<code>jenv install jvmtop</code>。</p>
-
-<p>jvmtop 提供了两个视图，一个是概览视图，可以展示出当前机器的所有的 JVM 的情况，命令是 </p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">jvmtop.sh</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>显示出的信息类似下面这样：</p>
-
-<p><img src="https://pic.yupoo.com/khotyn/DhvVumOY/medish.jpg" alt="image" /></p>
-
-<p>其中，各个字段的意义分别如下：</p>
-
-<ul>
-  <li>PID：进程 ID</li>
-  <li>MAIN-CLASS：main 类的名字</li>
-  <li>HPCUR：当前被使用的 heap 的大小</li>
-  <li>HPMAX：最大可用的 heap 的大小</li>
-  <li>NHCUR：当前被使用的非 heap 大小（比如：perm gen）</li>
-  <li>NHMAX：最大可用的非 heap 大小</li>
-  <li>CPU：CPU 的使用情况</li>
-  <li>GC：消耗在 GC 上的时间比例</li>
-  <li>VM：JVM 的提供者，大版本号，小版本号，图中的意思是 Apple 提供的 JDK 6U51 版本。</li>
-  <li>USERNAME：当前的用户名</li>
-  <li>#T：线程数量</li>
-  <li>DL：是否有现成发生死锁</li>
-</ul>
-
-<p>还有一个视图是详情视图，展示一个 JVM 的详细情况，使用的命令如下：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">jvmtop.sh &lt;pid&gt;</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>显示的信息类似下面这样：</p>
-
-<p><img src="https://pic.yupoo.com/khotyn/Dhw0sotX/dTwsh.png" alt="image" /></p>
-
-<p>其中，各个字段的意义如下：</p>
-
-<ul>
-  <li>TID：线程 ID</li>
-  <li>NAME：线程名</li>
-  <li>STATE：线程状态</li>
-  <li>CPU：线程当前的 CPU 占用情况</li>
-  <li>TOTALCPU：从线程被创建开始总体的 CPU 占用情况</li>
-  <li>BLOCKBY：阻塞这个线程的线程 ID</li>
-</ul>
-
-<p>更加详细的用法大家可以用下面的用 <code>jvmtop.sh -h</code> 来查看。</p>
-
-<h3 id="section-1">实现</h3>
-
-<p>jvmtop 的实现相对来说还是比较简单的，整个 jvmtop 才 14 个类。</p>
-
-<p><img src="https://pic.yupoo.com/khotyn/DhwgtqPY/IYHUw.png" alt="image" /></p>
-
-<p>其中 JvmTop.java 是入口类。</p>
-
-<p>jvmtop 在启动后，会首先用 <code>sun.jvmstat.monitor.*</code> 下面的类以及 <code>com.sun.tools.attach.VirtualMachine</code> 获取到当前机器的所有的 JVM，然后通过 attachment api 将 <code>management-agent.jar</code> 这个 agent 加载到目标 JVM 上，这样，通过 JMX，就可以拿到当前的 JVM 的各种信息了，具体各个信息需要用什么样的 MBean 去拿，大家可以看对应的源代码。</p>
-
-<p>其实，如果需要一个 JVM 的静态的信息，比如，PID，MAIN-CLASS，JVM-ARGS 等等静态信息，直接用 <code>sun.jvmstat.monitor.*</code> 下的 API 就可以，只有需要动态信息的时候，我们才需要通过 attachment api 把 JMX 的功能打开，通过各种 MBean 去获取这些信息。如果后续需要实现类似的功能，也可以通过这样的思路去做。</p>
 ]]></content>
   </entry>
   

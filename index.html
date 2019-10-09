@@ -110,6 +110,150 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2019/10/08/jdk13-dynamic-cds/">JDK13 新特性之 Dynamic CDS</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2019-10-08T20:51:00-05:00" pubdate data-updated="true">Oct 8<span>th</span>, 2019</time>
+        
+         | <a href="/blog/2019/10/08/jdk13-dynamic-cds/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>一年多以前，我写过一篇文章<a href="/blog/2018/03/21/app-cds/">Java 10 新特性之 AppCDS</a>，文章的最后有一个结论：</p>
+
+<blockquote>
+  <p>虽然 AppCDS 号称可以支持自定义的 Classloader，但是我试了一个 SpringBoot 的应用，发现对于没有在 -classpath 中指定的 JAR 包中的类，并不会有效果。</p>
+</blockquote>
+
+<p>在 Java 的世界中，自定义的 Classloader 情况太多了，这个大大限制了 AppCDS 的应用，不过，这次看了 JDK13 的 Release Note，很开心看到 JDK13 对 CDS 的功能进行了增强，本次对 CDS 的增强主要是两个方面：</p>
+
+<ul>
+  <li>一个是简化了 CDS 的使用，在原来的步骤中，需要生成能够 dump 的 Class 文件的列表，然后再根据这份文件生成 dump 的内容，然后再使用 dump 的内容进行启动的加速。现在一步就可以直接生成 dump 文件了拿过来做启动的加速了，比原来少了一步。</li>
+  <li>另一个增强是现在 CDS 不仅仅会 dump <code>-cp</code> 指定的类路径下的 Class，并且会 dump 在应用退出之前所有已经加载的类，有个这个特性，CDS 就能够用在各种场景下了。</li>
+</ul>
+
+<p>接下来，我们就尝试一下在 SOFABoot 中使用 Dynamic CDS，首先新建一个 Spring Boot 的应用，并且把 parent 替换为：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="nt">&lt;parent&gt;</span>
+</span><span class="line">    <span class="nt">&lt;groupId&gt;</span>com.alipay.sofa<span class="nt">&lt;/groupId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;artifactId&gt;</span>sofaboot-dependencies<span class="nt">&lt;/artifactId&gt;</span>
+</span><span class="line">    <span class="nt">&lt;version&gt;</span>3.1.5<span class="nt">&lt;/version&gt;</span>
+</span><span class="line"><span class="nt">&lt;/parent&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后我们可以编译并且启动一下，看下耗时情况：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">➜  time java -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span><span class="line">
+</span><span class="line">  .   ____          _            __ _ _
+</span><span class="line"> /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
+</span><span class="line">( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
+</span><span class="line"> \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+</span><span class="line">  &#39;  |____| .__|_| |_|_| |_\__, | / / / /
+</span><span class="line"> =========|_|==============|___/=/_/_/_/
+</span><span class="line"> :: Spring Boot ::        (v2.1.0.RELEASE)
+</span><span class="line">
+</span><span class="line">2019-10-08 23:16:55.768  INFO 69815 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Starting DynamiccdsApplication v0.0.1-SNAPSHOT on lotus.local with PID 69815 (/Users/khotyn/Downloads/dynamiccds/target/dynamiccds-0.0.1-SNAPSHOT.jar started by khotyn in /Users/khotyn/Downloads/dynamiccds)
+</span><span class="line">2019-10-08 23:16:55.772  INFO 69815 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : No active profile set, falling back to default profiles: default
+</span><span class="line">2019-10-08 23:16:56.377  INFO 69815 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Started DynamiccdsApplication in 0.981 seconds (JVM running for 1.411)
+</span><span class="line">java -jar target/dynamiccds-0.0.1-SNAPSHOT.jar  4.14s user 0.29s system 301% cpu 1.473 total
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>耗时时间是 4.14s。</p>
+
+<p>然后我们用如下的命令生成一下 Class 的 Dump：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">java -XX:ArchiveClassesAtExit=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后我们再执行以下命令就可以使用刚才 Dump 出来的文件了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">time java -XX:SharedArchiveFile=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>可以看下输出：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line">➜  time java -XX:SharedArchiveFile=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar
+</span><span class="line">
+</span><span class="line">  .   ____          _            __ _ _
+</span><span class="line"> /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
+</span><span class="line">( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
+</span><span class="line"> \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+</span><span class="line">  &#39;  |____| .__|_| |_|_| |_\__, | / / / /
+</span><span class="line"> =========|_|==============|___/=/_/_/_/
+</span><span class="line"> :: Spring Boot ::        (v2.1.0.RELEASE)
+</span><span class="line">
+</span><span class="line">2019-10-08 23:20:44.078  INFO 70738 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Starting DynamiccdsApplication v0.0.1-SNAPSHOT on lotus.local with PID 70738 (/Users/khotyn/Downloads/dynamiccds/target/dynamiccds-0.0.1-SNAPSHOT.jar started by khotyn in /Users/khotyn/Downloads/dynamiccds)
+</span><span class="line">2019-10-08 23:20:44.083  INFO 70738 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : No active profile set, falling back to default profiles: default
+</span><span class="line">2019-10-08 23:20:44.636  INFO 70738 --- [           main] c.e.dynamiccds.DynamiccdsApplication     : Started DynamiccdsApplication in 0.91 seconds (JVM running for 1.462)
+</span><span class="line">java -XX:SharedArchiveFile=dcds.jsa -jar target/dynamiccds-0.0.1-SNAPSHOT.jar  2.94s user 0.30s system 210% cpu 1.540 total
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>耗时是 2.94s，时间快了将近一秒多，这个时间可能相比于有大量业务逻辑的应用来说意义不大，但是也算是非常可观了。</p>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2019/10/06/new-zealand/">新西兰游记</a></h1>
     
     
@@ -1024,86 +1168,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/2014/10/19/intellij-idea-feature/">Intellij IDEA 的一些使用技巧</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-10-19T21:41:00-05:00" pubdate data-updated="true">Oct 19<span>th</span>, 2014</time>
-        
-         | <a href="/blog/2014/10/19/intellij-idea-feature/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>所有的这些功能都是在 Intellij IDEA 14 中测试的，其他的版本不一定适用</strong></p>
-
-<h3 id="section">打开类的直接定位到某一行</h3>
-
-<p>在 Mac 下，IDEA 默认的打开类的快捷键是 <code>Command+O</code>，不过这个快捷键也有一些技巧。</p>
-
-<p>第一个是可以在打开类的时候直接跳到某一行，比如下面这样：</p>
-
-<p><img src="https://pic.yupoo.com/khotyn/E8WysuL3/Pv6jh.png" alt="" /></p>
-
-<p>打开 String 这个类的同时直接跳转到 String 的第 40 行。</p>
-
-<h3 id="section-1">到某个类的某个方法</h3>
-
-<p>IDEA 的 Open Symbol 功能可以直接定位到某一个类的某一个方法，默认的快捷键是 <code>Option+Command+O</code>，如下：</p>
-
-<p><img src="https://pic.yupoo.com/khotyn/E8WRrUjB/I2Vom.png" alt="" /></p>
-
-<h3 id="sublime-">像 Sublime 那样多行编辑</h3>
-
-<p>以前要做多行编辑，总是现在 Sublime 里面先做好，然后再拷贝回到 IDEA 里面，现在知道了 IDEA 本身就自带这个功能，快捷键是 <code>Option+Shift+鼠标</code>，直接来看一个 gif 动画看来这个功能吧：</p>
-
-<p><img src="/images/select_multi_line.gif" alt="" /></p>
-
-<h3 id="smart-code-completion">Smart Code Completion</h3>
-
-<p>除了普通的代码补全的功能之外，IDEA 还提供了智能的不全功能，我们看下对比：</p>
-
-<p>下面是基本的补全功能：</p>
-
-<p><img src="/images/basic_completion.gif" alt="" /></p>
-
-<p>这个是智能的补全功能：</p>
-
-<p><img src="/images/smart_completion.gif" alt="" /></p>
-
-<p>可以看到智能补全可以直接推断类型，把不符合类型的提示直接全部过滤，让我们可以更加高效地编写代码。</p>
-
-<h3 id="section-2">草稿</h3>
-
-<p>工作的时候我们经常会创建一些临时文件，在 IDEA 14 中，加入了一个非常有用的创建草稿的功能，Mac 下的快捷键是 <code>Command+Shift+N</code>，你可以在一个工程里面随意创建任意数量的草稿。</p>
-
-<p>上面的这些是前几天参加 QCon 的时候听 IDEA 的一个 Session 知道的一些技巧。个人认为这个 Session 比很多其他的 Session 都更加有料</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <ul class="pager">
     
     <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
@@ -1119,6 +1183,10 @@
     <li class="nav-header">Recent Posts</li>
     
       <li class="post">
+        <a href="/blog/2019/10/08/jdk13-dynamic-cds/">JDK13 新特性之 Dynamic CDS</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/10/06/new-zealand/">新西兰游记</a>
       </li>
     
@@ -1132,10 +1200,6 @@
     
       <li class="post">
         <a href="/blog/2018/03/21/app-cds/">Java 10 新特性之 AppCDS</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2018/02/19/cloud-native-infrastrcuture/">Cloud Native Infrastrcuture 阅读笔记</a>
       </li>
     
   </ul>
