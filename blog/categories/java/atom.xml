@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Java | 小径分岔的花园]]></title>
   <link href="http://khotyn.github.com/blog/categories/java/atom.xml" rel="self"/>
   <link href="http://khotyn.github.com/"/>
-  <updated>2019-10-08T23:26:07-05:00</updated>
+  <updated>2020-08-09T10:35:15+08:00</updated>
   <id>http://khotyn.github.com/</id>
   <author>
     <name><![CDATA[khotyn]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[JVM 对 NoClassDefFoundError 的“缓存”]]></title>
     <link href="http://khotyn.github.com/blog/2015/02/15/jvm-noclassdeffounterror-cache/"/>
-    <updated>2015-02-15T20:44:00-06:00</updated>
+    <updated>2015-02-15T20:44:00+08:00</updated>
     <id>http://khotyn.github.com/blog/2015/02/15/jvm-noclassdeffounterror-cache</id>
     <content type="html"><![CDATA[<h2 id="section">问题</h2>
 
@@ -111,7 +111,7 @@ bool is_in_error_state() const           { return _init_state == initialization_
   <entry>
     <title type="html"><![CDATA[关闭 Tomcat 的 TLD 扫描的功能]]></title>
     <link href="http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan/"/>
-    <updated>2014-01-21T19:12:00-06:00</updated>
+    <updated>2014-01-21T19:12:00+08:00</updated>
     <id>http://khotyn.github.com/blog/2014/01/21/turnoff-tomcat-tld-scan</id>
     <content type="html"><![CDATA[<h3 id="section">背景</h3>
 
@@ -193,7 +193,7 @@ public class NullJarScanner implements JarScanner {
   <entry>
     <title type="html"><![CDATA[Java 8 之 default method]]></title>
     <link href="http://khotyn.github.com/blog/2014/01/19/java-8-default-method/"/>
-    <updated>2014-01-19T22:13:00-06:00</updated>
+    <updated>2014-01-19T22:13:00+08:00</updated>
     <id>http://khotyn.github.com/blog/2014/01/19/java-8-default-method</id>
     <content type="html"><![CDATA[<p>如果进度正常，新版本的 Java，Java 8 将在三月份发布，Java 开发人员期待已久的 lambda 也将在 Java 8 中得到支持。目前，Java 8 的早期版本已经可以在 Java 的网站上下载到了，Intellij IDEA 也已经在其最新的版本支持了 Java 8。所以，最近花了点时间了解了一下 Java 8 中新增加的一些特性。</p>
 
@@ -271,7 +271,7 @@ class MultiImplInvokeSuper implements A, B {
   <entry>
     <title type="html"><![CDATA[jvmtop 介绍和实现分析]]></title>
     <link href="http://khotyn.github.com/blog/2013/11/02/jvmtop-impl/"/>
-    <updated>2013-11-02T15:36:00-05:00</updated>
+    <updated>2013-11-02T15:36:00+08:00</updated>
     <id>http://khotyn.github.com/blog/2013/11/02/jvmtop-impl</id>
     <content type="html"><![CDATA[<h3 id="section">简介</h3>
 
@@ -346,7 +346,7 @@ jvmtop.sh &lt;pid&gt;
   <entry>
     <title type="html"><![CDATA[Java Bean 的布尔类型属性获取问题]]></title>
     <link href="http://khotyn.github.com/blog/2013/09/25/java-bean-boolean/"/>
-    <updated>2013-09-25T18:38:00-05:00</updated>
+    <updated>2013-09-25T18:38:00+08:00</updated>
     <id>http://khotyn.github.com/blog/2013/09/25/java-bean-boolean</id>
     <content type="html"><![CDATA[<h3 id="velocity--java-bean-">Velocity 对 Java Bean 中布尔类型的属性的获取问题</h3>
 
